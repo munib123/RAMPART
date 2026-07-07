@@ -1,0 +1,27 @@
+# HackerOne Report: Login CSRF
+**Report ID:** 6871
+**Vulnerability Class:** Cross-Site Request Forgery (CSRF)
+
+## Vulnerability Information & PoC
+Hi sir,
+
+There is no mitigation of XCSRF in your login form. 
+
+Kindly check the source code of login:
+
+<form class="signin" action="" method="post" novalidate>
+                    <p class="form">
+                        <input class="input" name="email" type="email" placeholder="Email">
+                        <input class="input" name="password" type="password" placeholder="Password">
+                        <input type="hidden" name="org_invite">
+                        <button type="submit"><span>Login</span></button>
+                        <a class="forgotten" href="#?/password-reset">Forgotten your password?</a>
+                    </p>
+                    <div class="userError"></div>
+                </form>
+
+kindly let me know if you needed more information.
+
+Clifford
+
+## Discussion & Remediation Timeline

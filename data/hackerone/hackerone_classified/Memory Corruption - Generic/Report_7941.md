@@ -1,0 +1,46 @@
+# HackerOne Report: A Serious Bug on SIGNUP Process!
+**Report ID:** 7941
+**Vulnerability Class:** Memory Corruption - Generic
+
+## Vulnerability Information & PoC
+Hello,
+I found a bug on your registration/Sign UP process.. You should fix this one soon as Possible!
+ 
+With This bug, Attacker will able to create thousands of ID's on you application..
+
+POC
+------
+
+it can be done in three (3) ways..
+
+### 1)
+
+By CSRF ..
+> * Copy You Registration FORM source (only form code is enough)  and save it as "anyname.html" [[Attached]]
+* load this page on browser > http://www.localize.io/pages/sign_up
+* get the "CSRFToken" from source and paste it on "CSRFToken" Value section of your anyname.html and save.
+* open anyname.html file on browser and fill the form and Click "Sign UP" ..
+* if the username is available, ID will be created.. 
+* Now reload the anyname.html page and try with different username..
+
+every time you change the USERNAME and click sign UP.. ID will be Created!
+
+### 2)
+By Live HTTP Headers (Mozilla Add-on)
+
+> This process is Simple.. [[ Check Attached Screenshot ]] 
+Just Change the username and reply..
+ID will created everytime..
+
+### 3)
+By Creating a php File..
+> Attacker can create a PHP File and run it on your application..
+it will automatically change the username to a RANDOM one.. so attacker can register IDs as much as he want to create..
+I can code with PHP and Curl and i can assure you it will  work flawlessly.. (only if you want)
+
+That's all for now..
+
+Thanks and Regards,
+FaisaL Ahmed
+
+## Discussion & Remediation Timeline

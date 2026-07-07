@@ -1,0 +1,23 @@
+# HackerOne Report: File Name Enumeration 
+**Report ID:** 33935
+**Vulnerability Class:** Information Disclosure
+
+## Vulnerability Information & PoC
+Hi guys,
+I am kind of surprised no one hast reported this issue yet.
+ (or maybe they have and due to the severity it was never patched?)
+
+An example of this behavior would be:
+
+https://hackerone.com//%5C../%5C../%5C../%5C../%5C../%5C../etc/passwd  (which is a valid attempt even though we get an error saying file not found because..)
+
+https://hackerone.com//%5C../%5C../%5C../%5C../%5C../%5C../etc/passwd_DOESNTEXIST will rediredt us to a 404 page.
+
+
+Let me know if you need more info from my end.
+
+Thanks,
+Ben
+
+
+## Discussion & Remediation Timeline

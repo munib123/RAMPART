@@ -1,0 +1,15 @@
+# HackerOne Report:  Homograph attack. 
+**Report ID:** 37108
+**Vulnerability Class:** Violation of Secure Design Principles
+
+## Vulnerability Information & PoC
+In the report  31193      cmiller said    "Twitter does warn if the user tries to visit a malicious URL while passing through our t.co URL shortening service. Thanks!"
+
+
+URL redirection warning not given for punny code URL.
+
+
+ATTACK:
+ I mainly envision using this as an attack against admins of programs that use twitter. for example, if a bad guy can put up a spoof site behind one of these IDN links that one of the admins carelessly enters their credentials into, then the bad guy can go do bad stuff against the target site...
+
+## Discussion & Remediation Timeline

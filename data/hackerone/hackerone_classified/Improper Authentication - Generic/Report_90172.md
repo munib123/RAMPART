@@ -1,0 +1,8 @@
+# HackerOne Report: Tweetdeck (twitter owned app) not revoked
+**Report ID:** 90172
+**Vulnerability Class:** Improper Authentication - Generic
+
+## Vulnerability Information & PoC
+I've noticed an issue in tweetdeck & twitter. If you try to revoke tweet deck, no matter what you do, if anyone else is logged in on your account through tweetdeck, they will still be able to use your account. This doesn't properly revoke users, so therefore I thought this as is a bug/problem e.g. if someone gets hacked, but the hacker has added their account to tweetdeck, their account can still be controlled. I am reporting this to twitter because tweetdeck is their app. Please fix this issue.
+
+## Discussion & Remediation Timeline

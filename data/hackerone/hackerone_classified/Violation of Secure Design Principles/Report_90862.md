@@ -1,0 +1,21 @@
+# HackerOne Report: Passwords Returned in Later Responses.
+**Report ID:** 90862
+**Vulnerability Class:** Violation of Secure Design Principles
+
+## Vulnerability Information & PoC
+
+Passwords submitted to the application are returned in clear form in later responses from the application. This behavior increases the risk that users' passwords will be captured by an attacker. Many types of vulnerability, such as weaknesses in session handling, broken access controls, and cross-site scripting, would enable an attacker to leverage this behavior to retrieve the passwords of other application users. This possibility typically exacerbates the impact of those other vulnerabilities, and in some situations can enable an attacker to quickly compromise the entire application.
+
+Proof Of Concept:
+1. Login into your online shop.
+2. Add any staff member.
+3. An invitation mail is send towards the person to whom you wanted to added.
+4. When you click on the confirmation mail. A new link is generated who sends you to some another page.
+5. Fill the complete form there.
+6. Submit the Form.
+7. You'll see the complete password are submitted in clear test in later responses.
+
+PFA, the attached Video PoC for the same and the screenshot
+
+
+## Discussion & Remediation Timeline

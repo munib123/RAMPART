@@ -1,0 +1,24 @@
+# HackerOne Report: Improper Validation of the Referrer header leading to Open URL Redirection
+**Report ID:** 5199
+**Vulnerability Class:** Open Redirect
+
+## Vulnerability Information & PoC
+Using a proxy tool such as Burp, set the Target as https://coinbase.com.
+Then, send the following request:
+
+GET /cdn-cgi/l/chk_jschl HTTP/1.1
+Host: coinbase.com
+Referer: http://attacker.com
+Content-Length: 2
+
+Notice the attacker's domain in the Referrer header. This value is not being validated on the server side and as a result, the user is redirected to http://www.attacker.com
+
+Attack Scenario:
+1. An attacker hosts his own website www.attacker.com.
+2. He has a link on this website https://coinbase.com/cdn-cgi/l/chk_jschl.
+3. The attacker tricks a legitimate coinbase user to click on this link.
+4. When the user clicks on the link, he gets redirected to the attacker controlled website.
+5. Now, if the coinbase user is authenticated to the coinbase website in the same browser, all the cookies from the browser are sent to the attacker controlled website.
+6. The attacker now has access to the user's session cookies which he can use to impersonate the coinbase user and take complete control over the user's account.
+
+## Discussion & Remediation Timeline

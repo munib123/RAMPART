@@ -1,0 +1,21 @@
+# HackerOne Report: Content Spoofing through URL
+**Report ID:** 28792
+**Vulnerability Class:** Violation of Secure Design Principles
+
+## Vulnerability Information & PoC
+Hello
+I hope this is upto the level you guys think of accepting reports.
+Specified content can be injected into the webpage as text using the URL
+
+Consider this
+https://secure.phabricator.com/diffusion/PHU/browse/master/In%20order%20to%20complete%20the%20sign%20up%20procedure%20please%20visit%20the%20following%20link/www.google.com/%3C----Google-----%3E
+
+This can be misused in a number of ways
+Attacker injecting text can redirect users to malicious sites
+Attacker injecting text can prompt users with false messages like to logout or change their passwords
+
+You must have an argument that URLs are displayed in address bars but many browsers do not perform that action especially mobile browsers
+
+Please pay attention to this report. 
+
+## Discussion & Remediation Timeline

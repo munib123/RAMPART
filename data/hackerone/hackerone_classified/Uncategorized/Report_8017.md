@@ -1,0 +1,31 @@
+# HackerOne Report: Login page password-guessing attack
+**Report ID:** 8017
+**Vulnerability Class:** Uncategorized
+
+## Vulnerability Information & PoC
+
+Login page password-guessing attack
+
+
+Vulnerability description
+
+A common threat web developers face is a password-guessing attack known as a brute force attack. A brute-force attack is an attempt to discover a password by systematically trying every possible combination of letters, numbers, and symbols until you discover the one correct combination that works. 
+
+This login page doesn't have any protection against password-guessing attacks (brute force attacks). It's recommended to implement some type of account lockout after a defined number of incorrect password attempts. Consult Web references for more information about fixing this problem. 
+
+This vulnerability affects http://www.localize.io/
+
+ Attack details
+I tested 10 invalid credentials and no account lockout was detected.
+
+The impact of this vulnerability
+An attacker may attempt to discover a weak password by systematically trying every possible combination of letters, numbers, and symbols until it discovers the one correct combination that works.
+
+How to fix this vulnerability
+It's recommended to implement some type of account lockout after a defined number of incorrect password attempts. 
+
+Web references
+Blocking Brute Force Attacks
+http://www.owasp.org/index.php/Blocking_Brute_Force_Attacks
+
+## Discussion & Remediation Timeline

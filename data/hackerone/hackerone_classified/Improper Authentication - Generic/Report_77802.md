@@ -1,0 +1,14 @@
+# HackerOne Report: TCP Source Port Pass Firewall
+**Report ID:** 77802
+**Vulnerability Class:** Improper Authentication - Generic
+
+## Vulnerability Information & PoC
+Affects: *yourshop.myshopify.com
+
+Your firewall policy seems to let TCP packets with a specific source port pass through. Some types of requests can pass through the firewall. The port number 80 is the source port that unauthorized users can use to bypass your firewall.
+
+Suggestion to fix: Make sure that all your filtering rules are correct and strict enough. If the firewall intends to deny TCP connections to a specific port, it should be configured to block all TCP SYN packets going to this port, regardless of the source port. 
+
+I tested on test.myshopify.com and it responded 4 times to 4 TCP SYN probes sent to port 20 using source port 80. However, it did not respond at all to 4 TCP SYN probes sent to the same destination port using a random source port.
+
+## Discussion & Remediation Timeline

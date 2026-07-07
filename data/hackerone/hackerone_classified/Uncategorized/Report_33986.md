@@ -1,0 +1,41 @@
+# HackerOne Report: Option Method Enabled on web server
+**Report ID:** 33986
+**Vulnerability Class:** Uncategorized
+
+## Vulnerability Information & PoC
+Vuln Details:
+
+I detected that OPTIONS method is allowed. This issue is reported as extra information.
+
+Impact:
+Information disclosed from this page can be used to gain additional information about the target system
+
+Remedy:
+Disable OPTIONS method in all production systems.
+
+POC:
+
+REQUEST:
+
+OPTIONS /includes/ HTTP/1.1
+Cache-Control: no-cache
+Referer: https://dev.twitter.com/robots.txt
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.170 Safari/537.36 Netsparker
+Accept-Language: en-us,en;q=0.5
+X-Scanner: Netsparker
+Host: dev.twitter.com
+Accept-Encoding: gzip, deflate
+
+RESPONSE:
+
+
+HTTP/1.1 200 OK
+accept-ranges: bytes
+age: 0
+allow: POST,OPTIONS,GET,HEAD,TRACE
+cache-control: max-age=86400
+content-length: 0
+content-type: httpd/unix-directory
+
+## Discussion & Remediation Timeline

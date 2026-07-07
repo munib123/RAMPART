@@ -1,0 +1,24 @@
+# HackerOne Report: XSS in editor by any user
+**Report ID:** 18691
+**Vulnerability Class:** Cross-site Scripting (XSS) - Generic
+
+## Vulnerability Information & PoC
+# Steps 
+
++ Open any editor in phabricator where memes can be used (literally anywhere :P)
++ Enter the following and save it & **BOOM**
+
+```
+{meme, src= http://dummy//onerror=eval(prompt(1))// }
+```
+
+# Why ?
+
++ Nested parsing is causing the src value to be treated as a link which is automatically made link by fabricator. So, a whole mess-up of syntax happening there.
++ ```\\``` are being used as space separators since those replaced.
+
+# Fix ?
+
++ May be to avoid nested parsing, it messes up things. But the choice is yours since you have more knowledge of the application needs
+
+## Discussion & Remediation Timeline

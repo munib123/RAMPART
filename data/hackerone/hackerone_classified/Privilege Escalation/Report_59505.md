@@ -1,0 +1,19 @@
+# HackerOne Report: Create and Update patients vulnerability
+**Report ID:** 59505
+**Vulnerability Class:** Privilege Escalation
+
+## Vulnerability Information & PoC
+Hi there,
+
+This is a vulnerability in Create and Update permission in drchrono. When you try to [modify a role of a certain staff member](https://trizaeron.drchrono.com/permissions/#staff) then uncheck Create and Update patients it supposed to barred your staff in updating users.
+
+But this does not appear to be true. Yes a ``You do not have permission to access this page.`` error displays when you visit [https://trizaeron.drchrono.com/patients/](https://trizaeron.drchrono.com/patients/) but a direct access to a patient info does not! [https://trizaeron.drchrono.com/patients/56958243/?](https://trizaeron.drchrono.com/patients/56958243/?)
+
+What this means, a staff can directly access still the patients and modify its details. 
+
+In case you needed more information, kindly let me know.
+
+Cheers
+Clifford
+
+## Discussion & Remediation Timeline

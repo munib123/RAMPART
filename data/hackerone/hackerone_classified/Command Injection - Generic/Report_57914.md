@@ -1,0 +1,23 @@
+# HackerOne Report: HTML injection in email sent by romit.io
+**Report ID:** 57914
+**Vulnerability Class:** Command Injection - Generic
+
+## Vulnerability Information & PoC
+**Issue**
+It is possible for the attacker to inject arbitary HTML code in the email sent by romit.io as "<" in username is not sanitized when sending mail to the user. This can be used to redirect user to unwanted websites or spam from romit.io
+
+**PoC**
+1. Go to settings in your account and change the Nickname to some HTML like
+    "> <a href="google.com">    OR
+    "><img src="sth bad"             OR
+    <!--
+
+2. Save your settings.
+3. Share your wallet with any user by providing phone number.
+
+
+Thanks
+crab
+
+
+## Discussion & Remediation Timeline

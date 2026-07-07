@@ -1,0 +1,34 @@
+# HackerOne Report: Adobe Flash Player MP4 Use-After-Free Vulnerability
+**Report ID:** 30567
+**Vulnerability Class:** Memory Corruption - Generic
+
+## Vulnerability Information & PoC
+I. Summary
+Adobe Flash Player is prone to a vulnerability which leads to Use-After-Free. After parsing a malformed mp4 file, Flash will keep on accessing a block of memory for timing. Such memory block is still accessed even the page containing Flash is closed, which leads to a memory crash. 
+------------------------------------------------------------------
+II. Description
+Adobe Flash is a multimedia and software platform used for authoring of vector graphics, animation, games and rich Internet applications (RIAs) that can be viewed, played and executed in Adobe Flash Player. NetStream object can load and play an external mp4 file. 
+After playing a mp4 file, Flash will keep on updating a counter that saves the current frame and duration. A malformed mp4 file will trick the Flash to believe that this film never ends. The counter will not stop updating even the web page containing Flash is closing. Closing the page release Flash from the memory space, while the counter is still updated by a standalone thread. 
+There are two possible types of crash depending on the order of different blocks' release:
+1. If the counter memory is freed first, then the memory crash is caused by accessing freed memory.
+2. If the code snippets that update the counter is freed first, then the crash is caused by executing freed memory.
+Each of the two possible types of crash may by exploited by carefully crafted mp4 file which could lead to code execution.
+
+POC and its source code are attached.   
+Previous and lastest version of Adobe Flash Player has been tested under both Windows 7 and Windows XP.
+------------------------------------------------------------------
+III. Impact
+Use-After-Free
+------------------------------------------------------------------
+IV. Affected
+Adobe Flash Player (verion >10) under Windows XP and Windows 7.
+Other versions of windows may also be affected.
+------------------------------------------------------------------
+V. Reference
+Fix: http://helpx.adobe.com/security/products/flash-player/apsb14-21.html
+It has been asigned as CVE-2014-0553
+------------------------------------------------------------------
+VI. Credit
+Liu Jincheng and Wen Guanxing from Venustech ADLAB are credited for this vulnerability.
+
+## Discussion & Remediation Timeline

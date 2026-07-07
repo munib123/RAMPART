@@ -1,0 +1,12 @@
+# HackerOne Report: Adding an user email address to the list before confirming.
+**Report ID:** 3923
+**Vulnerability Class:** Violation of Secure Design Principles
+
+## Vulnerability Information & PoC
+I know many of the penetration tester's email address.And many of them will be interested to join on hackerone.
+Well lets think of a scenario.
+I used some other penetration tester's email address to create an account on hackerone.And I choosed the username to be "something_erotic"
+I know that users account will not be created untill they click on the confirmation key.
+Ok,now think the real owner of that email address came to hackerone,and tried to create an account.He wont be able to create account that time.Cause the email address was already used.This is a bug.Obviously,you should not mark an email address as "USED" untill they have been confirmed.And if the real user tries forget password option also,he will have to take trouble of sending email to your support,to change his username.
+
+## Discussion & Remediation Timeline

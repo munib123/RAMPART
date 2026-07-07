@@ -1,0 +1,12 @@
+# HackerOne Report: SPF records not found
+**Report ID:** 92740
+**Vulnerability Class:** Violation of Secure Design Principles
+
+## Vulnerability Information & PoC
+There is no TXT record in DNS zone that defines Sender Policy Framework entry for domain api.coinbase.com.
+
+These are the best practices and need to be configure in DNS records to protect your mail servers. using SPF records will help in spam filtering as SPF records does helps in verifying the source IP of the email by comparing with a DNS TXT record with a SPF content which will only allow authentic mail server to send emails with our domain. DKIM on the other hand will use cryptography keys for validating a domain name identity that is associated with a message by providing cryptography authentication mechanism( private key to the server and public key on the DKIM record ) checking message content with applied digital signatures. SPF and DKIM will manage validating your outbound SMTP traffic.
+DMARC policies needs to be set up for ensuring inbound SMTP traffic as well. with DMARC, message sender must verify their authentication with SPF and/or DKIM as DMARC consider DKIM and SPF as a combined authentication method. If DMARC policies of SPF and/or DKIM authentication failed the receiver have clear instructions to follow
+for example : to reject or junk/spam email if it does not pass DMARC policy( passed-SPF and passed-DKIM authentication).
+
+## Discussion & Remediation Timeline

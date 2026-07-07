@@ -1,0 +1,20 @@
+# HackerOne Report: Password type input with auto-complete enabled
+**Report ID:** 13628
+**Vulnerability Class:** Violation of Secure Design Principles
+
+## Vulnerability Information & PoC
+Vulnerability description :
+
+When a new name and password is entered in a form and the form is submitted, the browser asks if the password should be saved. Thereafter when the form is displayed, the name and password are filled in automatically or are completed as the name is entered. An attacker with local access could obtain the cleartext password from the browser cache.
+
+URL : https://www.irccloud.com/
+
+Fixing this vulnerability :
+
+The password auto-complete should be disabled in sensitive applications. 
+To disable auto-complete, you may use a code similar to: 
+<INPUT TYPE="password" AUTOCOMPLETE="off">
+
+
+
+## Discussion & Remediation Timeline

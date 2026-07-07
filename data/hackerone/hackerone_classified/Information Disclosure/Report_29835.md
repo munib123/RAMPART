@@ -1,0 +1,13 @@
+# HackerOne Report: Profile Pic padding (Length-hiding) fails due to use of GZIP
+**Report ID:** 29835
+**Vulnerability Class:** Information Disclosure
+
+## Vulnerability Information & PoC
+Back in August, I noted that Twitter was appending anywhere from dozens to thousands of junk (0x20) bytes on the end of the JPEG and PNG files they serve for users’ profile images. It was suggested that, though invalid, they were doing this deliberately, as an information-hiding mechanism. 
+
+The HTTPS protocol encrypts all of the data transferred over it, but it doesn’t hide the length of that data. Because Twitter profile pictures can appear in predictable patterns on 3rd-party pages, an otherwise “blind” network attacker could infer what pages a user was visiting based on the length of responses from Twitter’s image server. So, Twitter selected a number of common byte length thresholds and they pad images to those sizes. So, for instance, a 10174 byte image is padded with 6124 bytes of data to yield a 16298 byte response, while a 11502 byte response is padded with 4796 bytes to yield a matching 16298 byte response. Fiddler now detects this padded at the end of PNG files and surfaces it:
+
+Unfortunately it seems that Twitter's Performance team wasn't aware that this padding was intentional and they mistakenly enabled GZIP compression for these images. That change improves performance, but circumvents the length-blinding padding effort.
+
+
+## Discussion & Remediation Timeline

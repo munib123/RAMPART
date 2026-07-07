@@ -1,0 +1,41 @@
+# HackerOne Report: Weak Cryptographic Hash
+**Report ID:** 77231
+**Vulnerability Class:** Violation of Secure Design Principles
+
+## Vulnerability Information & PoC
+Issue:
+
+The following files are vulnerable to this issue:
+
+\src\includes\class-breaking-updater.php line 246 and 247
+
+protected function check_module( $module ) {
+
+		$rand_str = str_shuffle( md5( microtime() ) );
+		$nonce = md5( $rand_str . 'wordpoints_check_modules-' . $module );
+
+\src\admin\includes\class-wordpoints-modules-list-table.php line 541
+
+switch ( $column_name ) {
+
+					case 'cb':
+						$checkbox_id = 'checkbox_' . md5( $module_data['name'] );
+
+\src\components\points\includes\class-wordpoints-points-logs-query.php line 705
+
+private function _calc_cache_query_md5() {
+
+		if ( ! isset( $this->_cache_query_md5 ) ) {
+			$this->_cache_query_md5 = md5( $this->get_sql() );
+		}
+	}
+
+Explanation:
+
+Weak cryptographic hashes are susceptible to attacks like rainbow table searches. Hashing algorithms like MD5 and SHA-1 has been marked obsolete according to latest coding standards. This risk the integrity of security critical data to be compromised.
+
+Recommendation:
+
+Discontinue the use of MD5 and SHA-1 algorithms. Use SHA-256 or above to perform one way hashing for better security and integrity of data.
+
+## Discussion & Remediation Timeline

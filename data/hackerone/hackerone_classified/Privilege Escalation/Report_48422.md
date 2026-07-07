@@ -1,0 +1,17 @@
+# HackerOne Report: Team member invitations to sandboxed teams are not invalidated consistently (v2)
+**Report ID:** 48422
+**Vulnerability Class:** Privilege Escalation
+
+## Vulnerability Information & PoC
+As per our email conversation on ticket 2527, I am giving you a proof of concept of my claim.
+
+1. I have a sandboxed team in hackerone,named movielee.
+2. The manager of that team (@haxorsistz) sends an invite to => ██████████
+3. The link which I received on email was => https://hackerone.com/invitations/6fbca8af2f861c8174136f97ec51fde6
+
+4. I logged in from another researcher (@geekboy) account and visited the link.Accepted the request.
+5. Now I can see that invitation is still live.
+
+So, a member of any team can pass this token to other people and they will be added to the team.I used this token 3 times and it's still live.
+
+## Discussion & Remediation Timeline

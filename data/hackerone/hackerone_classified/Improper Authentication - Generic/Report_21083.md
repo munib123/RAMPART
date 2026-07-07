@@ -1,0 +1,24 @@
+# HackerOne Report: Account Hijacking (Only rare case scenario)
+**Report ID:** 21083
+**Vulnerability Class:** Improper Authentication - Generic
+
+## Vulnerability Information & PoC
+Hi,
+This is a logical flaw in the application which may allow any arbitrary user to obtain account access of another user.
+Below is the exploit scenario which may lead to potential account takeover in certain circumstances:
+* User changes email while he is logged in his own account (Some wrong email)
+* User enters an incorrect mail
+* Another user (user-2) receives the verification link
+* User- 2 clicks on the link (as of yet the new email doesn't get assoc. with the account)
+* Now, User-2 clicks on forgot password - the reset link is sent on the User-2 's email address.
+* User-2 clicks on that link, and changes the password.
+
+Successfully gains any hackerone's account.
+
+The glitch - User-1 needs to set wrong email by-mistake.
+
+Possible Fix: 
+> Authentication after the reset link is sent via the old creds.
+> Use Codes which can be sent to emails and not Links for verification
+
+## Discussion & Remediation Timeline

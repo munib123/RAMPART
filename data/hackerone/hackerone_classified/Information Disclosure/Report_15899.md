@@ -1,0 +1,20 @@
+# HackerOne Report: PHP PDOException and Full Path Disclosure
+**Report ID:** 15899
+**Vulnerability Class:** Information Disclosure
+
+## Vulnerability Information & PoC
+hi
+
+in phrases on phrasemove or phraseChange action
+
+- parameter phrasekey set to array  like phraseChange[phraseKey][11]:test
+pdo quote show error :
+
+Warning: PDO::quote() expects parameter 1 to be string, array given in /srv/data/web/vhosts/www.localize.im/htdocs/classes/Database.php on line 30
+
+Fatal error: Uncaught exception 'PDOException' with message 'SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 1' in /srv/data/web/vhosts/www.localize.im/htdocs/classes/Database.php:53 Stack trace: #0 /srv/data/web/vhosts/www.localize.im/htdocs/classes/Database.php(53): PDO->exec('UPDATE phrases ...') #1 /srv/data/web/vhosts/www.localize.im/htdocs/classes/Database.php(351): Database::update('UPDATE phrases ...') #2 /srv/data/web/vhosts/www.localize.im/htdocs/index.php(789): Database::setPhraseGroup(339, Array, '326') #3 {main} thrown in /srv/data/web/vhosts/www.localize.im/htdocs/classes/Database.php on line 53
+
+
+
+
+## Discussion & Remediation Timeline
