@@ -1,0 +1,12 @@
+# Vulnerability: Suzuri User Name Information - Detect
+**Classification:** CWE-200
+**Source:** Nuclei Template (`suzuri.yaml`)
+
+## Description
+Suzuri user name information check was conducted.
+
+## Vulnerable Code Pattern / Exploit Payload
+```http
+GET https://suzuri.jp/{{user}}
+```
+

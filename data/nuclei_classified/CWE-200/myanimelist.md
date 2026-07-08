@@ -1,0 +1,12 @@
+# Vulnerability: MyAnimeList User Name Information - Detect
+**Classification:** CWE-200
+**Source:** Nuclei Template (`myanimelist.yaml`)
+
+## Description
+MyAnimeList user name information check was conducted.
+
+## Vulnerable Code Pattern / Exploit Payload
+```http
+GET https://myanimelist.net/profile/{{user}}
+```
+

