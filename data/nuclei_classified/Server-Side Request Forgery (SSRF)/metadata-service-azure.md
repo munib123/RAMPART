@@ -1,0 +1,26 @@
+# Nuclei Template: Microsoft Azure Cloud Metadata Service Check
+**Template ID:** metadata-service-azure
+**Vulnerability Class:** Server-Side Request Forgery (SSRF)
+**Severity:** Critical
+**CWE:** CWE-441
+**Source:** Nuclei Template (`metadata-azure.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+The Microsoft Azure cloud host is configured as a proxy which allows access to the instance metadata service. This could allow significant access to the host/infrastructure.
+
+## Steps to reproduce / Exploit Payload
+```http
+GET http://{{hostval}}/metadata/instance?api-version=2021-02-01 HTTP/1.1
+Host: {{hostval}}
+Metadata: true
+```
+
+## Remediation
+Disable the proxy or restrict configuration to only allow access to approved hosts/ports. Upgrade to IMDSv2 if possible.
+
+## References
+- https://docs.microsoft.com/en-us/azure/virtual-machines/linux/instance-metadata-service?tabs=windows
+- https://blog.projectdiscovery.io/abusing-reverse-proxies-metadata/
+- https://www.mcafee.com/blogs/enterprise/cloud-security/how-an-attacker-could-use-instance-metadata-to-breach-your-app-in-aws/

