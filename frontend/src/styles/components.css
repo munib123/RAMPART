@@ -1,0 +1,115 @@
+/* ============ buttons ============ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; flex: none;
+  padding: 7px 13px; border-radius: 8px;
+  background: var(--surface-card); color: var(--text-body);
+  border: 1px solid var(--border-default);
+  transition: background 120ms var(--ease-out), border-color 120ms var(--ease-out), color 120ms var(--ease-out);
+}
+.btn:hover { background: var(--bg-subtle); border-color: var(--border-strong); }
+.btn:disabled { opacity: 0.6; cursor: default; }
+.btn svg { width: 14px; height: 14px; }
+
+.btn-primary {
+  background: var(--brand); color: #ffffff; border: 1px solid transparent;
+  border-radius: 10px; box-shadow: var(--shadow-brand);
+}
+.btn-primary:hover { background: var(--brand-hover); border-color: transparent; }
+.btn-primary:active { transform: translateY(0.5px) scale(0.99); }
+.btn-lg { font-size: 15px; padding: 13px 30px; }
+.btn-block { width: 100%; padding: 10px 16px; }
+.btn-xs { font-size: 12px; padding: 5px 11px; border-radius: 6px; }
+.btn-ghostline { background: transparent; }
+
+.icon-btn { width: 32px; height: 32px; padding: 0; }
+.icon-btn svg { width: 16px; height: 16px; }
+
+.fix-trigger:hover { background: var(--brand-subtle); border-color: var(--brand-border); color: var(--brand-hover); }
+.fix-trigger svg { color: var(--brand); }
+
+.copybtn { background: var(--brand); color: #ffffff; border-color: transparent; box-shadow: var(--shadow-xs); }
+.copybtn:hover { background: var(--brand-hover); border-color: transparent; }
+.copybtn.copied { background: var(--success); }
+.copybtn.copied:hover { background: var(--green-600); }
+
+/* ============ pills ============ */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex: none;
+  font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+  background: var(--bg-subtle); color: var(--neutral-600); border: 1px solid var(--border-subtle);
+}
+.pill.mono { font-family: var(--font-mono); font-weight: 500; }
+.pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex: none; }
+.pill.ok { color: var(--success); }
+.pill.ok .dot { background: currentColor; }
+.pill.warn { background: var(--warning-subtle); color: var(--amber-600); border-color: #eeddb0; }
+.pill.warn .dot { background: currentColor; }
+.pill.bad { background: var(--danger-subtle); color: var(--red-600); border-color: #f3d2cb; }
+.pill.bad .dot { background: currentColor; }
+.pill.sm { font-size: 11.5px; padding: 3px 9px; }
+
+/* severity */
+.pill.sev-critical, .pill.sev-high { background: var(--danger-subtle); color: var(--red-600); border-color: #f3d2cb; }
+.pill.sev-medium { background: var(--warning-subtle); color: var(--amber-600); border-color: #eeddb0; }
+.pill.sev-low { background: var(--brand-subtle); color: var(--blue-700); border-color: var(--blue-100); }
+
+/* verdicts */
+.pill.v-Confirmed { background: var(--danger-subtle); color: var(--danger); border-color: #f3d2cb; }
+.pill.v-Likely { background: var(--warning-subtle); color: var(--amber-600); border-color: #eeddb0; }
+.pill.v-Informational, .pill.v-Unverified, .pill.v-Error { background: var(--bg-muted); color: var(--neutral-600); border-color: var(--border-subtle); }
+.pill.v-Falsepositive { background: var(--success-subtle); color: var(--green-600); border-color: #cdeede; }
+
+/* exemplar sources */
+.pill.src-hackerone { background: var(--blue-50); color: var(--blue-700); border-color: var(--blue-200); }
+.pill.src-nuclei { background: var(--green-50); color: var(--green-600); border-color: #cdeede; }
+
+/* fix-panel pills */
+.pill.ai { background: var(--neutral-0); color: var(--brand); border-color: var(--brand-border); font-size: 11.5px; padding: 3px 9px; gap: 5px; }
+.pill.ai svg { width: 11px; height: 11px; }
+.pill.tier-High { background: var(--danger-subtle); color: var(--danger); border-color: #f3d2cb; font-size: 11.5px; padding: 3px 9px; }
+.pill.tier-Medium { background: var(--warning-subtle); color: var(--amber-600); border-color: #eeddb0; font-size: 11.5px; padding: 3px 9px; }
+.pill.tier-Low { background: var(--bg-muted); color: var(--neutral-600); border-color: var(--border-subtle); font-size: 11.5px; padding: 3px 9px; }
+
+/* scope recap */
+.scope-pill {
+  white-space: nowrap; font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+  background: var(--brand-subtle); color: var(--brand-hover); border: 1px solid var(--brand-border);
+  display: inline-flex; align-items: center; flex: none;
+}
+
+/* ============ app bar ============ */
+.appbar {
+  position: sticky; top: 0; z-index: 10; flex: none;
+  display: flex; align-items: center; gap: 14px; padding: 11px 22px;
+  background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.brand {
+  display: flex; align-items: center; gap: 9px; cursor: pointer;
+  background: none; border: 0; padding: 0; font: inherit; text-align: left; border-radius: 6px;
+}
+.brand .logo { width: 26px; height: 26px; filter: drop-shadow(0 3px 7px rgba(58, 95, 228, 0.28)); }
+.wordmark { font-weight: 800; font-size: 16px; letter-spacing: 0.02em; color: var(--text-strong); }
+.poc-pill {
+  font-size: 11px; font-weight: 600; color: var(--text-subtle);
+  border: 1px solid var(--border-subtle); border-radius: 999px; padding: 2px 8px; margin-left: 2px;
+}
+.appbar-status { margin-left: auto; display: flex; gap: 7px; flex-wrap: wrap; }
+
+/* ============ account / auth ============ */
+.appbar-account { margin-left: 6px; display: flex; align-items: center; gap: 8px; flex: none; }
+.account-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 600; color: var(--text-body);
+  background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 999px; padding: 4px 12px;
+}
+.account-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+.account-pill.guest .dot { background: var(--neutral-300); }
+.account-pill .mail { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-btn {
+  border: 1px solid var(--border-default); background: var(--surface-card); color: var(--text-body);
+  border-radius: 999px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  font-family: var(--font-sans); transition: all 120ms var(--ease-out);
+}
+.account-btn:hover { border-color: var(--blue-300); color: var(--text-link); }

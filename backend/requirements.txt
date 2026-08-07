@@ -1,0 +1,40 @@
+# RAMPART POC - backend requirements (Python 3.13)
+# Generated from backend\.venv (pip freeze) after resolving the semgrep/chromadb
+# opentelemetry conflict (semgrep pins otel ~=1.37, chromadb pulls 1.44 -> both pinned to 1.37).
+
+# --- API + UI host ---
+fastapi==0.141.1
+uvicorn==0.52.1
+pydantic==2.13.4
+python-dotenv==1.2.2
+
+# --- LLM (Gemini) verification ---
+google-genai==2.17.0
+
+# --- Database (Supabase / asyncpg) + Auth (JWT / bcrypt) ---
+asyncpg==0.31.0
+PyJWT==2.13.0
+bcrypt==4.3.0
+email-validator==2.3.0
+
+# --- Scanner ---
+bandit==1.9.4
+semgrep==1.172.0
+
+# --- RAG (ChromaDB + MiniLM-ONNX) ---
+chromadb==1.5.9
+onnxruntime==1.28.0
+
+# --- opentelemetry pinned to a single version both semgrep (~=1.37) and
+#     chromadb's otlp exporters resolve cleanly against ---
+opentelemetry-api==1.37.0
+opentelemetry-sdk==1.37.0
+opentelemetry-proto==1.37.0
+opentelemetry-exporter-otlp-proto-common==1.37.0
+opentelemetry-exporter-otlp-proto-grpc==1.37.0
+opentelemetry-exporter-otlp-proto-http==1.37.0
+opentelemetry-instrumentation==0.58b0
+opentelemetry-instrumentation-requests==0.58b0
+opentelemetry-instrumentation-threading==0.58b0
+opentelemetry-semantic-conventions==0.58b0
+opentelemetry-util-http==0.58b0

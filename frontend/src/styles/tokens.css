@@ -1,0 +1,81 @@
+/* RAMPART POC - Serene design system (white + blue, Hanken Grotesk + JetBrains Mono).
+   Token values from the design handoff (theme/*.css); components match the redesign reference. */
+
+/* ============ tokens ============ */
+:root {
+  /* brand blue scale */
+  --blue-50:  #eef4ff;
+  --blue-100: #dde8ff;
+  --blue-200: #c2d5fe;
+  --blue-300: #9bb8fc;
+  --blue-400: #6f93f7;
+  --blue-500: #4d72f0;
+  --blue-600: #3a5fe4;
+  --blue-700: #2f4bc4;
+  --blue-800: #2a409e;
+  --blue-900: #263a7e;
+
+  /* neutrals (cool, faint-blue tint) */
+  --neutral-0:   #ffffff;
+  --neutral-25:  #fbfcfe;
+  --neutral-50:  #f6f8fc;
+  --neutral-100: #eef1f8;
+  --neutral-200: #e0e5f0;
+  --neutral-300: #cbd2e2;
+  --neutral-400: #a2abc2;
+  --neutral-500: #79839c;
+  --neutral-600: #596377;
+  --neutral-700: #414a5c;
+  --neutral-800: #2b3242;
+  --neutral-900: #191e2a;
+
+  /* semantic hues */
+  --green-50:  #e9f8f0;
+  --green-500: #2e9e6b;
+  --green-600: #268659;
+  --amber-50:  #fdf4e3;
+  --amber-500: #dd9b18;
+  --amber-600: #b97f11;
+  --red-50:    #fcecea;
+  --red-500:   #e0533d;
+  --red-600:   #c13f2b;
+
+  /* aliases */
+  --brand:            var(--blue-600);
+  --brand-hover:      var(--blue-700);
+  --brand-active:     var(--blue-800);
+  --brand-subtle:     var(--blue-50);
+  --brand-border:     var(--blue-200);
+  --bg-page:          var(--neutral-25);
+  --bg-subtle:        var(--neutral-50);
+  --bg-muted:         var(--neutral-100);
+  --surface-card:     var(--neutral-0);
+  --surface-inset:    var(--neutral-50);
+  --text-strong:      var(--neutral-900);
+  --text-body:        var(--neutral-700);
+  --text-muted:       var(--neutral-500);
+  --text-subtle:      var(--neutral-400);
+  --text-link:        var(--blue-600);
+  --text-link-hover:  var(--blue-700);
+  --border-subtle:    var(--neutral-200);
+  --border-default:   var(--neutral-300);
+  --border-strong:    var(--neutral-400);
+  --success:          var(--green-500);
+  --success-subtle:   var(--green-50);
+  --warning:          var(--amber-500);
+  --warning-subtle:   var(--amber-50);
+  --danger:           var(--red-500);
+  --danger-subtle:    var(--red-50);
+  --focus-ring:       0 0 0 3px rgba(77, 114, 240, 0.28);
+
+  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --shadow-xs:  0 1px 2px rgba(25, 40, 90, 0.05);
+  --shadow-sm:  0 1px 3px rgba(25, 40, 90, 0.06), 0 1px 2px rgba(25, 40, 90, 0.04);
+  --shadow-md:  0 4px 12px rgba(25, 40, 90, 0.08), 0 2px 4px rgba(25, 40, 90, 0.04);
+  --shadow-lg:  0 12px 28px rgba(25, 40, 90, 0.10), 0 4px 10px rgba(25, 40, 90, 0.05);
+  --shadow-brand: 0 6px 16px rgba(58, 95, 228, 0.24);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}

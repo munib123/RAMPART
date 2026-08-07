@@ -1,0 +1,30 @@
+{
+  "name": "rampart-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:web": "vite",
+    "dev:api": "..\\backend\\.venv\\Scripts\\python.exe ..\\backend\\run_server.py",
+    "dev:all": "concurrently -k -n web,api -c blue,green \"vite\" \"..\\backend\\.venv\\Scripts\\python.exe ..\\backend\\run_server.py\"",
+    "build": "tsc && vite build",
+    "typecheck": "tsc",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^4.7.0",
+    "concurrently": "^9.1.0",
+    "react-router-dom": "^6.30.4",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  }
+}

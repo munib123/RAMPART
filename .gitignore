@@ -1,0 +1,59 @@
+# ---- Python / backend ----
+# Virtual environment
+backend/.venv/
+.venv/
+
+# Server run logs
+backend_server.*.log
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test / coverage / tooling
+.pytest_cache/
+coverage/
+htmlcov/
+.coverage
+.mypy_cache/
+.ruff_cache/
+.python-version
+
+# ---- Environment / secrets ----
+# Commit .env.example only; never the real .env or other secret files
+.env
+.env.local
+.env.*
+!.env.example
+
+# ---- Frontend (Node) ----
+frontend/node_modules/
+node_modules/
+frontend/dist/
+dist/
+frontend/.vite/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---- Tauri / Rust ----
+frontend/src-tauri/target/
+frontend/src-tauri/gen/
+# Cargo.lock is intentionally committed for this application; only the
+# generated gen/ and target/ build outputs are ignored.
+*.rs.bk
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ---- Knowledge base (embeddings are large) ----
+knowledge_base/**
