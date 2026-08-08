@@ -1,0 +1,7 @@
+# Tauri generated resources (Rust target dir + schema gen)
+target/
+gen/
+
+# Python backend frozen output (if you build a standalone backend binary)
+*.exe
+resources/

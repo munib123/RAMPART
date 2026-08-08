@@ -27,9 +27,9 @@ rampart/
 │   ├── requirements.txt     pinned Python deps
 │   ├── run_server.py        start API only
 │   └── .venv/               virtual environment (git-ignored)
-├── frontend/                Vite + React + TS SPA (and Tauri shell)
+├── frontend/                Vite + React + TS SPA (and Tauri desktop shell)
 │   ├── src/                 App, pages, components, hooks, api, contexts, styles
-│   └── src-tauri/           optional Rust/Tauri desktop shell
+│   └── src-tauri/           Rust/Tauri shell (spawns the backend sidecar)
 ├── knowledge_base/          RAG source (builds the Chroma store; README inside)
 ├── semgrep_test/            bundled vulnerable sample code
 ├── data/                    raw sources (nuclei_classified/, etc.)
@@ -68,6 +68,21 @@ default points at the bundled vulnerable sample (`semgrep_test/test_code`).
 | Backend only | `backend\.venv\Scripts\python.exe backend\run_server.py` |
 | Frontend only | `cd frontend && npm run dev:web` |
 | Frontend + backend together (npm) | `cd frontend && npm run dev:all` |
+
+### Desktop app (Tauri)
+
+The bundled Rust/Tauri shell (`frontend/src-tauri/`) spawns the FastAPI backend as a
+localhost sidecar and shows the SPA in a native window. It needs the Rust toolchain
+(cargo) and the frontend deps.
+
+| What | Command |
+|---|---|
+| Run in dev (hot-reload + backend sidecar) | `cd frontend && npm run dev:tauri` |
+| Build an installer (NSIS/MSI in `src-tauri/target/release/bundle/`) | `cd frontend && npm run build:tauri` |
+
+The webview talks to the backend on `127.0.0.1:8000` exactly like the browser build, so
+the two share the same API base (`frontend/src/api/client.ts`). On exit the shell kills
+the backend it spawned.
 
 ### Prereqs (already done in this working copy, re-run if cloning fresh)
 
@@ -128,7 +143,7 @@ backend\.venv\Scripts\python -m pip install semgrep
 | API | `backend/app/main.py` | FastAPI on localhost; CORS for the dev/Tauri webviews |
 | Database | `backend/db/schema.sql`, `app/db.py` | optional Supabase/Postgres via `DATABASE_URL`; degrades gracefully when unset |
 | Auth | `app/routers/auth.py`, `app/core/security.py` | bcrypt + JWT (email/password) |
-| UI | `frontend/src` | React SPA; **Tauri-ready** (the shell loads this frontend and runs the backend as a sidecar) |
+| UI | `frontend/src` + `src-tauri/` | React SPA; the Tauri shell (`src-tauri/`) spawns the backend sidecar and loads this UI in a native window |
 
 ### API endpoints
 
