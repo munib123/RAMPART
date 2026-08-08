@@ -48,10 +48,14 @@ export function useScan({ path, scanner, scope, model, activeScanner }: UseScanO
   const seenStageRef = useRef(0); // tracks the highest-introduced stage in the timer
   const pendingRef = useRef<ScanReport | null>(null); // backing result awaiting the sweep
   const commitAtRef = useRef(0); // elapsed threshold at which to show the result
+  const firedRef = useRef(false); // set once the scan request has been sent
 
+  // StrictMode double-invokes mount effects in dev (setup -> cleanup -> setup). On the
+  // simulated cleanup we must NOT abort the in-flight fetch (the backend keeps processing
+  // and counting it, so aborting would double-count the scan). We clear only the timer;
+  // a guarded re-entry re-arms it without sending a second scan request.
   useEffect(() => () => {
-    if (timerRef.current) window.clearInterval(timerRef.current);
-    ctrlRef.current?.abort();
+    if (timerRef.current) { window.clearInterval(timerRef.current); timerRef.current = null; }
   }, []);
 
   // Progress is a fraction of the display window; the clock still shows real elapsed ms.
@@ -66,7 +70,45 @@ export function useScan({ path, scanner, scope, model, activeScanner }: UseScanO
     stage, Math.floor(elapsedMs / 900), model ?? null, activeScanner, stageTimesRef.current, completed,
   );
 
+  const pump = () => {
+    const el = performance.now() - t0Ref.current;
+    setElapsedMs(el);
+    if (el > 150000) setLongNote(true);
+
+    const f = Math.min(1, el / MIN_DISPLAY_MS);
+    const s = el >= DONE_ELAPSED ? 3 : f < FRAC_T1 ? 0 : f < FRAC_T2 ? 1 : 2;
+    const times = stageTimesRef.current;
+    if (s > 0 && times[0] == null) times[0] = el;
+    if (s > 1 && times[1] == null) times[1] = el;
+    if (s !== seenStageRef.current) {
+      if (s < seenStageRef.current || s > 2) return;
+      announce(STAGE_META[s].name + ' stage started');
+      seenStageRef.current = s;
+    }
+
+    // Reveal the result once the backend has returned AND the sweep window is satisfied.
+    if (pendingRef.current && el >= commitAtRef.current) {
+      const res = pendingRef.current;
+      pendingRef.current = null;
+      if (timerRef.current) { window.clearInterval(timerRef.current); timerRef.current = null; }
+      for (let i = 0; i < 3; i++) if (times[i] == null) times[i] = el;
+      setElapsedMs(DONE_ELAPSED);
+      setReport(res);
+      setRunning(false);
+    }
+  };
+
   const start = useCallback(() => {
+    // React StrictMode double-invokes this mount effect in dev. After the first call
+    // the request is already in flight (and the backend counts it); a re-entry must
+    // NOT abort it (or the result is never read) and must NOT send a second /api/scan
+    // (which would double-charge the plan quota) — it only re-arms the display timer.
+    if (firedRef.current) {
+      if (!timerRef.current) timerRef.current = window.setInterval(pump, 110);
+      return;
+    }
+    firedRef.current = true;
+
     ctrlRef.current?.abort();
     const ctrl = new AbortController();
     ctrlRef.current = ctrl;
@@ -81,33 +123,7 @@ export function useScan({ path, scanner, scope, model, activeScanner }: UseScanO
     setError(null);
     setRunning(true);
 
-    timerRef.current = window.setInterval(() => {
-      const el = performance.now() - t0Ref.current;
-      setElapsedMs(el);
-      if (el > 150000) setLongNote(true);
-
-      const f = Math.min(1, el / MIN_DISPLAY_MS);
-      const s = el >= DONE_ELAPSED ? 3 : f < FRAC_T1 ? 0 : f < FRAC_T2 ? 1 : 2;
-      const times = stageTimesRef.current;
-      if (s > 0 && times[0] == null) times[0] = el;
-      if (s > 1 && times[1] == null) times[1] = el;
-      if (s !== seenStageRef.current) {
-        if (s < seenStageRef.current || s > 2) return;
-        announce(STAGE_META[s].name + ' stage started');
-        seenStageRef.current = s;
-      }
-
-      // Reveal the result once the backend has returned AND the sweep window is satisfied.
-      if (pendingRef.current && el >= commitAtRef.current) {
-        const res = pendingRef.current;
-        pendingRef.current = null;
-        if (timerRef.current) { window.clearInterval(timerRef.current); timerRef.current = null; }
-        for (let i = 0; i < 3; i++) if (times[i] == null) times[i] = el;
-        setElapsedMs(DONE_ELAPSED);
-        setReport(res);
-        setRunning(false);
-      }
-    }, 110);
+    timerRef.current = window.setInterval(pump, 110);
 
     (async () => {
       try {
