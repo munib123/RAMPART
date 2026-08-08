@@ -10,6 +10,7 @@ create table users (
   id          uuid primary key default gen_random_uuid(),
   email       text unique not null,
   password    text not null,          -- bcrypt hash only, never plaintext
+  name        text not null,          -- display name (required at signup)
   is_admin    boolean not null default false,
   created_at  timestamptz not null default now()
 );
@@ -22,6 +23,7 @@ create table scans (
   status      text not null default 'done',
   counts      jsonb not null default '{}',
   verdict_summary jsonb not null default '{}',
+  scope       jsonb not null default '{}',   -- {platform, stack[], priorities[]} set by the user before scanning
   created_at  timestamptz not null default now()
 );
 
@@ -45,3 +47,12 @@ create view cwe_stats as
   from findings
   where verdict in ('Confirmed','Likely','Informational')
   group by cwe_id, severity, verdict;
+
+-- Codebase-type x vulnerability aggregate (categorizes what kinds of code have which issues).
+create view code_stats as
+  select scope->>'platform' as platform, scanner, cwe_id, severity, verdict,
+         count(*) n, round(avg(confidence)::numeric,1) avg_conf
+  from scans
+  join findings on findings.scan_id = scans.id
+  where scope is not null and verdict in ('Confirmed','Likely','Informational')
+  group by 1, 2, 3, 4, 5;

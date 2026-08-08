@@ -7,6 +7,7 @@ import { Icon } from '@/components/Icons';
 export default function Auth() {
   const [params] = useSearchParams();
   const [mode, setMode] = useState<'login' | 'signup'>(params.get('mode') === 'signup' ? 'signup' : 'login');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [note, setNote] = useState('');
@@ -17,12 +18,14 @@ export default function Auth() {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setNote('');
+    const trimmed = name.trim();
+    if (mode === 'signup' && !trimmed) { setNote('Enter your name.'); return; }
     if (!email || !/.+@.+\..+/.test(email)) { setNote('Enter a valid email address.'); return; }
     if (password.length < 8) { setNote('Password must be at least 8 characters.'); return; }
     setBusy(true);
     try {
-      const user = mode === 'signup' ? await signUp(email, password) : await signIn(email, password);
-      announce('Signed in as ' + user.email);
+      const user = mode === 'signup' ? await signUp(trimmed, email, password) : await signIn(email, password);
+      announce('Signed in as ' + (user.name || user.email));
       navigate('/setup');
     } catch (err) {
       setNote((err as Error).message || 'Sign-in failed.');
@@ -46,6 +49,12 @@ export default function Auth() {
         </div>
 
         <form className="auth-form" onSubmit={submit} noValidate>
+          {mode === 'signup' && (
+            <label className="field">
+              <span className="field-label">Name</span>
+              <input type="text" id="authName" autoComplete="name" placeholder="Ada Lovelace" maxLength={80} value={name} onChange={(e) => setName(e.target.value)} />
+            </label>
+          )}
           <label className="field">
             <span className="field-label">Email</span>
             <input type="email" id="authEmail" autoComplete="email" placeholder="you@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />

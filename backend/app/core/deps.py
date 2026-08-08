@@ -17,7 +17,7 @@ async def current_user(authorization: str | None = Header(default=None)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     try:
         user = await db.fetch_row(
-            "select id::text as id, email, is_admin, created_at from users where id = $1",
+            "select id::text as id, name, email, is_admin, created_at from users where id = $1",
             payload["sub"],
         )
     except Exception:
@@ -39,7 +39,7 @@ async def optional_user(authorization: str | None = Header(default=None)):
         return None
     try:
         return await db.fetch_row(
-            "select id::text as id, email, is_admin, created_at from users where id = $1",
+            "select id::text as id, name, email, is_admin, created_at from users where id = $1",
             payload["sub"],
         )
     except Exception:

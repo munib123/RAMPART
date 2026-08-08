@@ -22,6 +22,7 @@ export interface Health {
 export interface User {
   id: string;
   email: string;
+  name?: string;
   is_admin: boolean;
   created_at?: string;
 }
@@ -109,7 +110,18 @@ export interface HistoryRow {
   status: string;
   counts?: ScanCounts;
   verdict_summary?: Record<string, number>;
+  scope?: Scope;
   created_at?: string;
+}
+
+export interface CodeStatsRow {
+  platform?: string | null;
+  scanner?: string;
+  cwe_id?: string | null;
+  severity?: string | null;
+  verdict?: string | null;
+  n?: number;
+  avg_conf?: number | null;
 }
 
 export interface FixResponse {

@@ -22,13 +22,14 @@ def verify_password(plain: str, hashed: str) -> bool:
         return False
 
 
-def create_token(user_id: str, email: str, is_admin: bool = False) -> str:
+def create_token(user_id: str, email: str, is_admin: bool = False, name: str = "") -> str:
     import jwt
     now = dt.datetime.now(dt.timezone.utc)
     payload = {
         "sub": str(user_id),
         "email": email,
         "is_admin": bool(is_admin),
+        "name": name or "",
         "iat": now,
         "exp": now + dt.timedelta(minutes=config.JWT_EXPIRE_MIN),
     }

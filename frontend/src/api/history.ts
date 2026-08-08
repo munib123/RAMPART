@@ -1,10 +1,16 @@
 import { API, authHeaders } from '@/api/client';
-import type { Exemplar, FixResponse, HistoryRow } from '@/types';
+import type { CodeStatsRow, Exemplar, FixResponse, HistoryRow } from '@/types';
 
 export async function loadHistory(): Promise<HistoryRow[]> {
   const r = await fetch(API + '/api/scans', { headers: authHeaders() });
   if (!r.ok) throw new Error(`Request failed (${r.status})`);
   return (await r.json()) as HistoryRow[];
+}
+
+export async function loadCodebaseStats(): Promise<CodeStatsRow[]> {
+  const r = await fetch(API + '/api/research/codebase', { headers: authHeaders() });
+  if (!r.ok) throw new Error(`Request failed (${r.status})`);
+  return (await r.json()) as CodeStatsRow[];
 }
 
 export async function generateFix(input: {

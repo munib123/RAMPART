@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useHealth } from '@/context/HealthContext';
 import { esc } from '@/utils/format';
 import { Icon } from '@/components/Icons';
+import ProfileMenu from '@/components/ProfileMenu';
 
 export default function AppBar() {
   const { user, token, signOut } = useAuth();
@@ -28,11 +29,7 @@ export default function AppBar() {
       <div className="appbar-status" dangerouslySetInnerHTML={{ __html: scannerPill + llmPill }} />
       <div className="appbar-account">
         {token && user ? (
-          <>
-            <span className="account-pill"><span className="dot"></span><span className="mail">{user.email}</span></span>
-            <button className="account-btn" onClick={() => navigate('/history')} title="View saved scans">History</button>
-            <button className="account-btn" onClick={signOut} title="Sign out">Sign out</button>
-          </>
+          <ProfileMenu user={user} onSignOut={signOut} />
         ) : (
           <button className="account-btn" onClick={() => navigate('/auth')}>Sign in</button>
         )}

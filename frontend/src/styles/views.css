@@ -126,6 +126,13 @@
 .scope-label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
 .scope-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .scope-empty { font-size: 12.5px; color: var(--text-subtle); }
+.opt.req { color: var(--brand); font-weight: 600; }
+.setup-required-hint {
+  margin: 10px 0 0; padding: 9px 12px; border-radius: 10px;
+  background: var(--warning-subtle); border: 1px solid var(--amber-200, var(--border-subtle));
+  font-size: 12.5px; color: var(--text-strong); display: flex; align-items: center; gap: 7px;
+}
+.setup-required-hint .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning); flex: none; }
 .run-caption { margin-top: -8px; font-size: 12px; color: var(--text-subtle); text-align: center; }
 
 /* ============ scanning ============ */
@@ -218,6 +225,7 @@
 #view-history { padding: 32px 24px 56px; max-width: 900px; margin: 0 auto; width: 100%; }
 #historyList { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
 .hist-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 16px 18px; }
+.hist-scope { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .hist-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .hist-target { font-weight: 700; color: var(--text-strong); font-size: 14.5px; word-break: break-all; }
 .hist-meta { font-size: 12.5px; color: var(--text-muted); }

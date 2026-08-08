@@ -12,6 +12,7 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 class SignupReq(BaseModel):
+    name: str
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
 
@@ -25,13 +26,18 @@ class LoginReq(BaseModel):
 async def signup(req: SignupReq):
     if not db.enabled():
         raise HTTPException(status_code=503, detail="Database not configured (set DATABASE_URL).")
+    name = req.name.strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="Display name is required.")
+    if len(name) > 80:
+        raise HTTPException(status_code=422, detail="Display name must be 80 characters or fewer.")
     email = req.email.lower()
     password_hash = security.hash_password(req.password)
     try:
         row = await db.fetch_row(
-            """insert into users (email, password) values ($1, $2)
-               returning id::text as id, email, is_admin, created_at""",
-            email, password_hash,
+            """insert into users (name, email, password) values ($1, $2, $3)
+               returning id::text as id, name, email, is_admin, created_at""",
+            name, email, password_hash,
         )
     except Exception as e:
         if "duplicate" in str(e).lower() or "unique" in str(e).lower():
@@ -39,7 +45,7 @@ async def signup(req: SignupReq):
         raise HTTPException(status_code=500, detail=f"signup failed: {e}")
     return {
         "user": row,
-        "token": security.create_token(row["id"], row["email"], row["is_admin"]),
+        "token": security.create_token(row["id"], row["email"], row["is_admin"], row["name"]),
     }
 
 
@@ -49,7 +55,7 @@ async def login(req: LoginReq):
         raise HTTPException(status_code=503, detail="Database not configured (set DATABASE_URL).")
     email = req.email.lower()
     row = await db.fetch_row(
-        "select id::text as id, email, password, is_admin, created_at from users where email = $1",
+        "select id::text as id, name, email, password, is_admin, created_at from users where email = $1",
         email,
     )
     if not row or not security.verify_password(req.password, row["password"]):
@@ -57,7 +63,7 @@ async def login(req: LoginReq):
     del row["password"]
     return {
         "user": row,
-        "token": security.create_token(row["id"], row["email"], row["is_admin"]),
+        "token": security.create_token(row["id"], row["email"], row["is_admin"], row["name"]),
     }
 
 

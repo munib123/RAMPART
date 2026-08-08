@@ -48,10 +48,10 @@ async def _persist_scan(owner_id: str, report: dict):
         vsum[vname] = vsum.get(vname, 0) + 1
 
     scan_id = await db.fetch_val(
-        """insert into scans (owner_id, target, scanner, status, counts, verdict_summary)
-           values ($1,$2,$3,$4,$5::jsonb,$6::jsonb) returning id::text""",
+        """insert into scans (owner_id, target, scanner, status, counts, verdict_summary, scope)
+           values ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb) returning id::text""",
         owner_id, report.get("target", ""), report.get("scanner", ""),
-        "done", json.dumps(counts), json.dumps(vsum),
+        "done", json.dumps(counts), json.dumps(vsum), json.dumps(report.get("scope") or {}),
     )
     for f in findings:
         v = f.get("verdict", {})

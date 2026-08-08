@@ -57,3 +57,6 @@ desktop.ini
 
 # ---- Knowledge base (embeddings are large) ----
 knowledge_base/**
+
+# ---- Planfiles -------
+docs/**

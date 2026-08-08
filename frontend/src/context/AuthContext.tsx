@@ -7,7 +7,7 @@ interface AuthCtx {
   user: User | null;
   token: string;
   signIn: (email: string, password: string) => Promise<User>;
-  signUp: (email: string, password: string) => Promise<User>;
+  signUp: (name: string, email: string, password: string) => Promise<User>;
   signOut: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -29,8 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return r.user;
   }, [commit]);
 
-  const signUp = useCallback(async (email: string, password: string) => {
-    const r = await authApi.signup(email, password);
+  const signUp = useCallback(async (name: string, email: string, password: string) => {
+    const r = await authApi.signup(name, email, password);
     commit(r.token, r.user);
     return r.user;
   }, [commit]);

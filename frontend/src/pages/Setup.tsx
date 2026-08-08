@@ -35,7 +35,7 @@ export default function Setup() {
   const { token, user } = useAuth();
   const health = useHealth();
 
-  const [platform, setPlatform] = useState('generic');
+  const [platform, setPlatform] = useState<string | null>(null);
   const [stack, setStack] = useState<string[]>([]);
   const [priorities, setPriorities] = useState<string[]>([]);
   const [path, setPath] = useState(health?.default_target || '');
@@ -43,8 +43,19 @@ export default function Setup() {
   const [browsing, setBrowsing] = useState(false);
   const [running, setRunning] = useState(false);
 
-  const scope: Scope = useMemo(() => ({ platform, stack, priorities }), [platform, stack, priorities]);
+  const ready = platform != null && stack.length > 0 && priorities.length > 0;
+
+  const scope: Scope = useMemo(() => {
+    const s: Scope = { stack, priorities };
+    if (platform) s.platform = platform;
+    return s;
+  }, [platform, stack, priorities]);
   const labels = scopeLabels(scope);
+  const missing = ready ? '' : [
+    platform == null ? 'platform' : '',
+    stack.length === 0 ? 'stack' : '',
+    priorities.length === 0 ? 'priorities' : '',
+  ].filter(Boolean).join(', ');
 
   const toggleChip = (arr: string[], set: (v: string[]) => void, v: string) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
@@ -57,6 +68,7 @@ export default function Setup() {
   };
 
   const run = () => {
+    if (!ready) return;
     if (!token) { navigate('/auth?mode=signup'); return; }
     setRunning(true);
     navigate('/scan', { state: { path, scanner, scope } });
@@ -92,6 +104,7 @@ export default function Setup() {
             <div className="scard-head">
               <span className="num-chip">1</span>
               <div className="scard-label">What are you scanning?</div>
+              <span className="opt req">required</span>
             </div>
             <div className="platform-grid" id="platform" role="group" aria-label="What are you scanning?">
               {PLATFORMS.map((p) => (
@@ -107,7 +120,7 @@ export default function Setup() {
             <div className="scard-head">
               <span className="num-chip">2</span>
               <div className="scard-label">Tech stack</div>
-              <span className="opt">optional</span>
+              <span className="opt req">required</span>
             </div>
             <div className="chips" id="stack">
               {STACKS.map((s) => (
@@ -122,7 +135,7 @@ export default function Setup() {
             <div className="scard-head">
               <span className="num-chip">3</span>
               <div className="scard-label">Priority concerns</div>
-              <span className="opt">optional</span>
+              <span className="opt req">required</span>
             </div>
             <div className="chips" id="priorities">
               {PRIORITIES.map((p) => (
@@ -131,7 +144,7 @@ export default function Setup() {
                 </button>
               ))}
             </div>
-            <div className="scard-note">Selected concerns are weighed first when the LLM ranks verdicts.</div>
+            <div className="scard-note">All three are required — RAMPART stores them to categorize your scans.</div>
           </div>
         </div>
 
@@ -156,10 +169,13 @@ export default function Setup() {
             <div className="scope-pills" id="scopeSummary">
               {labels.length
                 ? labels.map((l) => <span key={l} className="scope-pill">{l}</span>)
-                : <span className="scope-empty">Generic scan, no extra context</span>}
+                : <span className="scope-empty">Select a platform, stack and priorities above</span>}
             </div>
           </div>
-          <button className="btn btn-primary btn-block" id="runBtn" onClick={run} disabled={running}>{running ? 'Starting…' : 'Run scan'}</button>
+          {!ready && (
+            <div className="setup-required-hint" role="status"><span className="dot warn"></span>Required to run the scan: {missing}.</div>
+          )}
+          <button className="btn btn-primary btn-block" id="runBtn" onClick={run} disabled={running || !ready}>{running ? 'Starting…' : (ready ? 'Run scan' : 'Select scan options')}</button>
           <div className="run-caption">One batched LLM call per scan · nothing is auto-applied</div>
         </div>
       </div>

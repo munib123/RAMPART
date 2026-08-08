@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useHealth } from '@/context/HealthContext';
 import { loadHistory } from '@/api/history';
 import { SEV_BAR_COLORS } from '@/utils/format';
+import { scopeLabels } from '@/utils/scope';
 import { Icon } from '@/components/Icons';
 import type { HistoryRow } from '@/types';
 
@@ -43,6 +44,7 @@ export default function History() {
       const total = totalOf(s);
       const segs = segsOf(s);
       const date = s.created_at ? new Date(s.created_at).toLocaleString() : '';
+      const scopeLabelsFor = scopeLabels(s.scope);
       return (
         <div className="hist-card" key={s.id}>
           <div className="hist-row">
@@ -50,6 +52,11 @@ export default function History() {
             <span className="hist-target">{s.target || '(unknown target)'}</span>
             <span className="hist-meta">{date}</span>
           </div>
+          {scopeLabelsFor.length ? (
+            <div className="hist-scope">
+              {scopeLabelsFor.map((l) => <span key={l} className="scope-pill">{l}</span>)}
+            </div>
+          ) : null}
           {segs.length ? (
             <div className="hist-sevbar">
               {segs.map((k) => (
