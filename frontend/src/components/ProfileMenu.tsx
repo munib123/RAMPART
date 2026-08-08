@@ -57,12 +57,26 @@ export default function ProfileMenu({ user, onSignOut }: { user: User; onSignOut
               <span className="profile-head-mail">{user.email}</span>
             </div>
           </div>
+          <button type="button" className="profile-item" role="menuitem" onClick={() => { setOpen(false); navigate('/profile'); }}>
+            <svg className="profile-item-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21a8 8 0 0 1 16 0" />
+            </svg>
+            Profile
+          </button>
           <button type="button" className="profile-item" role="menuitem" onClick={() => { setOpen(false); navigate('/history'); }}>
             <svg className="profile-item-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
               <path d="M12 7v5l3 2" />
             </svg>
             History
+          </button>
+          <button type="button" className="profile-item" role="menuitem" onClick={() => { setOpen(false); navigate('/pricing'); }}>
+            <svg className="profile-item-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="6" width="18" height="13" rx="2" />
+              <path d="M3 10h18" />
+            </svg>
+            Plans & pricing
           </button>
           <div className="profile-sep" role="separator"></div>
           <button type="button" className="profile-item" role="menuitem" onClick={() => { setOpen(false); onSignOut(); }}>Sign out</button>

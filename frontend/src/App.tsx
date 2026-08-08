@@ -9,6 +9,8 @@ import Setup from '@/pages/Setup';
 import Scanning from '@/pages/Scanning';
 import Report from '@/pages/Report';
 import History from '@/pages/History';
+import Profile from '@/pages/Profile';
+import Pricing from '@/pages/Pricing';
 
 function RequireAuth({ children }: { children: ReactElement }) {
   const { token } = useAuth();
@@ -32,6 +34,8 @@ export default function App() {
               <Route path="/scan" element={<RequireAuth><Scanning /></RequireAuth>} />
               <Route path="/report" element={<Report />} />
               <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
+              <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>

@@ -6,7 +6,7 @@ import FixPanel from '@/components/FixPanel';
 import { ExemplarCard } from '@/components/ExemplarCard';
 import type { Finding } from '@/types';
 
-export default function FindingCard({ f }: { f: Finding }) {
+export default function FindingCard({ f, scanId }: { f: Finding; scanId?: string }) {
   const [fixOpen, setFixOpen] = useState(false);
   const v = f.verdict || {};
   const vName = v.verdict || 'Unverified';
@@ -49,7 +49,7 @@ export default function FindingCard({ f }: { f: Finding }) {
               <Icon id="ic-sparkles" /> Suggest a fix
             </button>
           )}
-          {fixOpen && <FixPanel finding={f} />}
+          {fixOpen && <FixPanel finding={f} scanId={scanId} />}
         </div>
       )}
       {f.slice && f.slice.code && (

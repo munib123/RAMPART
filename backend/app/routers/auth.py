@@ -36,7 +36,7 @@ async def signup(req: SignupReq):
     try:
         row = await db.fetch_row(
             """insert into users (name, email, password) values ($1, $2, $3)
-               returning id::text as id, name, email, is_admin, created_at""",
+               returning id::text as id, name, email, is_admin, plan, created_at""",
             name, email, password_hash,
         )
     except Exception as e:
@@ -55,7 +55,7 @@ async def login(req: LoginReq):
         raise HTTPException(status_code=503, detail="Database not configured (set DATABASE_URL).")
     email = req.email.lower()
     row = await db.fetch_row(
-        "select id::text as id, name, email, password, is_admin, created_at from users where email = $1",
+        "select id::text as id, name, email, password, is_admin, plan, created_at from users where email = $1",
         email,
     )
     if not row or not security.verify_password(req.password, row["password"]):

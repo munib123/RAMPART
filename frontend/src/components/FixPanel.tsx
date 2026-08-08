@@ -4,10 +4,12 @@ import { announce } from '@/api/client';
 import { esc, langOf } from '@/utils/format';
 import { diffLines, diffReact } from '@/utils/diff';
 import { Icon } from '@/components/Icons';
-import type { DiffLine, Exemplar, Finding, FixState } from '@/types';
+import PlanLimitCard from '@/components/PlanLimitCard';
+import type { DiffLine, Exemplar, Finding, FixState, PlanLimitPayload } from '@/types';
 
 interface Props {
   finding: Finding;
+  scanId?: string;
   onRegenerate?: () => void;
 }
 
@@ -23,7 +25,7 @@ async function copyText(text: string): Promise<boolean> {
   } catch { return false; }
 }
 
-export default function FixPanel({ finding }: Props) {
+export default function FixPanel({ finding, scanId }: Props) {
   const [fx, setFx] = useState<FixState>({ loading: true });
   const [view, setView] = useState<'diff' | 'full'>('diff');
   const [copied, setCopied] = useState(false);
@@ -47,8 +49,20 @@ export default function FixPanel({ finding }: Props) {
         title: (finding.verdict && finding.verdict.vuln_class) || finding.title,
         message: finding.message,
         exemplars: finding.exemplars as Exemplar[],
+        scan_id: scanId,
       });
       if (requestId.current !== id) return;
+      if (r.code === 'plan_limit') {
+        const payload: PlanLimitPayload = { code: r.code, kind: (r.kind as 'scan' | 'fix') || 'fix', plan: r.plan, used: r.used, limit: r.limit };
+        setFx({ limit: payload });
+        announce('Fix limit reached for your plan');
+        return;
+      }
+      if (r.code === 'auth_required') {
+        setFx({ error: true });
+        announce('Sign in to suggest a fix');
+        return;
+      }
       setFx({ fixed_code: r.fixed_code || '', summary: r.summary || '', error: !r.available || !r.fixed_code });
       setView('diff');
       announce(r.available && r.fixed_code ? 'Suggested fix ready' : 'No automated fix available');
@@ -58,6 +72,11 @@ export default function FixPanel({ finding }: Props) {
       announce('No automated fix available');
     }
   };
+
+  // plan limit upsell
+  if (fx.limit) {
+    return <div className="fixwrap"><PlanLimitCard limit={fx.limit} label="Upgrade to keep fixing" /></div>;
+  }
 
   const onCopy = async () => {
     const ok = await copyText(fx.fixed_code || '');

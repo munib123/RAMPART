@@ -17,3 +17,4 @@ class FixReq(BaseModel):
     title: str | None = ""
     message: str | None = ""
     exemplars: list | None = None
+    scan_id: str | None = None

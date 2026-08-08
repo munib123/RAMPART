@@ -12,6 +12,11 @@ create table users (
   password    text not null,          -- bcrypt hash only, never plaintext
   name        text not null,          -- display name (required at signup)
   is_admin    boolean not null default false,
+  plan        text not null default 'free',
+  scans_used  int not null default 0,
+  fixes_used  int not null default 0,
+  last_fix_scan_id uuid,              -- dedupe: charge 1 fix per distinct scan
+  constraint users_plan_check check (plan in ('free','pro','premium')),
   created_at  timestamptz not null default now()
 );
 

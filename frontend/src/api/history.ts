@@ -19,10 +19,11 @@ export async function generateFix(input: {
   title?: string;
   message?: string;
   exemplars?: Exemplar[];
+  scan_id?: string;
 }): Promise<FixResponse> {
   const res = await fetch(API + '/api/fix', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(input),
   });
   return (await res.json()) as FixResponse;

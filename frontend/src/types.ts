@@ -24,6 +24,7 @@ export interface User {
   email: string;
   name?: string;
   is_admin: boolean;
+  plan?: string;
   created_at?: string;
 }
 
@@ -100,7 +101,14 @@ export interface ScanReport {
   counts?: ScanCounts;
   elapsed_s?: number;
   error?: string;
+  scan_id?: string;
   findings?: Finding[];
+  /** plan_limit (402) passthrough, when set ok is false */
+  code?: string;
+  kind?: string;
+  plan?: string;
+  used?: number;
+  limit?: number;
 }
 
 export interface HistoryRow {
@@ -129,6 +137,56 @@ export interface FixResponse {
   fixed_code?: string;
   summary?: string;
   error?: string;
+  code?: string;
+  kind?: string;
+  plan?: string;
+  used?: number;
+  limit?: number;
+  fixes_used?: number;
+  fixes_limit?: number;
+}
+
+export interface FixState {
+  loading?: boolean;
+  fixed_code?: string;
+  summary?: string;
+  error?: boolean;
+  view?: 'diff' | 'full';
+  limit?: PlanLimitPayload | null;
+}
+
+/** Structured "plan limit reached" error from POST /api/scan or POST /api/fix. */
+export interface PlanLimitPayload {
+  code: string;          // 'plan_limit'
+  kind: 'scan' | 'fix';
+  plan?: string;
+  used?: number;
+  limit?: number;
+}
+
+/** Usage counters for one dimension (kept in sync with backend/app/config.py PLANS). */
+export interface PlanUsage {
+  used: number;
+  limit: number;
+}
+
+/** Full plan + usage snapshot from GET /api/profile / GET /api/billing. */
+export interface PlanInfo {
+  plan: string;
+  label?: string;
+  scans: PlanUsage;
+  fixes: PlanUsage;
+  models?: { label?: string; note?: string };
+}
+
+/** Public plan catalog row from GET /api/billing/plans. */
+export interface PlanRow {
+  key: string;
+  label: string;
+  scans: number;
+  fixes: number;
+  price: string | number;
+  note?: string;
 }
 
 export interface FixState {

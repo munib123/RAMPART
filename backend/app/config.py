@@ -42,3 +42,15 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 JWT_SECRET = os.environ.get("JWT_SECRET", "").strip()
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_MIN = int(os.environ.get("JWT_EXPIRE_MIN", "30").strip() or 30)
+
+# --- Plans / billing (single source of truth) ---
+# Quotas are cumulative per-plan totals on the users row (no monthly job). A "fix" charges
+# once per distinct scan (see users.last_fix_scan_id), so fixes = how many scans were fixed.
+PLANS = {
+    "free":    {"label": "Free",    "scans": 10,   "fixes": 5,   "price": 0,        "note": "For trying RAMPART on small projects"},
+    "pro":     {"label": "Pro",     "scans": 30,   "fixes": 20,  "price": "$13/mo",  "note": "For serious teams"},
+    "premium": {"label": "Premium", "scans": 500,  "fixes": 200, "price": "$30/mo",  "note": "For whole orgs"},
+}
+# Model routing is UI-advertised per plan but STILL uses the single working GEMINI_MODEL for now.
+PLAN_MODEL = {"free": GEMINI_MODEL, "pro": GEMINI_MODEL, "premium": GEMINI_MODEL}
+# FUTURE: point pro/premium at heavier models (e.g. gemini-2.5-pro) by editing only this map.

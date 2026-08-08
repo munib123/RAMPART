@@ -151,9 +151,11 @@ def _err_verdict(it: dict, msg: str) -> dict:
             "vuln_class": it.get("title", ""), "explanation": f"LLM verification failed: {msg}", "fix_suggestion": ""}
 
 
-def analyze_batch(items: list[dict], scope: dict = None) -> list[dict]:
-    """Verify all findings in as few calls as possible (chunks of LLM_BATCH). One call ≈ one request."""
+def analyze_batch(items: list[dict], scope: dict = None, model: str = None) -> list[dict]:
+    """Verify all findings in as few calls as possible (chunks of LLM_BATCH). One call ≈ one request.
+    `model` defaults to config.GEMINI_MODEL; per-plan routing can override later via PLAN_MODEL."""
     import time
+    model = model or config.GEMINI_MODEL
     n = len(items)
     if not available():
         return [{"available": False, "verdict": "Unverified", "confidence": 0, "cwe": it.get("cwe_id", ""),
@@ -168,7 +170,7 @@ def analyze_batch(items: list[dict], scope: dict = None) -> list[dict]:
         for attempt in range(4):
             try:
                 resp = _client.models.generate_content(
-                    model=config.GEMINI_MODEL,
+                    model=model,
                     contents=_batch_prompt(group, scope),
                     config={"response_mime_type": "application/json", "temperature": 0},
                 )
@@ -224,18 +226,20 @@ def _fix_prompt(finding: dict, code: str, exemplars: list[dict]) -> str:
     )
 
 
-def generate_fix(finding: dict, code: str, exemplars: list[dict] = None) -> dict:
-    """On-demand: produce a corrected version of one vulnerable code slice (one Gemini call)."""
+def generate_fix(finding: dict, code: str, exemplars: list[dict] = None, model: str = None) -> dict:
+    """On-demand: produce a corrected version of one vulnerable code slice (one Gemini call).
+    `model` defaults to config.GEMINI_MODEL; per-plan routing can override later via PLAN_MODEL."""
     if not available():
         return {"available": False, "error": "LLM unavailable. Set GEMINI_API_KEY in .env."}
     import time
+    model = model or config.GEMINI_MODEL
     ensure_configured()
     prompt = _fix_prompt(finding, code, exemplars or [])
     last = ""
     for attempt in range(4):
         try:
             resp = _client.models.generate_content(
-                model=config.GEMINI_MODEL,
+                model=model,
                 contents=prompt,
                 config={"response_mime_type": "application/json", "temperature": 0})
             data = _loads_lenient(resp.text)

@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useHealth } from '@/context/HealthContext';
 import { browse } from '@/api/scan';
+import { billingInfo } from '@/api/profile';
 import { PLATFORM_LABELS, STACK_LABELS, PRIORITY_LABELS, scopeLabels } from '@/utils/scope';
 import { Icon } from '@/components/Icons';
 import type { Scope } from '@/types';
@@ -42,6 +43,14 @@ export default function Setup() {
   const [scanner, setScanner] = useState('auto');
   const [browsing, setBrowsing] = useState(false);
   const [running, setRunning] = useState(false);
+  const [quota, setQuota] = useState<{ used: number; limit: number } | null>(null);
+
+  useEffect(() => {
+    if (!token || !health?.db_enabled) return;
+    let alive = true;
+    void billingInfo().then((b) => { if (alive) setQuota(b.scans ?? null); }).catch(() => {});
+    return () => { alive = false; };
+  }, [token, health?.db_enabled]);
 
   const ready = platform != null && stack.length > 0 && priorities.length > 0;
 
@@ -81,6 +90,13 @@ export default function Setup() {
     : 'Semgrep unavailable, so Bandit (Python) is used for now.';
   if (!health?.llm_enabled) note += ' Set GEMINI_API_KEY in .env for verified verdicts.';
   const noteCls = 'avail-note' + (sgAvail && health?.llm_enabled ? '' : ' warn');
+
+  const quotaPill = quota ? (quota.used >= quota.limit ? 'out' : '') : 'hide';
+  const quotaText = quota
+    ? quota.used >= quota.limit
+      ? `${quota.used}/${quota.limit} scans · limit reached`
+      : `${quota.used}/${quota.limit} scans`
+    : '';
 
   if (!token || !user) {
     return null; // guarded by route; brief blank while auth resolves
@@ -177,6 +193,13 @@ export default function Setup() {
           )}
           <button className="btn btn-primary btn-block" id="runBtn" onClick={run} disabled={running || !ready}>{running ? 'Starting…' : (ready ? 'Run scan' : 'Select scan options')}</button>
           <div className="run-caption">One batched LLM call per scan · nothing is auto-applied</div>
+          {quota && (
+            <div className={'quota-pill ' + quotaPill} data-noprint>
+              <span className="dot"></span>{quotaText}
+              {quota.used >= quota.limit && ' · '}
+              {quota.used >= quota.limit && <a href="#/pricing">Upgrade</a>}
+            </div>
+          )}
         </div>
       </div>
     </section>

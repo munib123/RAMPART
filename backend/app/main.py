@@ -17,6 +17,8 @@ from app.routers import scan as scan_router
 from app.routers import fix as fix_router
 from app.routers import browse as browse_router
 from app.routers import health as health_router
+from app.routers import profile as profile_router
+from app.routers import billing as billing_router
 
 
 @asynccontextmanager
@@ -57,6 +59,8 @@ app.include_router(scan_router.router)
 app.include_router(fix_router.router)
 app.include_router(browse_router.router)
 app.include_router(health_router.router)
+app.include_router(profile_router.router)
+app.include_router(billing_router.router)
 
 
 @app.get("/")
