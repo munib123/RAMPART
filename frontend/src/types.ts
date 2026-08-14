@@ -153,6 +153,29 @@ export interface FixState {
   error?: boolean;
   view?: 'diff' | 'full';
   limit?: PlanLimitPayload | null;
+  authRequired?: boolean;       // backend said the session is invalid/expired
+  applied?: boolean;            // apply succeeded (file written)
+  revertable?: boolean;         // a snapshot exists for this scan
+  applyErr?: string;
+}
+
+export interface ApplyResult {
+  ok: boolean;
+  path?: string;
+  start_line?: number;
+  end_line?: number;
+  original_code?: string;
+  new_code?: string;
+  code?: string;                // 'file_changed' | 'not_found'
+  error?: string;
+}
+
+export interface RevertResult {
+  ok: boolean;
+  restored_from?: string;
+  target?: string;
+  code?: string;                // 'no_snapshot'
+  error?: string;
 }
 
 /** Structured "plan limit reached" error from POST /api/scan or POST /api/fix. */
@@ -187,14 +210,6 @@ export interface PlanRow {
   fixes: number;
   price: string | number;
   note?: string;
-}
-
-export interface FixState {
-  loading?: boolean;
-  fixed_code?: string;
-  summary?: string;
-  error?: boolean;
-  view?: 'diff' | 'full';
 }
 
 export type DiffOp = 'ctx' | 'add' | 'del';

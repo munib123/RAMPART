@@ -54,3 +54,7 @@ PLANS = {
 # Model routing is UI-advertised per plan but STILL uses the single working GEMINI_MODEL for now.
 PLAN_MODEL = {"free": GEMINI_MODEL, "pro": GEMINI_MODEL, "premium": GEMINI_MODEL}
 # FUTURE: point pro/premium at heavier models (e.g. gemini-2.5-pro) by editing only this map.
+
+# --- Local fix snapshots (apply/revert safety net) ---
+# A whole-target copy taken at the moment of the first Apply for a scan; Revert restores it.
+FIX_SNAPSHOT_DIR = FYP / "backend" / ".fix_snapshots"   # git-ignored; <scan_id>/ per scan

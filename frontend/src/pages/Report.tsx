@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SummaryCard from '@/components/SummaryCard';
 import FindingCard from '@/components/FindingCard';
 import PlanLimitCard from '@/components/PlanLimitCard';
 import { announce } from '@/api/client';
+import { revertFix } from '@/api/history';
 import { Icon } from '@/components/Icons';
 import type { PlanLimitPayload, ScanReport } from '@/types';
 
@@ -13,12 +14,33 @@ export default function Report() {
   const state = (location.state || {}) as { report?: ScanReport; path?: string };
   const report = state.report;
   const path = state.path || report?.target || '';
+  const [applied, setApplied] = useState(false);
+  const [reverting, setReverting] = useState(false);
 
   useEffect(() => {
     if (report) {
       announce('Scan complete: ' + ((report.counts && report.counts.total) ?? (report.findings || []).length) + ' findings');
     }
   }, [report]);
+
+  const onRevertAll = async () => {
+    if (!report?.scan_id || !report.target) return;
+    if (!window.confirm(`Revert ${report.target} to its state at first apply? All applied fixes are undone.`)) return;
+    setReverting(true);
+    try {
+      const r = await revertFix({ scan_id: report.scan_id, target: report.target });
+      if (r.ok) {
+        setApplied(false);
+        announce('All changes reverted — code restored');
+      } else {
+        announce(r.error || 'Revert failed');
+      }
+    } catch (e) {
+      announce((e as Error).message || 'Revert failed');
+    } finally {
+      setReverting(false);
+    }
+  };
 
   if (!report) {
     return (
@@ -69,10 +91,18 @@ export default function Report() {
         ) : (
           <>
             <SummaryCard r={report} />
+            {applied && report.scan_id && report.target && (
+              <div className="card applied-banner" data-noprint>
+                <div><b>Fix applied to the codebase.</b> A snapshot of <span className="mono">{path}</span> was kept before the change.</div>
+                <button className="btn btn-xs revertbtn" onClick={onRevertAll} disabled={reverting}>
+                  {reverting ? 'Reverting…' : 'Revert all changes'}
+                </button>
+              </div>
+            )}
             {!findings.length ? (
               <div className="card empty-card"><div className="big">You're all set.</div><div className="sub">Nothing flagged in this path.</div></div>
             ) : (
-              findings.map((f, i) => <FindingCard f={f} key={i} scanId={report.scan_id} />)
+              findings.map((f, i) => <FindingCard f={f} key={i} scanId={report.scan_id} target={report.target} onApplied={() => setApplied(true)} />)
             )}
           </>
         )}

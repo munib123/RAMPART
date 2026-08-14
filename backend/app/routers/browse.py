@@ -11,16 +11,18 @@ router = APIRouter(tags=["browse"])
 @router.get("/api/browse")
 def browse():
     """Open a native folder picker on the local machine and return the chosen absolute path.
-    The dialog is parented to an off-screen TOPMOST window so it appears in front of the browser."""
+    The dialog is owned by a small on-screen TOPMOST window so it appears in front of the
+    browser (a 1x1 form centred on the primary screen keeps it invisible while anchoring
+    the dialog on-screen)."""
     ps = r"""
 Add-Type -AssemblyName System.Windows.Forms | Out-Null
 [System.Windows.Forms.Application]::EnableVisualStyles()
 $owner = New-Object System.Windows.Forms.Form
-$owner.StartPosition = 'Manual'
-$owner.Location = New-Object System.Drawing.Point(-3000,-3000)
+$owner.StartPosition = 'CenterScreen'
+$owner.FormBorderStyle = 'None'
 $owner.Size = New-Object System.Drawing.Size(1,1)
-$owner.TopMost = $true
 $owner.ShowInTaskbar = $false
+$owner.TopMost = $true
 $owner.Show(); $owner.Activate()
 $d = New-Object System.Windows.Forms.FolderBrowserDialog
 $d.Description = 'Select a folder to scan'

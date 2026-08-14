@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { generateFix } from '@/api/history';
+import { generateFix, applyFix, revertFix } from '@/api/history';
 import { announce } from '@/api/client';
 import { esc, langOf } from '@/utils/format';
 import { diffLines, diffReact } from '@/utils/diff';
@@ -10,7 +10,9 @@ import type { DiffLine, Exemplar, Finding, FixState, PlanLimitPayload } from '@/
 interface Props {
   finding: Finding;
   scanId?: string;
-  onRegenerate?: () => void;
+  target?: string;
+  onApplied?: () => void;
+  onReverted?: () => void;
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -25,10 +27,11 @@ async function copyText(text: string): Promise<boolean> {
   } catch { return false; }
 }
 
-export default function FixPanel({ finding, scanId }: Props) {
+export default function FixPanel({ finding, scanId, target, onApplied, onReverted }: Props) {
   const [fx, setFx] = useState<FixState>({ loading: true });
   const [view, setView] = useState<'diff' | 'full'>('diff');
   const [copied, setCopied] = useState(false);
+  const [applying, setApplying] = useState(false);
   const btnRef = useRef<HTMLButtonElement | null>(null);
   const requestId = useRef(0);
   const started = useRef(false);
@@ -59,7 +62,7 @@ export default function FixPanel({ finding, scanId }: Props) {
         return;
       }
       if (r.code === 'auth_required') {
-        setFx({ error: true });
+        setFx({ authRequired: true });
         announce('Sign in to suggest a fix');
         return;
       }
@@ -84,6 +87,72 @@ export default function FixPanel({ finding, scanId }: Props) {
     setCopied(ok);
     if (btnRef.current) btnRef.current.textContent = ok ? 'Copied ✓' : 'Copy failed';
     setTimeout(() => { setCopied(false); if (btnRef.current) btnRef.current.textContent = 'Copy fix'; }, 2000);
+  };
+
+  // signing back in refreshes the stored token (the stored one was expired/rejected)
+  if (fx.authRequired) {
+    return (
+      <div className="fixpanel nofix">
+        <span><b>Session expired.</b> Sign in again to suggest or apply a fix.</span>
+        <div data-noprint><button className="btn btn-xs" onClick={() => { window.location.hash = '#/auth'; }}>Sign in</button></div>
+      </div>
+    );
+  }
+
+  const canApply = !!(scanId && target && finding.path && finding.slice && finding.slice.start_line && fx.fixed_code);
+
+  const onApply = async () => {
+    if (!canApply) return;
+    const ok = window.confirm(`This will edit ${finding.path} on disk. A snapshot keeps a revert point. Continue?`);
+    if (!ok) return;
+    setApplying(true);
+    try {
+      const r = await applyFix({
+        scan_id: scanId as string,
+        path: finding.path as string,
+        start_line: (finding.slice as { start_line?: number }).start_line as number,
+        end_line: (finding.slice as { end_line?: number }).end_line as number,
+        fixed_code: fx.fixed_code || '',
+        original_code: finding.slice?.code,
+      });
+      if (r.ok) {
+        setFx((p) => ({ ...p, applied: true, revertable: true, applyErr: undefined }));
+        announce('Fix applied to the codebase');
+        onApplied && onApplied();
+      } else if (r.code === 'file_changed') {
+        setFx((p) => ({ ...p, applied: false, applyErr: r.error || 'File changed since scan' }));
+        announce(r.error || 'File changed since scan — re-scan to refresh');
+      } else {
+        setFx((p) => ({ ...p, applyErr: r.error || 'Apply failed' }));
+        announce(r.error || 'Apply failed');
+      }
+    } catch (e) {
+      setFx((p) => ({ ...p, applyErr: (e as Error).message || 'Apply failed' }));
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const onRevert = async () => {
+    if (!scanId || !target) return;
+    const ok = window.confirm(`Revert ${target} to the state before this fix? This restores your code.`);
+    if (!ok) return;
+    setApplying(true);
+    try {
+      const r = await revertFix({ scan_id: scanId as string, target });
+      if (r.ok) {
+        setFx((p) => ({ ...p, applied: false, revertable: false, applyErr: undefined }));
+        announce('Changes reverted — code restored');
+        onReverted && onReverted();
+      } else {
+        setFx((p) => ({ ...p, applyErr: r.error || 'Revert failed' }));
+        announce(r.error || 'Revert failed');
+      }
+    } catch (e) {
+      setFx((p) => ({ ...p, applyErr: (e as Error).message || 'Revert failed' }));
+    } finally {
+      setApplying(false);
+    }
   };
 
   // loading panel
@@ -128,8 +197,20 @@ export default function FixPanel({ finding, scanId }: Props) {
           )}
           <button className="btn btn-xs" onClick={run}>Regenerate</button>
           <button className={'btn btn-xs copybtn' + (copied ? ' copied' : '')} ref={btnRef} aria-label="Copy corrected code" onClick={onCopy}>Copy fix</button>
+          {canApply && !fx.applied && (
+            <button className="btn btn-xs btn-primary applybtn" onClick={onApply} disabled={applying}>
+              {applying ? 'Applying…' : 'Apply fix'}
+            </button>
+          )}
+          {fx.applied && (
+            <button className="btn btn-xs revertbtn" onClick={onRevert} disabled={applying}>
+              {applying ? 'Reverting…' : 'Revert changes'}
+            </button>
+          )}
         </span>
       </div>
+      {fx.applied && <div className="applied-note">Applied ✓ — this fix is now in the codebase. Revert any time.</div>}
+      {fx.applyErr && <div className="applyerr">{fx.applyErr}</div>}
       <div className="caveat">{tier === 'Low' ? 'Low confidence: verify manually. ' : ''}AI-suggested fix. Review and test before using.</div>
       {fx.summary && <div className="whatchanged"><b>What changed.</b> {fx.summary}</div>}
       <div className="codearea">
