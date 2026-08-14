@@ -23,7 +23,7 @@ semgrep==1.172.0
 
 # --- Testing (dev) ---
 pytest==9.1.1
-httpx2==2.9.1
+httpx==0.28.1
 
 # --- RAG (ChromaDB + MiniLM-ONNX) ---
 chromadb==1.5.9

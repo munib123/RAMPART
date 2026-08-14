@@ -58,5 +58,8 @@ desktop.ini
 # ---- Knowledge base (embeddings are large) ----
 knowledge_base/**
 
+# ---- Local fix snapshots (apply/revert safety net) ----
+backend/.fix_snapshots/
+
 # ---- Planfiles -------
 docs/**

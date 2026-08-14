@@ -1,5 +1,5 @@
 import { API, authHeaders } from '@/api/client';
-import type { CodeStatsRow, Exemplar, FixResponse, HistoryRow } from '@/types';
+import type { ApplyResult, CodeStatsRow, Exemplar, FixResponse, HistoryRow, RevertResult } from '@/types';
 
 export async function loadHistory(): Promise<HistoryRow[]> {
   const r = await fetch(API + '/api/scans', { headers: authHeaders() });
@@ -27,4 +27,29 @@ export async function generateFix(input: {
     body: JSON.stringify(input),
   });
   return (await res.json()) as FixResponse;
+}
+
+export async function applyFix(p: {
+  scan_id: string;
+  path: string;
+  start_line: number;
+  end_line: number;
+  fixed_code: string;
+  original_code?: string;
+}): Promise<ApplyResult> {
+  const res = await fetch(API + '/api/fix/apply', {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(p),
+  });
+  return (await res.json()) as ApplyResult;
+}
+
+export async function revertFix(p: { scan_id: string; target: string }): Promise<RevertResult> {
+  const res = await fetch(API + '/api/fix/revert', {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(p),
+  });
+  return (await res.json()) as RevertResult;
 }
