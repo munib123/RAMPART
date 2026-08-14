@@ -19,11 +19,11 @@ rampart/
 │   │   ├── config.py        env / secrets-driven config (.env) + path resolution
 │   │   ├── db.py            asyncpg pool (+ graceful no-DB degrade)
 │   │   ├── core/            JWT + bcrypt, FastAPI auth deps
-│   │   ├── routers/         auth, scans, scan, fix, browse, health
+│   │   ├── routers/         auth, scans, scan, fix, browse, health, profile, billing
 │   │   ├── schemas/         Pydantic request models
-│   │   └── services/        scanner, extract, rag, gemini, pipeline
-│   ├── db/schema.sql        Supabase/Postgres schema (users, scans, findings, cwe_stats)
-│   ├── tests/               lightweight smoke/health checks
+│   │   └── services/        scanner, extract, rag, gemini, pipeline, apply
+│   ├── db/schema.sql        Supabase/Postgres schema (users, scans, findings, cwe_stats, code_stats)
+│   ├── tests/               pytest smoke + apply/revert suites
 │   ├── requirements.txt     pinned Python deps
 │   ├── run_server.py        start API only
 │   └── .venv/               virtual environment (git-ignored)
@@ -105,7 +105,7 @@ cd frontend && npm install
 Without a key the app still runs: you get findings and the retrieved real-world exemplars;
 only the LLM verdict is marked "Unverified".
 
-**Model / quota:** the default is `gemini-3.5-flash-lite` (settable via `GEMINI_MODEL`). Free-tier
+**Model / quota:** the default is `gemini-2.5-flash-lite` (settable via `GEMINI_MODEL`). Free-tier
 limits are **per-day, per-model**. All findings are verified in **one batched call per scan**
 (`gemini.analyze_batch`), so a scan costs ~1 request. Rotate models or enable billing to lift the
 daily cap.
@@ -138,7 +138,8 @@ backend\.venv\Scripts\python -m pip install semgrep
 | Code-slice extract | `backend/app/services/extract.py` | containing function (Python AST) or a line window |
 | RAG | `backend/app/services/rag.py` | queries `rampart_hackerone_minilm` + `rampart_nuclei_minilm` Chroma collections, CWE-filtered |
 | LLM verify | `backend/app/services/gemini.py` | Gemini, grounded in exemplars; key from `.env` only. Batch API for ~1 request per scan |
-| Suggest a fix | `generate_fix` in `gemini.py` + `POST /api/fix` | on-demand corrected code per finding; UI shows a diff + Copy (no auto-apply) |
+| Suggest a fix | `generate_fix` in `gemini.py` + `POST /api/fix` | on-demand corrected code per finding; UI shows a diff + Copy |
+| Apply / revert a fix | `apply.py` + `POST /api/fix/apply`, `POST /api/fix/revert` | writes the fix into the user's codebase and can undo it; snapshots the target into `backend/.fix_snapshots/` (git-ignored) |
 | Orchestration | `backend/app/services/pipeline.py` | scan -> extract -> ground -> verify -> rank |
 | API | `backend/app/main.py` | FastAPI on localhost; CORS for the dev/Tauri webviews |
 | Database | `backend/db/schema.sql`, `app/db.py` | optional Supabase/Postgres via `DATABASE_URL`; degrades gracefully when unset |
@@ -152,12 +153,20 @@ backend\.venv\Scripts\python -m pip install semgrep
 | POST | `/api/scan` | run a full scan; persists when signed in |
 | GET | `/api/health` | scanner/LLM/RAG/db availability |
 | POST | `/api/fix` | generate a fix for one finding |
+| POST | `/api/fix/apply` | apply the generated fix to the codebase (snapshots the target first) |
+| POST | `/api/fix/revert` | restore the pre-fix snapshot |
 | GET | `/api/browse` | native folder picker |
 | POST | `/api/auth/signup`, `/api/auth/login` | register / log in |
 | GET | `/api/auth/me` | who am I (Bearer) |
+| POST | `/api/auth/change-password` | change password (signed in) |
 | GET / POST | `/api/scans` | list / save scans |
 | GET | `/api/scans/{id}` | one saved scan |
 | GET | `/api/research/overview` | CWE aggregate stats |
+| GET | `/api/research/codebase` | codebase stats (platform × scanner × cwe × severity × verdict) |
+| GET / PUT | `/api/profile` | read / update the signed-in profile |
+| GET | `/api/billing` | current plan + usage |
+| GET | `/api/billing/plans` | available plans |
+| POST | `/api/billing/upgrade` | plan switch (stub, no payment) |
 
 ---
 
@@ -169,6 +178,10 @@ backend\.venv\Scripts\python -m pip install semgrep
   retrieval quality improves once a gte-large index is built on a GPU.
 - Persistence is optional: without `DATABASE_URL` the app runs fully, only scan history / auth are
   disabled.
+- Apply/revert fixes are **local-only**: snapshots live in `backend/.fix_snapshots/` (git-ignored)
+  keyed by scan id and are not sent to the database; deleting them removes the revert net.
+- Plans/billing: per-plan scan/fix quotas (Free 10/5, Pro 30/20, Premium 500/200) enforced server-side
+  with a `402 {code: plan_limit}` upsell; upgrade is a stub until payment is wired.
 - LLM quota: free-tier limits are per-day per-model; a scan costs ~1 batched call to stay within budget.
 - Later (per the design): more knowledge-base sources and the self-verifying remediation loop.
 
