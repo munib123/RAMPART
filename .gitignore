@@ -63,3 +63,11 @@ backend/.fix_snapshots/
 
 # ---- Planfiles -------
 docs/**
+
+# ---- opencode (local-only: project guide + skills) ----
+AGENTS.md
+.opencode/
+
+# ---- graphify knowledge graph (local-only) ----
+graphify-out/
+.graphifyignore

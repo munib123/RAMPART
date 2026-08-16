@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { HealthProvider } from '@/context/HealthContext';
 import AppBar from '@/components/AppBar';
@@ -20,25 +20,35 @@ function RequireAuth({ children }: { children: ReactElement }) {
   return children;
 }
 
+function Layout() {
+  const location = useLocation();
+  const showChrome = location.pathname !== '/auth';
+  return (
+    <>
+      {showChrome && <AppBar />}
+      <main className="main">
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/setup" element={<RequireAuth><Setup /></RequireAuth>} />
+          <Route path="/scan" element={<RequireAuth><Scanning /></RequireAuth>} />
+          <Route path="/report" element={<Report />} />
+          <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </>
+  );
+}
+
 export default function App() {
   return (
     <HealthProvider>
       <AuthProvider>
         <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <AppBar />
-          <main className="main">
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/setup" element={<RequireAuth><Setup /></RequireAuth>} />
-              <Route path="/scan" element={<RequireAuth><Scanning /></RequireAuth>} />
-              <Route path="/report" element={<Report />} />
-              <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
-              <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
+          <Layout />
         </HashRouter>
       </AuthProvider>
     </HealthProvider>
