@@ -1,0 +1,64 @@
+# CrossVul Fix Pair: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') in php
+**Pair ID:** 3798_0
+**Vulnerability Class:** Cross-site Scripting (XSS) - Generic
+**CWE:** CWE-79
+**Language:** php
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `3798_0`)
+
+## Vulnerability Information & PoC
+
+## Description
+Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') - Cross-site scripting (XSS) vulnerabilities occur when: Untrusted data enters a web application, typically from a web request.
+
+## Vulnerable Code
+```php
+Lines 4-36 of the vulnerable file.
+
+ * ownCloud - user_webdavauth
+ *
+ * @author Frank Karlitschek
+ * @copyright 2012 Frank Karlitschek frank@owncloud.org
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU AFFERO GENERAL PUBLIC LICENSE for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+print_r($_POST);
+if($_POST) {
+
+		if(isset($_POST['webdav_url'])) {
+			OC_CONFIG::setValue('user_webdavauth_url', strip_tags($_POST['webdav_url']));
+		}
+}
+
+// fill template
+$tmpl = new OC_Template( 'user_webdavauth', 'settings');
+$tmpl->assign( 'webdav_url', OC_Config::getValue( "user_webdavauth_url" ));
+
+return $tmpl->fetchPage();
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -21,7 +21,6 @@
+  *
+  */
+ 
+-print_r($_POST);
+ if($_POST) {
+ 
+ 		if(isset($_POST['webdav_url'])) {
+```

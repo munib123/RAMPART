@@ -1,0 +1,73 @@
+# CrossVul Fix Pair: URL Redirection to Untrusted Site ('Open Redirect') in python
+**Pair ID:** 1915_7
+**Vulnerability Class:** Open Redirect
+**CWE:** CWE-601
+**Language:** python
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `1915_7`)
+
+## Vulnerability Information & PoC
+
+## Description
+URL Redirection to Untrusted Site ('Open Redirect') - An http parameter may contain a URL value and could cause the web application to redirect the request to the specified URL.
+
+## Vulnerable Code
+```python
+Lines 123-163 of the vulnerable file.
+
+    def __init__(self, hs: "HomeServer"):
+        super().__init__(hs)
+
+        self.hs = hs
+
+        self.store = hs.get_datastore()
+        self.storage = hs.get_storage()
+        self.state_store = self.storage.state
+        self.federation_client = hs.get_federation_client()
+        self.state_handler = hs.get_state_handler()
+        self._state_resolution_handler = hs.get_state_resolution_handler()
+        self.server_name = hs.hostname
+        self.keyring = hs.get_keyring()
+        self.action_generator = hs.get_action_generator()
+        self.is_mine_id = hs.is_mine_id
+        self.spam_checker = hs.get_spam_checker()
+        self.event_creation_handler = hs.get_event_creation_handler()
+        self._message_handler = hs.get_message_handler()
+        self._server_notices_mxid = hs.config.server_notices_mxid
+        self.config = hs.config
+        self.http_client = hs.get_simple_http_client()
+        self._instance_name = hs.get_instance_name()
+        self._replication = hs.get_replication_data_handler()
+
+        self._send_events = ReplicationFederationSendEventsRestServlet.make_client(hs)
+        self._clean_room_for_join_client = ReplicationCleanRoomRestServlet.make_client(
+            hs
+        )
+
+        if hs.config.worker_app:
+            self._user_device_resync = ReplicationUserDevicesResyncRestServlet.make_client(
+                hs
+            )
+            self._maybe_store_room_on_outlier_membership = ReplicationStoreRoomOnOutlierMembershipRestServlet.make_client(
+                hs
+            )
+        else:
+            self._device_list_updater = hs.get_device_handler().device_list_updater
+            self._maybe_store_room_on_outlier_membership = (
+                self.store.maybe_store_room_on_outlier_membership
+            )
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -140,7 +140,7 @@
+         self._message_handler = hs.get_message_handler()
+         self._server_notices_mxid = hs.config.server_notices_mxid
+         self.config = hs.config
+-        self.http_client = hs.get_simple_http_client()
++        self.http_client = hs.get_proxied_blacklisted_http_client()
+         self._instance_name = hs.get_instance_name()
+         self._replication = hs.get_replication_data_handler()
+ 
+```

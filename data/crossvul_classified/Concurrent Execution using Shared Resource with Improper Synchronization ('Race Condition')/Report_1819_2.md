@@ -1,0 +1,188 @@
+# CrossVul Fix Pair: Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition') in c
+**Pair ID:** 1819_2
+**Vulnerability Class:** Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')
+**CWE:** CWE-362
+**Language:** c
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `1819_2`)
+
+## Vulnerability Information & PoC
+
+## Description
+Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition') - This can have security implications when the expected synchronization is in security-critical code, such as recording whether a user is authenticated or modifying important state information that s...
+
+## Vulnerable Code
+```c
+Lines 192-232 of the vulnerable file.
+
+	return ret;
+}
+
+#ifdef CONFIG_FS_DAX
+static void ext4_end_io_unwritten(struct buffer_head *bh, int uptodate)
+{
+	struct inode *inode = bh->b_assoc_map->host;
+	/* XXX: breaks on 32-bit > 16TB. Is that even supported? */
+	loff_t offset = (loff_t)(uintptr_t)bh->b_private << inode->i_blkbits;
+	int err;
+	if (!uptodate)
+		return;
+	WARN_ON(!buffer_unwritten(bh));
+	err = ext4_convert_unwritten_extents(NULL, inode, offset, bh->b_size);
+}
+
+static int ext4_dax_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+{
+	int result;
+	handle_t *handle = NULL;
+	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
+	bool write = vmf->flags & FAULT_FLAG_WRITE;
+
+	if (write) {
+		sb_start_pagefault(sb);
+		file_update_time(vma->vm_file);
+		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
+						EXT4_DATA_TRANS_BLOCKS(sb));
+	}
+
+	if (IS_ERR(handle))
+		result = VM_FAULT_SIGBUS;
+	else
+		result = __dax_fault(vma, vmf, ext4_get_block_dax,
+						ext4_end_io_unwritten);
+
+	if (write) {
+		if (!IS_ERR(handle))
+			ext4_journal_stop(handle);
+		sb_end_pagefault(sb);
+	}
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -209,15 +209,18 @@
+ {
+ 	int result;
+ 	handle_t *handle = NULL;
+-	struct super_block *sb = file_inode(vma->vm_file)->i_sb;
++	struct inode *inode = file_inode(vma->vm_file);
++	struct super_block *sb = inode->i_sb;
+ 	bool write = vmf->flags & FAULT_FLAG_WRITE;
+ 
+ 	if (write) {
+ 		sb_start_pagefault(sb);
+ 		file_update_time(vma->vm_file);
++		down_read(&EXT4_I(inode)->i_mmap_sem);
+ 		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
+ 						EXT4_DATA_TRANS_BLOCKS(sb));
+-	}
++	} else
++		down_read(&EXT4_I(inode)->i_mmap_sem);
+ 
+ 	if (IS_ERR(handle))
+ 		result = VM_FAULT_SIGBUS;
+@@ -228,8 +231,10 @@
+ 	if (write) {
+ 		if (!IS_ERR(handle))
+ 			ext4_journal_stop(handle);
++		up_read(&EXT4_I(inode)->i_mmap_sem);
+ 		sb_end_pagefault(sb);
+-	}
++	} else
++		up_read(&EXT4_I(inode)->i_mmap_sem);
+ 
+ 	return result;
+ }
+@@ -246,10 +251,12 @@
+ 	if (write) {
+ 		sb_start_pagefault(sb);
+ 		file_update_time(vma->vm_file);
++		down_read(&EXT4_I(inode)->i_mmap_sem);
+ 		handle = ext4_journal_start_sb(sb, EXT4_HT_WRITE_PAGE,
+ 				ext4_chunk_trans_blocks(inode,
+ 							PMD_SIZE / PAGE_SIZE));
+-	}
++	} else
++		down_read(&EXT4_I(inode)->i_mmap_sem);
+ 
+ 	if (IS_ERR(handle))
+ 		result = VM_FAULT_SIGBUS;
+@@ -260,30 +267,71 @@
+ 	if (write) {
+ 		if (!IS_ERR(handle))
+ 			ext4_journal_stop(handle);
++		up_read(&EXT4_I(inode)->i_mmap_sem);
+ 		sb_end_pagefault(sb);
+-	}
++	} else
++		up_read(&EXT4_I(inode)->i_mmap_sem);
+ 
+ 	return result;
+ }
+ 
+ static int ext4_dax_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+ {
+-	return dax_mkwrite(vma, vmf, ext4_get_block_dax,
+-				ext4_end_io_unwritten);
++	int err;
++	struct inode *inode = file_inode(vma->vm_file);
++
++	sb_start_pagefault(inode->i_sb);
++	file_update_time(vma->vm_file);
++	down_read(&EXT4_I(inode)->i_mmap_sem);
++	err = __dax_mkwrite(vma, vmf, ext4_get_block_dax,
++			    ext4_end_io_unwritten);
++	up_read(&EXT4_I(inode)->i_mmap_sem);
++	sb_end_pagefault(inode->i_sb);
++
++	return err;
++}
++
++/*
++ * Handle write fault for VM_MIXEDMAP mappings. Similarly to ext4_dax_mkwrite()
++ * handler we check for races agaist truncate. Note that since we cycle through
++ * i_mmap_sem, we are sure that also any hole punching that began before we
++ * were called is finished by now and so if it included part of the file we
++ * are working on, our pte will get unmapped and the check for pte_same() in
++ * wp_pfn_shared() fails. Thus fault gets retried and things work out as
++ * desired.
++ */
++static int ext4_dax_pfn_mkwrite(struct vm_area_struct *vma,
++				struct vm_fault *vmf)
++{
++	struct inode *inode = file_inode(vma->vm_file);
++	struct super_block *sb = inode->i_sb;
++	int ret = VM_FAULT_NOPAGE;
++	loff_t size;
++
++	sb_start_pagefault(sb);
++	file_update_time(vma->vm_file);
++	down_read(&EXT4_I(inode)->i_mmap_sem);
++	size = (i_size_read(inode) + PAGE_SIZE - 1) >> PAGE_SHIFT;
++	if (vmf->pgoff >= size)
++		ret = VM_FAULT_SIGBUS;
++	up_read(&EXT4_I(inode)->i_mmap_sem);
++	sb_end_pagefault(sb);
++
++	return ret;
+ }
+ 
+ static const struct vm_operations_struct ext4_dax_vm_ops = {
+ 	.fault		= ext4_dax_fault,
+ 	.pmd_fault	= ext4_dax_pmd_fault,
+ 	.page_mkwrite	= ext4_dax_mkwrite,
+-	.pfn_mkwrite	= dax_pfn_mkwrite,
++	.pfn_mkwrite	= ext4_dax_pfn_mkwrite,
+ };
+ #else
+ #define ext4_dax_vm_ops	ext4_file_vm_ops
+ #endif
+ 
+ static const struct vm_operations_struct ext4_file_vm_ops = {
+-	.fault		= filemap_fault,
++	.fault		= ext4_filemap_fault,
+ 	.map_pages	= filemap_map_pages,
+ 	.page_mkwrite   = ext4_page_mkwrite,
+ };
+```

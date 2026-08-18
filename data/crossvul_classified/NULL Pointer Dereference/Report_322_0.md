@@ -1,0 +1,81 @@
+# CrossVul Fix Pair: NULL Pointer Dereference in c
+**Pair ID:** 322_0
+**Vulnerability Class:** NULL Pointer Dereference
+**CWE:** CWE-476
+**Language:** c
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `322_0`)
+
+## Vulnerability Information & PoC
+
+## Description
+NULL Pointer Dereference - NULL pointer dereference issues can occur through a number of flaws, including race conditions, and simple programming omissions.
+
+## Vulnerable Code
+```c
+Lines 30-70 of the vulnerable file.
+
+
+typedef bool (*IdentLookupFunc)(struct xkb_context *ctx, const void *priv,
+                                xkb_atom_t field, enum expr_value_type type,
+                                unsigned int *val_rtrn);
+
+bool
+ExprResolveLhs(struct xkb_context *ctx, const ExprDef *expr,
+               const char **elem_rtrn, const char **field_rtrn,
+               ExprDef **index_rtrn)
+{
+    switch (expr->expr.op) {
+    case EXPR_IDENT:
+        *elem_rtrn = NULL;
+        *field_rtrn = xkb_atom_text(ctx, expr->ident.ident);
+        *index_rtrn = NULL;
+        return (*field_rtrn != NULL);
+    case EXPR_FIELD_REF:
+        *elem_rtrn = xkb_atom_text(ctx, expr->field_ref.element);
+        *field_rtrn = xkb_atom_text(ctx, expr->field_ref.field);
+        *index_rtrn = NULL;
+        return true;
+    case EXPR_ARRAY_REF:
+        *elem_rtrn = xkb_atom_text(ctx, expr->array_ref.element);
+        *field_rtrn = xkb_atom_text(ctx, expr->array_ref.field);
+        *index_rtrn = expr->array_ref.entry;
+        return true;
+    default:
+        break;
+    }
+    log_wsgo(ctx, "Unexpected operator %d in ResolveLhs\n", expr->expr.op);
+    return false;
+}
+
+static bool
+SimpleLookup(struct xkb_context *ctx, const void *priv, xkb_atom_t field,
+             enum expr_value_type type, unsigned int *val_rtrn)
+{
+    const LookupEntry *entry;
+    const char *str;
+
+    if (!priv || field == XKB_ATOM_NONE || type != EXPR_TYPE_INT)
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -47,11 +47,15 @@
+         *elem_rtrn = xkb_atom_text(ctx, expr->field_ref.element);
+         *field_rtrn = xkb_atom_text(ctx, expr->field_ref.field);
+         *index_rtrn = NULL;
+-        return true;
++        return (*elem_rtrn != NULL && *field_rtrn != NULL);
+     case EXPR_ARRAY_REF:
+         *elem_rtrn = xkb_atom_text(ctx, expr->array_ref.element);
+         *field_rtrn = xkb_atom_text(ctx, expr->array_ref.field);
+         *index_rtrn = expr->array_ref.entry;
++	if (expr->array_ref.element != XKB_ATOM_NONE && *elem_rtrn == NULL)
++		return false;
++	if (*field_rtrn == NULL)
++		return false;
+         return true;
+     default:
+         break;
+```

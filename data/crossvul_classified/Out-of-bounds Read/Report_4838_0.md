@@ -1,0 +1,80 @@
+# CrossVul Fix Pair: Out-of-bounds Read in c
+**Pair ID:** 4838_0
+**Vulnerability Class:** Out-of-bounds Read
+**CWE:** CWE-125
+**Language:** c
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `4838_0`)
+
+## Vulnerability Information & PoC
+
+## Description
+Out-of-bounds Read - Typically, this can allow attackers to read sensitive information from other memory locations or cause a crash.
+
+## Vulnerable Code
+```c
+Lines 959-999 of the vulnerable file.
+
+static int
+name_parse(u8 *packet, int length, int *idx, char *name_out, int name_out_len) {
+	int name_end = -1;
+	int j = *idx;
+	int ptr_count = 0;
+#define GET32(x) do { if (j + 4 > length) goto err; memcpy(&t32_, packet + j, 4); j += 4; x = ntohl(t32_); } while (0)
+#define GET16(x) do { if (j + 2 > length) goto err; memcpy(&t_, packet + j, 2); j += 2; x = ntohs(t_); } while (0)
+#define GET8(x) do { if (j >= length) goto err; x = packet[j++]; } while (0)
+
+	char *cp = name_out;
+	const char *const end = name_out + name_out_len;
+
+	/* Normally, names are a series of length prefixed strings terminated */
+	/* with a length of 0 (the lengths are u8's < 63). */
+	/* However, the length can start with a pair of 1 bits and that */
+	/* means that the next 14 bits are a pointer within the current */
+	/* packet. */
+
+	for (;;) {
+		u8 label_len;
+		if (j >= length) return -1;
+		GET8(label_len);
+		if (!label_len) break;
+		if (label_len & 0xc0) {
+			u8 ptr_low;
+			GET8(ptr_low);
+			if (name_end < 0) name_end = j;
+			j = (((int)label_len & 0x3f) << 8) + ptr_low;
+			/* Make sure that the target offset is in-bounds. */
+			if (j < 0 || j >= length) return -1;
+			/* If we've jumped more times than there are characters in the
+			 * message, we must have a loop. */
+			if (++ptr_count > length) return -1;
+			continue;
+		}
+		if (label_len > 63) return -1;
+		if (cp != name_out) {
+			if (cp + 1 >= end) return -1;
+			*cp++ = '.';
+		}
+		if (cp + label_len >= end) return -1;
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -976,7 +976,6 @@
+ 
+ 	for (;;) {
+ 		u8 label_len;
+-		if (j >= length) return -1;
+ 		GET8(label_len);
+ 		if (!label_len) break;
+ 		if (label_len & 0xc0) {
+@@ -997,6 +996,7 @@
+ 			*cp++ = '.';
+ 		}
+ 		if (cp + label_len >= end) return -1;
++		if (j + label_len > length) return -1;
+ 		memcpy(cp, packet + j, label_len);
+ 		cp += label_len;
+ 		j += label_len;
+```

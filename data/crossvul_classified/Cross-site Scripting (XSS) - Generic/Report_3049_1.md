@@ -1,0 +1,60 @@
+# CrossVul Fix Pair: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') in xml
+**Pair ID:** 3049_1
+**Vulnerability Class:** Cross-site Scripting (XSS) - Generic
+**CWE:** CWE-79
+**Language:** xml
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `3049_1`)
+
+## Vulnerability Information & PoC
+
+## Description
+Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') - Cross-site scripting (XSS) vulnerabilities occur when: Untrusted data enters a web application, typically from a web request.
+
+## Vulnerable Code
+```xml
+Lines 9-35 of the vulnerable file.
+
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+	xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+	<f:entry title="${it.name}" description="${it.formattedDescription}">
+		<div name="parameter">
+			<input type="hidden" name="name" value="${it.name}" />
+			<f:checkbox name="value" checked="${it.defaultValue}" />
+		</div>
+	</f:entry>
+</j:jelly>
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -26,7 +26,8 @@
+ <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+ 	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
+ 	xmlns:i="jelly:fmt" xmlns:p="/lib/hudson/project">
+-	<f:entry title="${it.name}" description="${it.formattedDescription}">
++        <j:set var="escapeEntryTitleAndDescription" value="false"/>
++        <f:entry title="${h.escape(it.name)}" description="${it.formattedDescription}">
+ 		<div name="parameter">
+ 			<input type="hidden" name="name" value="${it.name}" />
+ 			<f:checkbox name="value" checked="${it.defaultValue}" />
+```

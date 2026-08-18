@@ -1,0 +1,60 @@
+# CrossVul Fix Pair: Exposure of Sensitive Information to an Unauthorized Actor in ruby
+**Pair ID:** 21_0
+**Vulnerability Class:** Information Disclosure
+**CWE:** CWE-200
+**Language:** ruby
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `21_0`)
+
+## Vulnerability Information & PoC
+
+## Description
+Exposure of Sensitive Information to an Unauthorized Actor - There are many different kinds of mistakes that introduce information exposures.
+
+## Vulnerable Code
+```ruby
+Lines 6-31 of the vulnerable file.
+
+    # Prevented attack::   CSRF
+    # Supported browsers:: all
+    # More infos::         http://en.wikipedia.org/wiki/Cross-site_request_forgery
+    #
+    # Only accepts unsafe HTTP requests if a given access token matches the token
+    # included in the session.
+    #
+    # Compatible with Rails and rack-csrf.
+    #
+    # Options:
+    #
+    # authenticity_param: Defines the param's name that should contain the token on a request.
+    #
+    class AuthenticityToken < Base
+      default_options :authenticity_param => 'authenticity_token'
+
+      def accepts?(env)
+        session = session env
+        token   = session[:csrf] ||= session['_csrf_token'] || random_string
+        safe?(env) ||
+          env['HTTP_X_CSRF_TOKEN'] == token ||
+          Request.new(env).params[options[:authenticity_param]] == token
+      end
+    end
+  end
+end
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -23,8 +23,8 @@
+         session = session env
+         token   = session[:csrf] ||= session['_csrf_token'] || random_string
+         safe?(env) ||
+-          env['HTTP_X_CSRF_TOKEN'] == token ||
+-          Request.new(env).params[options[:authenticity_param]] == token
++          secure_compare(env['HTTP_X_CSRF_TOKEN'], token) ||
++          secure_compare(Request.new(env).params[options[:authenticity_param]], token)
+       end
+     end
+   end
+```

@@ -1,0 +1,74 @@
+# CrossVul Fix Pair: Improper Input Validation in php
+**Pair ID:** 5784_9
+**Vulnerability Class:** Improper Input Validation
+**CWE:** CWE-20
+**Language:** php
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `5784_9`)
+
+## Vulnerability Information & PoC
+
+## Description
+Improper Input Validation - Input validation is a frequently-used technique for checking potentially dangerous inputs in order to ensure that the inputs are safe for processing within the code, or when communicating with othe...
+
+## Vulnerable Code
+```php
+Lines 44-84 of the vulnerable file.
+
+	 * @return  string  The file name without the extension
+	 *
+	 * @since   11.1
+	 */
+	public static function stripExt($file)
+	{
+		return preg_replace('#\.[^.]*$#', '', $file);
+	}
+
+	/**
+	 * Makes file name safe to use
+	 *
+	 * @param   string  $file  The name of the file [not full path]
+	 *
+	 * @return  string  The sanitised string
+	 *
+	 * @since   11.1
+	 */
+	public static function makeSafe($file)
+	{
+		$regex = array('#(\.){2,}#', '#[^A-Za-z0-9\.\_\- ]#', '#^\.#');
+
+		return preg_replace($regex, '', $file);
+	}
+
+	/**
+	 * Copies a file
+	 *
+	 * @param   string   $src          The path to the source file
+	 * @param   string   $dest         The path to the destination file
+	 * @param   string   $path         An optional base path to prefix to the file names
+	 * @param   boolean  $use_streams  True to use streams
+	 *
+	 * @return  boolean  True on success
+	 *
+	 * @since   11.1
+	 */
+	public static function copy($src, $dest, $path = null, $use_streams = false)
+	{
+		// Prepend a base path if it exists
+		if ($path)
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -61,6 +61,9 @@
+ 	 */
+ 	public static function makeSafe($file)
+ 	{
++		// Remove any trailing dots, as those aren't ever valid file names.
++		$file = rtrim($file, '.');
++
+ 		$regex = array('#(\.){2,}#', '#[^A-Za-z0-9\.\_\- ]#', '#^\.#');
+ 
+ 		return preg_replace($regex, '', $file);
+```

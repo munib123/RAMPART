@@ -1,0 +1,76 @@
+# CrossVul Fix Pair: Cross-Site Request Forgery (CSRF) in php
+**Pair ID:** 5032_8
+**Vulnerability Class:** Cross-Site Request Forgery (CSRF)
+**CWE:** CWE-352
+**Language:** php
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `5032_8`)
+
+## Vulnerability Information & PoC
+
+## Description
+Cross-Site Request Forgery (CSRF) - When a web server is designed to receive a request from a client without any mechanism for verifying that it was intentionally sent, then it might be possible for an attacker to trick a client into...
+
+## Vulnerable Code
+```php
+Lines 173-213 of the vulnerable file.
+
+        header("Cache-Control: max-age=$offset");
+        header("Pragma: ");
+    }
+
+    /**
+     * Send browser compatibility/security/etc. headers
+     */
+    public function common_headers()
+    {
+        if (headers_sent()) {
+            return;
+        }
+
+        // Unlock IE compatibility mode
+        if ($this->browser->ie) {
+            header('X-UA-Compatible: IE=edge');
+        }
+
+        // Request browser to disable DNS prefetching (CVE-2010-0464)
+        header("X-DNS-Prefetch-Control: off");
+    }
+
+    /**
+     * Show error page and terminate script execution
+     *
+     * @param int    $code     Error code
+     * @param string $message  Error message
+     */
+    public function raise_error($code, $message)
+    {
+        // STUB: to be overloaded by specific output classes
+        fputs(STDERR, "Error $code: $message\n");
+        exit(-1);
+    }
+
+    /**
+     * Create an edit field for inclusion on a form
+     *
+     * @param string col field name
+     * @param string value field value
+     * @param array attrib HTML element attributes for field
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -190,6 +190,11 @@
+ 
+         // Request browser to disable DNS prefetching (CVE-2010-0464)
+         header("X-DNS-Prefetch-Control: off");
++
++        // send CSRF and clickjacking protection headers
++        if ($xframe = $this->app->config->get('x_frame_options', 'sameorigin')) {
++            header('X-Frame-Options: ' . $xframe);
++        }
+     }
+ 
+     /**
+```

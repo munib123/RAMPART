@@ -1,0 +1,78 @@
+# CrossVul Fix Pair: Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG) in java
+**Pair ID:** 830_1
+**Vulnerability Class:** Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)
+**CWE:** CWE-338
+**Language:** java
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `830_1`)
+
+## Vulnerability Information & PoC
+
+## Description
+Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG) - When a non-cryptographic PRNG is used in a cryptographic context, it can expose the cryptography to certain types of attacks.
+
+## Vulnerable Code
+```java
+Lines 1-33 of the vulnerable file.
+
+/*
+ * Copyright 2013 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package ratpack.session.internal;
+
+import io.netty.util.AsciiString;
+import ratpack.session.SessionIdGenerator;
+
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class DefaultSessionIdGenerator implements SessionIdGenerator {
+
+  public AsciiString generateSessionId() {
+    ThreadLocalRandom random = ThreadLocalRandom.current();
+    UUID uuid = new UUID(random.nextLong(), random.nextLong());
+    return AsciiString.of(uuid.toString());
+  }
+
+}
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -16,18 +16,17 @@
+ 
+ package ratpack.session.internal;
+ 
++import com.google.inject.Singleton;
+ import io.netty.util.AsciiString;
+ import ratpack.session.SessionIdGenerator;
+ 
+ import java.util.UUID;
+-import java.util.concurrent.ThreadLocalRandom;
+ 
++@Singleton
+ public class DefaultSessionIdGenerator implements SessionIdGenerator {
+ 
+   public AsciiString generateSessionId() {
+-    ThreadLocalRandom random = ThreadLocalRandom.current();
+-    UUID uuid = new UUID(random.nextLong(), random.nextLong());
+-    return AsciiString.of(uuid.toString());
++    return AsciiString.cached(UUID.randomUUID().toString());
+   }
+ 
+ }
+```

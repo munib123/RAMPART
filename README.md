@@ -32,7 +32,10 @@ rampart/
 │   └── src-tauri/           Rust/Tauri shell (spawns the backend sidecar)
 ├── knowledge_base/          RAG source (builds the Chroma store; README inside)
 ├── semgrep_test/            bundled vulnerable sample code
-├── data/                    raw sources (nuclei_classified/, etc.)
+├── data/                    classified corpora the knowledge base is built from
+│   ├── hackerone/hackerone_classified/   12k disclosed HackerOne reports
+│   ├── nuclei_classified/                5.3k Nuclei templates
+│   └── crossvul_classified/              9.3k CrossVul vulnerable/fixed code pairs
 ├── .env / .env.example      secrets config (git-ignored)
 └── README.md
 ```
@@ -130,6 +133,35 @@ backend\.venv\Scripts\python -m pip install semgrep
 
 ---
 
+## Knowledge-base corpora (`data/`)
+
+Every source is stored the same way - one markdown report per record, filed under a
+vulnerability-class folder - so the knowledge-base builder can walk them uniformly:
+
+| Corpus | Path | Records | Content |
+|---|---|---|---|
+| HackerOne | `data/hackerone/hackerone_classified/` | ~12,000 | disclosed reports (title, PoC, remediation timeline) |
+| Nuclei | `data/nuclei_classified/` | ~5,300 | templates (description, exploit payload, references) |
+| CrossVul | `data/crossvul_classified/` | 9,313 | real fix commits: the patch diff + the vulnerable lines around it, 21 languages |
+
+**CrossVul** is derived from the HuggingFace dataset
+[`hitoshura25/crossvul`](https://huggingface.co/datasets/hitoshura25/crossvul) (Apache-2.0):
+9,313 before/after file pairs over 158 CWEs and 21 languages (top: c, php, javascript,
+python, java). The upstream rows carry whole files before and after the fix - 672 MB of
+source, median 31 KB a pair - so each report here keeps only what carries the security
+signal: the unified diff of the fix plus the vulnerable lines around the patched hunk.
+
+Class folders reuse the names already present in the other two corpora wherever the CWE
+is known there (8,012 of 9,313 reports; 87 of the 138 folders are shared), so retrieval
+sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
+
+> **Not yet embedded:** `config.COLLECTIONS` still lists only the HackerOne and Nuclei
+> Chroma collections. CrossVul reaches retrieval once `knowledge_base/` indexes
+> `data/crossvul_classified/` into a `rampart_crossvul_minilm` collection and that name is
+> added to `backend/app/config.py`.
+
+---
+
 ## What each piece is
 
 | Part | File | Notes |
@@ -183,7 +215,51 @@ backend\.venv\Scripts\python -m pip install semgrep
 - Plans/billing: per-plan scan/fix quotas (Free 10/5, Pro 30/20, Premium 500/200) enforced server-side
   with a `402 {code: plan_limit}` upsell; upgrade is a stub until payment is wired.
 - LLM quota: free-tier limits are per-day per-model; a scan costs ~1 batched call to stay within budget.
+- CrossVul is **on disk but not yet retrievable** - it is a third corpus under `data/`, and it
+  reaches RAG only once `knowledge_base/` embeds it and `config.COLLECTIONS` names the collection.
 - Later (per the design): more knowledge-base sources and the self-verifying remediation loop.
+
+---
+
+## Progress log
+
+Newest first - what changed in the repo and why, so the state is legible without digging
+through git history.
+
+### 2026-08-19 - CrossVul added as a third knowledge-base corpus
+
+**What landed:** `data/crossvul_classified/` - 9,313 markdown reports across 138
+vulnerability-class folders (26.8 MB), built from the HuggingFace dataset
+[`hitoshura25/crossvul`](https://huggingface.co/datasets/hitoshura25/crossvul) (Apache-2.0,
+2 parquet shards, 223 MB). Same `<Class>/Report_<id>.md` layout and same header/section
+shape as the HackerOne and Nuclei corpora, so the knowledge-base builder needs no
+special-casing.
+
+**Decisions:**
+
+- *Patch, not whole files.* The upstream rows hold complete before/after files - 672 MB of
+  source, median 31 KB per pair, max 1 MB. Each report keeps the unified diff of the fix
+  (median ~600 chars, capped at 8 KB) plus the vulnerable lines around the first patched
+  hunk (±20 lines, capped at 60). That is the part carrying security signal, and it keeps
+  the corpus at 27 MB instead of ~700 MB of mostly-unrelated file content.
+- *One taxonomy, not three.* Class folders were matched to the CWE -> folder names already
+  used in `nuclei_classified/` and `hackerone_classified/` (136 CWEs covered), so e.g.
+  CWE-94 files into the existing `Code Injection` folder. 8,012 of 9,313 reports reuse an
+  existing class name; 87 of the 138 folders are shared with the older corpora. The
+  remainder fall back to the MITRE CWE name from the dataset's own `cwe_description`.
+- *Data only, no tooling.* The fetch/process scripts and the raw parquet staging copy were
+  deliberately removed after the run, by request. Consequence: the corpus is **not
+  regenerable from inside this repo** - redoing it means re-downloading the dataset and
+  rewriting the processing. Nothing is lost for retrieval (every report carries its CWE,
+  language, and upstream `file_pair_id`), only reproducibility.
+
+**Verified:** all 9,313 files parse with the expected header, a `**CWE:** CWE-nnn` line, a
+non-empty diff block, and a non-empty vulnerable-code excerpt.
+
+**Still open:** embedding it. `backend/app/config.py` still lists only
+`rampart_hackerone_minilm` + `rampart_nuclei_minilm`; CrossVul becomes retrievable when
+`knowledge_base/` indexes `data/crossvul_classified/` into a `rampart_crossvul_minilm`
+collection and that name is added to `COLLECTIONS`.
 
 ---
 

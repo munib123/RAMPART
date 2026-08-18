@@ -1,0 +1,73 @@
+# CrossVul Fix Pair: Improper Input Validation in python
+**Pair ID:** 3660_1
+**Vulnerability Class:** Improper Input Validation
+**CWE:** CWE-20
+**Language:** python
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `3660_1`)
+
+## Vulnerability Information & PoC
+
+## Description
+Improper Input Validation - Input validation is a frequently-used technique for checking potentially dangerous inputs in order to ensure that the inputs are safe for processing within the code, or when communicating with othe...
+
+## Vulnerable Code
+```python
+Lines 507-547 of the vulnerable file.
+
+                from_port > to_port):
+                raise exception.InvalidPortRange(from_port=from_port,
+                      to_port=to_port, msg="Former value cannot"
+                                            " be greater than the later")
+
+            # Verify valid TCP, UDP port ranges
+            if (ip_protocol.upper() in ['TCP', 'UDP'] and
+                (from_port < 1 or to_port > 65535)):
+                raise exception.InvalidPortRange(from_port=from_port,
+                      to_port=to_port, msg="Valid TCP ports should"
+                                           " be between 1-65535")
+
+            # Verify ICMP type and code
+            if (ip_protocol.upper() == "ICMP" and
+                (from_port < -1 or from_port > 255 or
+                to_port < -1 or to_port > 255)):
+                raise exception.InvalidPortRange(from_port=from_port,
+                      to_port=to_port, msg="For ICMP, the"
+                                           " type:code must be valid")
+
+            values['protocol'] = ip_protocol
+            values['from_port'] = from_port
+            values['to_port'] = to_port
+        else:
+            # If cidr based filtering, protocol and ports are mandatory
+            if 'cidr' in values:
+                return None
+
+        return values
+
+    def delete(self, req, id):
+        context = req.environ['nova.context']
+        authorize(context)
+
+        self.compute_api.ensure_default_security_group(context)
+        try:
+            id = int(id)
+            rule = db.security_group_rule_get(context, id)
+        except ValueError:
+            msg = _("Rule id is not integer")
+            raise exc.HTTPBadRequest(explanation=msg)
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -524,7 +524,7 @@
+                       to_port=to_port, msg="For ICMP, the"
+                                            " type:code must be valid")
+ 
+-            values['protocol'] = ip_protocol
++            values['protocol'] = ip_protocol.lower()
+             values['from_port'] = from_port
+             values['to_port'] = to_port
+         else:
+```

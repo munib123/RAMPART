@@ -1,0 +1,72 @@
+# CrossVul Fix Pair: Improper Authentication in python
+**Pair ID:** 650_0
+**Vulnerability Class:** Improper Authentication - Generic
+**CWE:** CWE-287
+**Language:** python
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `650_0`)
+
+## Vulnerability Information & PoC
+
+## Description
+Improper Authentication - When an actor claims to have a given identity, the product does not prove or insufficiently proves that the claim is correct.
+
+## Vulnerable Code
+```python
+Lines 15-55 of the vulnerable file.
+
+# You should have received a copy of the GNU Lesser General Public License
+# along with Paramiko; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
+
+"""
+Common constants and global variables.
+"""
+import logging
+from paramiko.py3compat import byte_chr, PY2, bytes_types, text_type, long
+
+MSG_DISCONNECT, MSG_IGNORE, MSG_UNIMPLEMENTED, MSG_DEBUG, \
+    MSG_SERVICE_REQUEST, MSG_SERVICE_ACCEPT = range(1, 7)
+MSG_KEXINIT, MSG_NEWKEYS = range(20, 22)
+MSG_USERAUTH_REQUEST, MSG_USERAUTH_FAILURE, MSG_USERAUTH_SUCCESS, \
+    MSG_USERAUTH_BANNER = range(50, 54)
+MSG_USERAUTH_PK_OK = 60
+MSG_USERAUTH_INFO_REQUEST, MSG_USERAUTH_INFO_RESPONSE = range(60, 62)
+MSG_USERAUTH_GSSAPI_RESPONSE, MSG_USERAUTH_GSSAPI_TOKEN = range(60, 62)
+MSG_USERAUTH_GSSAPI_EXCHANGE_COMPLETE, MSG_USERAUTH_GSSAPI_ERROR,\
+    MSG_USERAUTH_GSSAPI_ERRTOK, MSG_USERAUTH_GSSAPI_MIC = range(63, 67)
+MSG_GLOBAL_REQUEST, MSG_REQUEST_SUCCESS, MSG_REQUEST_FAILURE = range(80, 83)
+MSG_CHANNEL_OPEN, MSG_CHANNEL_OPEN_SUCCESS, MSG_CHANNEL_OPEN_FAILURE, \
+    MSG_CHANNEL_WINDOW_ADJUST, MSG_CHANNEL_DATA, MSG_CHANNEL_EXTENDED_DATA, \
+    MSG_CHANNEL_EOF, MSG_CHANNEL_CLOSE, MSG_CHANNEL_REQUEST, \
+    MSG_CHANNEL_SUCCESS, MSG_CHANNEL_FAILURE = range(90, 101)
+
+cMSG_DISCONNECT = byte_chr(MSG_DISCONNECT)
+cMSG_IGNORE = byte_chr(MSG_IGNORE)
+cMSG_UNIMPLEMENTED = byte_chr(MSG_UNIMPLEMENTED)
+cMSG_DEBUG = byte_chr(MSG_DEBUG)
+cMSG_SERVICE_REQUEST = byte_chr(MSG_SERVICE_REQUEST)
+cMSG_SERVICE_ACCEPT = byte_chr(MSG_SERVICE_ACCEPT)
+cMSG_KEXINIT = byte_chr(MSG_KEXINIT)
+cMSG_NEWKEYS = byte_chr(MSG_NEWKEYS)
+cMSG_USERAUTH_REQUEST = byte_chr(MSG_USERAUTH_REQUEST)
+cMSG_USERAUTH_FAILURE = byte_chr(MSG_USERAUTH_FAILURE)
+cMSG_USERAUTH_SUCCESS = byte_chr(MSG_USERAUTH_SUCCESS)
+cMSG_USERAUTH_BANNER = byte_chr(MSG_USERAUTH_BANNER)
+cMSG_USERAUTH_PK_OK = byte_chr(MSG_USERAUTH_PK_OK)
+cMSG_USERAUTH_INFO_REQUEST = byte_chr(MSG_USERAUTH_INFO_REQUEST)
+cMSG_USERAUTH_INFO_RESPONSE = byte_chr(MSG_USERAUTH_INFO_RESPONSE)
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -32,6 +32,7 @@
+ MSG_USERAUTH_GSSAPI_RESPONSE, MSG_USERAUTH_GSSAPI_TOKEN = range(60, 62)
+ MSG_USERAUTH_GSSAPI_EXCHANGE_COMPLETE, MSG_USERAUTH_GSSAPI_ERROR,\
+     MSG_USERAUTH_GSSAPI_ERRTOK, MSG_USERAUTH_GSSAPI_MIC = range(63, 67)
++HIGHEST_USERAUTH_MESSAGE_ID = 79
+ MSG_GLOBAL_REQUEST, MSG_REQUEST_SUCCESS, MSG_REQUEST_FAILURE = range(80, 83)
+ MSG_CHANNEL_OPEN, MSG_CHANNEL_OPEN_SUCCESS, MSG_CHANNEL_OPEN_FAILURE, \
+     MSG_CHANNEL_WINDOW_ADJUST, MSG_CHANNEL_DATA, MSG_CHANNEL_EXTENDED_DATA, \
+```

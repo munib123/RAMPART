@@ -1,0 +1,72 @@
+# CrossVul Fix Pair: 7PK in c
+**Pair ID:** 5205_0
+**Vulnerability Class:** 7PK
+**CWE:** CWE-254
+**Language:** c
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `5205_0`)
+
+## Vulnerability Information & PoC
+
+## Description
+7PK - Security Features
+
+## Vulnerable Code
+```c
+Lines 25-65 of the vulnerable file.
+
+#define PACKETPARSER_H
+
+#include <stdint.h>
+#include "bzrtp/bzrtp.h"
+
+/* header of ZRTP packet is 12 bytes : Preambule/Sequence Number + ZRTP Magic Cookie +  SSRC */
+#define ZRTP_PACKET_HEADER_LENGTH	12
+#define ZRTP_PACKET_CRC_LENGTH		4
+#define ZRTP_PACKET_OVERHEAD		16
+
+#define		BZRTP_PARSER_ERROR_INVALIDCRC  			0xa001
+#define		BZRTP_PARSER_ERROR_INVALIDPACKET		0xa002
+#define		BZRTP_PARSER_ERROR_OUTOFORDER			0xa004
+#define		BZRTP_PARSER_ERROR_INVALIDMESSAGE		0xa008
+#define		BZRTP_PARSER_ERROR_INVALIDCONTEXT		0xa010
+#define		BZRTP_PARSER_ERROR_UNMATCHINGCONFIRMMAC	0xa020
+#define		BZRTP_PARSER_ERROR_UNMATCHINGSSRC		0xa040
+#define		BZRTP_PARSER_ERROR_UNMATCHINGHASHCHAIN	0xa080
+#define		BZRTP_PARSER_ERROR_UNMATCHINGMAC		0xa100
+#define		BZRTP_PARSER_ERROR_UNEXPECTEDMESSAGE	0xa200
+
+#define		BZRTP_BUILDER_ERROR_INVALIDPACKET		0x5001
+#define		BZRTP_BUILDER_ERROR_INVALIDMESSAGE		0x5002
+#define		BZRTP_BUILDER_ERROR_INVALIDMESSAGETYPE	0x5004
+#define		BZRTP_BUILDER_ERROR_UNKNOWN				0x5008
+#define		BZRTP_BUILDER_ERROR_INVALIDCONTEXT		0x5010
+
+#define		BZRTP_CREATE_ERROR_INVALIDMESSAGETYPE			0x0a01
+#define		BZRTP_CREATE_ERROR_UNABLETOCREATECRYPTOCONTEXT	0x0a02
+#define		BZRTP_CREATE_ERROR_INVALIDCONTEXT				0x0a04
+
+/* map all message type to an uint8_t value */
+#define		MSGTYPE_INVALID		0x00
+#define		MSGTYPE_HELLO		0x01
+#define		MSGTYPE_HELLOACK	0x02
+#define		MSGTYPE_COMMIT		0x03
+#define		MSGTYPE_DHPART1		0x04
+#define		MSGTYPE_DHPART2		0x05
+#define		MSGTYPE_CONFIRM1	0x06
+#define		MSGTYPE_CONFIRM2	0x07
+#define		MSGTYPE_CONF2ACK	0x08
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -42,6 +42,7 @@
+ #define		BZRTP_PARSER_ERROR_UNMATCHINGHASHCHAIN	0xa080
+ #define		BZRTP_PARSER_ERROR_UNMATCHINGMAC		0xa100
+ #define		BZRTP_PARSER_ERROR_UNEXPECTEDMESSAGE	0xa200
++#define		BZRTP_PARSER_ERROR_UNMATCHINGHVI		0xa400
+ 
+ #define		BZRTP_BUILDER_ERROR_INVALIDPACKET		0x5001
+ #define		BZRTP_BUILDER_ERROR_INVALIDMESSAGE		0x5002
+```

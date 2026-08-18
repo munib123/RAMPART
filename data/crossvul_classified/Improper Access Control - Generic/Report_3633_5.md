@@ -1,0 +1,117 @@
+# CrossVul Fix Pair: Permissions, Privileges, and Access Controls in python
+**Pair ID:** 3633_5
+**Vulnerability Class:** Improper Access Control - Generic
+**CWE:** CWE-264
+**Language:** python
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `3633_5`)
+
+## Vulnerability Information & PoC
+
+## Description
+Permissions, Privileges, and Access Controls
+
+## Vulnerable Code
+```python
+Lines 27-67 of the vulnerable file.
+
+flags.DEFINE_integer('quota_instances', 10,
+                     'number of instances allowed per project')
+flags.DEFINE_integer('quota_cores', 20,
+                     'number of instance cores allowed per project')
+flags.DEFINE_integer('quota_ram', 50 * 1024,
+                     'megabytes of instance ram allowed per project')
+flags.DEFINE_integer('quota_volumes', 10,
+                     'number of volumes allowed per project')
+flags.DEFINE_integer('quota_gigabytes', 1000,
+                     'number of volume gigabytes allowed per project')
+flags.DEFINE_integer('quota_floating_ips', 10,
+                     'number of floating ips allowed per project')
+flags.DEFINE_integer('quota_metadata_items', 128,
+                     'number of metadata items allowed per instance')
+flags.DEFINE_integer('quota_max_injected_files', 5,
+                     'number of injected files allowed')
+flags.DEFINE_integer('quota_max_injected_file_content_bytes', 10 * 1024,
+                     'number of bytes allowed per injected file')
+flags.DEFINE_integer('quota_max_injected_file_path_bytes', 255,
+                     'number of bytes allowed per injected file path')
+
+
+def _get_default_quotas():
+    defaults = {
+        'instances': FLAGS.quota_instances,
+        'cores': FLAGS.quota_cores,
+        'ram': FLAGS.quota_ram,
+        'volumes': FLAGS.quota_volumes,
+        'gigabytes': FLAGS.quota_gigabytes,
+        'floating_ips': FLAGS.quota_floating_ips,
+        'metadata_items': FLAGS.quota_metadata_items,
+        'injected_files': FLAGS.quota_max_injected_files,
+        'injected_file_content_bytes':
+            FLAGS.quota_max_injected_file_content_bytes,
+    }
+    # -1 in the quota flags means unlimited
+    for key in defaults.keys():
+        if defaults[key] == -1:
+            defaults[key] = None
+    return defaults
+
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -44,6 +44,10 @@
+                      'number of bytes allowed per injected file')
+ flags.DEFINE_integer('quota_max_injected_file_path_bytes', 255,
+                      'number of bytes allowed per injected file path')
++flags.DEFINE_integer('quota_security_groups', 10,
++                     'number of security groups per project')
++flags.DEFINE_integer('quota_security_group_rules', 20,
++                     'number of security rules per security group')
+ 
+ 
+ def _get_default_quotas():
+@@ -58,6 +62,8 @@
+         'injected_files': FLAGS.quota_max_injected_files,
+         'injected_file_content_bytes':
+             FLAGS.quota_max_injected_file_content_bytes,
++        'security_groups': FLAGS.quota_security_groups,
++        'security_group_rules': FLAGS.quota_security_group_rules,
+     }
+     # -1 in the quota flags means unlimited
+     for key in defaults.keys():
+@@ -134,6 +140,32 @@
+     return min(requested_floating_ips, allowed_floating_ips)
+ 
+ 
++def allowed_security_groups(context, requested_security_groups):
++    """Check quota and return min(requested, allowed) security groups."""
++    project_id = context.project_id
++    context = context.elevated()
++    used_sec_groups = db.security_group_count_by_project(context, project_id)
++    quota = get_project_quotas(context, project_id)
++    allowed_sec_groups = _get_request_allotment(requested_security_groups,
++                                                  used_sec_groups,
++                                                  quota['security_groups'])
++    return min(requested_security_groups, allowed_sec_groups)
++
++
++def allowed_security_group_rules(context, security_group_id,
++        requested_rules):
++    """Check quota and return min(requested, allowed) sec group rules."""
++    project_id = context.project_id
++    context = context.elevated()
++    used_rules = db.security_group_rule_count_by_group(context,
++                                                            security_group_id)
++    quota = get_project_quotas(context, project_id)
++    allowed_rules = _get_request_allotment(requested_rules,
++                                              used_rules,
++                                              quota['security_group_rules'])
++    return min(requested_rules, allowed_rules)
++
++
+ def _calculate_simple_quota(context, resource, requested):
+     """Check quota for resource; return min(requested, allowed)."""
+     quota = get_project_quotas(context, context.project_id)
+```

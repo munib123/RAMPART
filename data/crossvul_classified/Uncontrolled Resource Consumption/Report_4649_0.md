@@ -1,0 +1,155 @@
+# CrossVul Fix Pair: Uncontrolled Resource Consumption in javascript
+**Pair ID:** 4649_0
+**Vulnerability Class:** Uncontrolled Resource Consumption
+**CWE:** CWE-400
+**Language:** javascript
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `4649_0`)
+
+## Vulnerability Information & PoC
+
+## Description
+Uncontrolled Resource Consumption - Limited resources include memory, file system storage, database connection pool entries, and CPU.
+
+## Vulnerable Code
+```javascript
+Lines 205-245 of the vulnerable file.
+
+                    '8.1'       : 'NT 6.3',
+                    '10'        : ['NT 6.4', 'NT 10.0'],
+                    'RT'        : 'ARM'
+                }
+            }
+        }
+    };
+
+
+    //////////////
+    // Regex map
+    /////////////
+
+
+    var regexes = {
+
+        browser : [[
+
+            // Presto based
+            /(opera\smini)\/([\w\.-]+)/i,                                       // Opera Mini
+            /(opera\s[mobiletab]+).+version\/([\w\.-]+)/i,                      // Opera Mobi/Tablet
+            /(opera).+version\/([\w\.]+)/i,                                     // Opera > 9.80
+            /(opera)[\/\s]+([\w\.]+)/i                                          // Opera < 9.80
+            ], [NAME, VERSION], [
+
+            /(opios)[\/\s]+([\w\.]+)/i                                          // Opera mini on iphone >= 8.0
+            ], [[NAME, 'Opera Mini'], VERSION], [
+
+            /\s(opr)\/([\w\.]+)/i                                               // Opera Webkit
+            ], [[NAME, 'Opera'], VERSION], [
+
+            // Mixed
+            /(kindle)\/([\w\.]+)/i,                                             // Kindle
+            /(lunascape|maxthon|netfront|jasmine|blazer)[\/\s]?([\w\.]*)/i,
+                                                                                // Lunascape/Maxthon/Netfront/Jasmine/Blazer
+            // Trident based
+            /(avant\s|iemobile|slim)(?:browser)?[\/\s]?([\w\.]*)/i,
+                                                                                // Avant/IEMobile/SlimBrowser
+            /(bidubrowser|baidubrowser)[\/\s]?([\w\.]+)/i,                      // Baidu Browser
+            /(?:ms|\()(ie)\s([\w\.]+)/i,                                        // Internet Explorer
+
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -222,7 +222,7 @@
+ 
+             // Presto based
+             /(opera\smini)\/([\w\.-]+)/i,                                       // Opera Mini
+-            /(opera\s[mobiletab]+).+version\/([\w\.-]+)/i,                      // Opera Mobi/Tablet
++            /(opera\s[mobiletab]{3,6}).+version\/([\w\.-]+)/i,                  // Opera Mobi/Tablet
+             /(opera).+version\/([\w\.]+)/i,                                     // Opera > 9.80
+             /(opera)[\/\s]+([\w\.]+)/i                                          // Opera < 9.80
+             ], [NAME, VERSION], [
+@@ -252,7 +252,7 @@
+             /(konqueror)\/([\w\.]+)/i                                           // Konqueror
+             ], [[NAME, 'Konqueror'], VERSION], [
+ 
+-            /(trident).+rv[:\s]([\w\.]+).+like\sgecko/i                         // IE11
++            /(trident).+rv[:\s]([\w\.]{1,9}).+like\sgecko/i                     // IE11
+             ], [[NAME, 'IE'], VERSION], [
+ 
+             /(edge|edgios|edga|edg)\/((\d+)?[\w\.]+)/i                          // Microsoft Edge
+@@ -362,13 +362,13 @@
+             /fxios\/([\w\.-]+)/i                                                // Firefox for iOS
+             ], [VERSION, [NAME, 'Firefox']], [
+ 
+-            /version\/([\w\.]+).+?mobile\/\w+\s(safari)/i                       // Mobile Safari
++            /version\/([\w\.]+)\s.*mobile\/\w+\s(safari)/i                      // Mobile Safari
+             ], [VERSION, [NAME, 'Mobile Safari']], [
+ 
+-            /version\/([\w\.]+).+?(mobile\s?safari|safari)/i                    // Safari & Safari Mobile
++            /version\/([\w\.]+)\s.*(mobile\s?safari|safari)/i                   // Safari & Safari Mobile
+             ], [VERSION, NAME], [
+ 
+-            /webkit.+?(gsa)\/([\w\.]+).+?(mobile\s?safari|safari)(\/[\w\.]+)/i  // Google Search Appliance on iOS
++            /webkit.+?(gsa)\/([\w\.]+)\s.*(mobile\s?safari|safari)(\/[\w\.]+)/i // Google Search Appliance on iOS
+             ], [[NAME, 'GSA'], VERSION], [
+ 
+             /webkit.+?(mobile\s?safari|safari)(\/[\w\.]+)/i                     // Safari < 3.0
+@@ -387,7 +387,7 @@
+ 
+                                                                                 // Firefox/SeaMonkey/K-Meleon/IceCat/IceApe/Firebird/Phoenix
+             /(firefox)\/([\w\.]+)\s[\w\s\-]+\/[\w\.]+$/i,                       // Other Firefox-based
+-            /(mozilla)\/([\w\.]+).+rv\:.+gecko\/\d+/i,                          // Mozilla
++            /(mozilla)\/([\w\.]+)\s.+rv\:.+gecko\/\d+/i,                        // Mozilla
+ 
+             // Other
+             /(polaris|lynx|dillo|icab|doris|amaya|w3m|netsurf|sleipnir)[\/\s]?([\w\.]+)/i,
+@@ -487,7 +487,7 @@
+             /(sprint\s(\w+))/i                                                  // Sprint Phones
+             ], [[VENDOR, mapper.str, maps.device.sprint.vendor], [MODEL, mapper.str, maps.device.sprint.model], [TYPE, MOBILE]], [
+ 
+-            /(htc)[;_\s-]+([\w\s]+(?=\)|\sbuild)|\w+)/i,                        // HTC
++            /(htc)[;_\s-]{1,2}([\w\s]+(?=\)|\sbuild)|\w+)/i,                    // HTC
+             /(zte)-(\w*)/i,                                                     // ZTE
+             /(alcatel|geeksphone|nexian|panasonic|(?=;\s)sony)[_\s-]?([\w-]*)/i
+                                                                                 // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
+@@ -591,13 +591,13 @@
+             ], [MODEL, [VENDOR, 'Google'], [TYPE, MOBILE]], [
+ 
+             /android.+;\s(\w+)\s+build\/hm\1/i,                                 // Xiaomi Hongmi 'numeric' models
+-            /android.+(hm[\s\-_]*note?[\s_]*(?:\d\w)?)\s+build/i,               // Xiaomi Hongmi
+-            /android.+(redmi[\s\-_]*(?:note|k)?(?:[\s_]?[\w\s]+))(?:\s+build|\))/i,      
++            /android.+(hm[\s\-_]?note?[\s_]?(?:\d\w)?)\sbuild/i,                // Xiaomi Hongmi
++            /android.+(redmi[\s\-_]?(?:note|k)?(?:[\s_]?[\w\s]+))(?:\sbuild|\))/i,      
+                                                                                 // Xiaomi Redmi
+-            /android.+(mi[\s\-_]*(?:a\d|one|one[\s_]plus|note lte)?[\s_]?(?:\d?\w?)[\s_]*(?:plus)?)\s+build/i    
++            /android.+(mi[\s\-_]?(?:a\d|one|one[\s_]plus|note lte)?[\s_]?(?:\d?\w?)[\s_]?(?:plus)?)\sbuild/i    
+                                                                                 // Xiaomi Mi
+             ], [[MODEL, /_/g, ' '], [VENDOR, 'Xiaomi'], [TYPE, MOBILE]], [
+-            /android.+(mi[\s\-_]*(?:pad)(?:[\s_]?[\w\s]+))(?:\s+build|\))/i     // Mi Pad tablets
++            /android.+(mi[\s\-_]?(?:pad)(?:[\s_]?[\w\s]+))(?:\sbuild|\))/i     // Mi Pad tablets
+             ],[[MODEL, /_/g, ' '], [VENDOR, 'Xiaomi'], [TYPE, TABLET]], [
+             /android.+;\s(m[1-5]\snote)\sbuild/i                                // Meizu
+             ], [MODEL, [VENDOR, 'Meizu'], [TYPE, MOBILE]], [
+@@ -611,7 +611,7 @@
+             /android.+[;\/]\s*(RCT[\d\w]+)\s+build/i                            // RCA Tablets
+             ], [MODEL, [VENDOR, 'RCA'], [TYPE, TABLET]], [
+ 
+-            /android.+[;\/\s]+(Venue[\d\s]{2,7})\s+build/i                      // Dell Venue Tablets
++            /android.+[;\/\s](Venue[\d\s]{2,7})\s+build/i                       // Dell Venue Tablets
+             ], [MODEL, [VENDOR, 'Dell'], [TYPE, TABLET]], [
+ 
+             /android.+[;\/]\s*(Q[T|M][\d\w]+)\s+build/i                         // Verizon Tablet
+@@ -669,8 +669,8 @@
+             /android.+[;\/]\s*TU_(1491)\s+build/i                               // Rotor Tablets
+             ], [MODEL, [VENDOR, 'Rotor'], [TYPE, TABLET]], [
+ 
+-            /android.+(KS(.+))\s+build/i                                        // Amazon Kindle Tablets
+-            ], [MODEL, [VENDOR, 'Amazon'], [TYPE, TABLET]], [
++            //android.+(KS(.+))\s+build/i                                        // Amazon Kindle Tablets
++            //], [MODEL, [VENDOR, 'Amazon'], [TYPE, TABLET]], [
+ 
+             /android.+(Gigaset)[\s\-]+(Q\w{1,9})\s+build/i                      // Gigaset Tablets
+             ], [VENDOR, MODEL, [TYPE, TABLET]], [
+```

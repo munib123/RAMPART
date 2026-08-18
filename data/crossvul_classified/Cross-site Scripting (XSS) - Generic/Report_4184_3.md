@@ -1,0 +1,80 @@
+# CrossVul Fix Pair: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') in xml
+**Pair ID:** 4184_3
+**Vulnerability Class:** Cross-site Scripting (XSS) - Generic
+**CWE:** CWE-79
+**Language:** xml
+**Source:** CrossVul dataset (`hitoshura25/crossvul`, file pair `4184_3`)
+
+## Vulnerability Information & PoC
+
+## Description
+Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting') - Cross-site scripting (XSS) vulnerabilities occur when: Untrusted data enters a web application, typically from a web request.
+
+## Vulnerable Code
+```xml
+Lines 12-52 of the vulnerable file.
+
+-->
+
+<container xmlns="http://symfony.com/schema/dic/services" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <imports>
+        <import resource="services/controller.xml" />
+        <import resource="services/email.xml" />
+        <import resource="services/listeners.xml" />
+        <import resource="services/menu.xml" />
+        <import resource="services/twig.xml" />
+    </imports>
+    <services>
+        <defaults public="true" />
+
+        <service id="sylius.handler.shop_user_logout" class="Sylius\Bundle\ShopBundle\EventListener\ShopUserLogoutHandler">
+            <argument type="service" id="security.http_utils" />
+            <argument>/</argument>
+            <argument type="service" id="sylius.context.channel.composite" />
+            <argument type="service" id="sylius.storage.cart_session" />
+        </service>
+
+        <service id="sylius.context.cart.session_and_channel_based" class="Sylius\Bundle\CoreBundle\Context\SessionAndChannelBasedCartContext">
+            <argument type="service" id="sylius.storage.cart_session" />
+            <argument type="service" id="sylius.context.channel" />
+            <tag name="sylius.context.cart" priority="-777" />
+        </service>
+
+        <service id="sylius.storage.cart_session" class="Sylius\Bundle\CoreBundle\Storage\CartSessionStorage">
+            <argument type="service" id="session" />
+            <argument>_sylius.cart</argument>
+            <argument type="service" id="sylius.repository.order" />
+        </service>
+
+        <service id="Sylius\Component\Core\Storage\CartStorageInterface" alias="sylius.storage.cart_session" />
+
+        <service id="sylius.grid_filter.shop_string" class="Sylius\Component\Grid\Filter\StringFilter">
+            <tag name="sylius.grid_filter" type="shop_string" form-type="Sylius\Bundle\GridBundle\Form\Type\Filter\StringFilterType" />
+        </service>
+
+        <service id="sylius.calculator.order_items_subtotal" class="Sylius\Bundle\ShopBundle\Calculator\OrderItemsSubtotalCalculator" />
+
+        <service id="Sylius\Bundle\ShopBundle\Calculator\OrderItemsSubtotalCalculatorInterface" alias="sylius.calculator.order_items_subtotal" />
+```
+
+## Fix (vulnerable -> fixed)
+```diff
+--- vulnerable
++++ fixed
+@@ -29,6 +29,15 @@
+             <argument type="service" id="sylius.storage.cart_session" />
+         </service>
+ 
++        <service id="sylius.listener.email_updater" class="Sylius\Bundle\ShopBundle\EventListener\CustomerEmailUpdaterListener">
++            <argument type="service" id="sylius.shop_user.token_generator.email_verification" />
++            <argument type="service" id="sylius.context.channel" />
++            <argument type="service" id="event_dispatcher" />
++            <argument type="service" id="session" />
++            <tag name="kernel.event_listener" event="sylius.customer.pre_update" method="eraseVerification" />
++            <tag name="kernel.event_listener" event="sylius.customer.post_update" method="sendVerificationEmail" />
++        </service>
++
+         <service id="sylius.context.cart.session_and_channel_based" class="Sylius\Bundle\CoreBundle\Context\SessionAndChannelBasedCartContext">
+             <argument type="service" id="sylius.storage.cart_session" />
+             <argument type="service" id="sylius.context.channel" />
+```
