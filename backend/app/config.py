@@ -19,7 +19,7 @@ GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite").strip()
 # --- Knowledge base (the RAG we built) ---
 KB_DIR = FYP / "knowledge_base"
 CHROMA_DIR = KB_DIR / "out" / "chroma"
-COLLECTIONS = ["rampart_hackerone_minilm", "rampart_nuclei_minilm"]
+COLLECTIONS = ["rampart_hackerone_minilm", "rampart_nuclei_minilm", "rampart_crossvul_minilm"]
 RAG_K = 4
 
 # --- LLM verification bounds ---
