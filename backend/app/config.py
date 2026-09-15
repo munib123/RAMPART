@@ -33,6 +33,20 @@ DEFAULT_SCANNER = "auto"        # semgrep (multi-language) when runnable, else b
 SEMGREP_CONFIG = "auto"         # semgrep ruleset (auto = fetch registry rules)
 DEFAULT_TARGET = str(FYP / "semgrep_test" / "test_code")
 
+# --- Joern / CPG phase (the SAST-blind logic-bug locator; Python targets) ---
+# Pure-JVM, runs natively on Windows. The runtime (portable JRE 21 + joern-cli) is installed
+# under tools/ by `python -m app.services.joern.runtime --install`; nothing is hard-coded to a
+# system Java. All overridable by env var.
+JOERN_ENABLED     = os.environ.get("JOERN_ENABLED", "auto").strip()      # auto | on | off
+JOERN_HOME        = os.environ.get("JOERN_HOME", "").strip()             # default: tools/joern-cli
+JOERN_JAVA_HOME   = os.environ.get("JOERN_JAVA_HOME", "").strip()        # default: tools/jre-21*
+JOERN_TIMEOUT     = int(os.environ.get("JOERN_TIMEOUT", "360").strip() or 360)   # s, CPG build + rules
+# Reserved verify slots for CPG candidates. pipeline sorts by severity with a STABLE sort and
+# appends Joern findings, so without this every CPG candidate on a real repo falls past
+# MAX_LLM_FINDINGS into "Unverified" - the phase that exists to find what semgrep cannot would
+# be the first thing starved.
+JOERN_LLM_QUOTA   = int(os.environ.get("JOERN_LLM_QUOTA", "20").strip() or 20)
+
 # --- Supabase / Postgres ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
 SUPABASE_PUBLISHABLE_KEY = os.environ.get("SUPABASE_PUBLISHABLE_KEY", "").strip()

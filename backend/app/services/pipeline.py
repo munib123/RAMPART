@@ -7,6 +7,7 @@ import time
 from app import config
 from app.services import rag, gemini
 from app.services.scanner import get_scanner
+from app.services.joern import scan as joern_scan
 from app.services.extract import extract_slice
 
 
@@ -41,6 +42,18 @@ def run_scan(path: str, scanner_name: str = None, scope: dict = None) -> dict:
 
     findings_raw = scanner.scan(path)
 
+    # Joern / CPG phase: ADD the SAST-blind logic-bug candidates (IDOR, mass assignment,
+    # unchecked quantity, TOCTOU) that the pattern scanner structurally cannot see. Joern only
+    # LOCATES; the candidates are verified by the same LLM step as everything else. It never
+    # raises - a failure can only mean "no extra findings", and the reason is carried in `joern`
+    # so a dead CPG phase is visible in the response and the UI, never silent.
+    run_joern, joern_why = joern_scan.enabled(path)
+    joern = {"used": False, "reason": joern_why, "elapsed_ms": 0, "candidates": 0}
+    if run_joern:
+        joern_raw, joern = joern_scan.scan(path)
+        if joern_raw:
+            findings_raw = list(findings_raw) + joern_raw
+
     # Phase 1 - extract slices (cheap file reads) for every finding.
     prepared = []
     for f in findings_raw:
@@ -50,9 +63,12 @@ def run_scan(path: str, scanner_name: str = None, scope: dict = None) -> dict:
     prepared = _dedupe(prepared)
 
     # Verify the most severe N with the LLM in ONE batched call (bounds cost + respects daily quota).
-    prepared.sort(key=lambda x: _SEV_W.get(x["severity"], 0), reverse=True)
-    to_verify = prepared[:config.MAX_LLM_FINDINGS]
-    skipped = prepared[config.MAX_LLM_FINDINGS:]
+    sev = lambda x: _SEV_W.get(x["severity"], 0)
+    cpg = sorted([x for x in prepared if x["tool"] == "joern"], key=sev, reverse=True)
+    rest = sorted([x for x in prepared if x["tool"] != "joern"], key=sev, reverse=True)
+    q = min(config.JOERN_LLM_QUOTA, len(cpg))          # CPG candidates get reserved slots
+    to_verify = cpg[:q] + rest[:config.MAX_LLM_FINDINGS - q]
+    skipped = cpg[q:] + rest[config.MAX_LLM_FINDINGS - q:]
 
     # Phase 2 - RAG grounding, only for the findings that get verified. Embedding + Chroma
     # queries are the slow part (sequential; embedder/Chroma are not thread-safe), and on a
@@ -86,6 +102,7 @@ def run_scan(path: str, scanner_name: str = None, scope: dict = None) -> dict:
         "ok": True,
         "target": path,
         "scanner": scanner_name,
+        "joern": joern,
         "scope": scope or {},
         "llm": {"enabled": gemini.available(), "model": config.GEMINI_MODEL if gemini.available() else None},
         "counts": counts,

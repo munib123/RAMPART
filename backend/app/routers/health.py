@@ -12,8 +12,10 @@ router = APIRouter(tags=["health"])
 @router.get("/api/health")
 def health():
     from app.services.scanner import SemgrepScanner, BanditScanner
+    from app.services.joern import scan as joern_scan
     sg_ok, sg_why = SemgrepScanner().available()
     bd_ok, _ = BanditScanner().available()
+    jn_ok, jn_why = joern_scan.available()
     active = "semgrep" if sg_ok else "bandit"
     return {
         "ok": True,
@@ -23,6 +25,10 @@ def health():
         "scanners": {
             "semgrep": {"available": sg_ok, "note": sg_why},
             "bandit": {"available": bd_ok, "note": "python-only"},
+            # additive CPG phase, not an alternative scanner: runs alongside whichever is active
+            "joern": {"available": jn_ok, "enabled": config.JOERN_ENABLED,
+                      "note": jn_why or "CPG logic-bug locator (Python) - IDOR, mass assignment, "
+                                        "unchecked quantity, TOCTOU"},
         },
         "default_target": config.DEFAULT_TARGET,
         "db_enabled": db.enabled(),
