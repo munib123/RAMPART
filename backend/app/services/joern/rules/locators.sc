@@ -61,7 +61,11 @@ val LOCK = List("lock", "acquire", "atomic", "select_for_update", "with_for_upda
 val ALLOWLIST = List("allow", "whitelist", "permitted", "allowed_fields", " in [", " in (", " in {")
 val QTY = List("qty", "quantity", "amount", "count", "total", "price", "subtotal", "balance", "stock")
 
-cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m => methodsSeen += 1; try {
+// Fix 4: name matchers are full-match regexes. pysrc2cpg names synthetic scopes "<lambda>0",
+// "<comprehension>1", "<module>" - the trailing index digit meant "<.*>" did NOT match
+// "<lambda>0", so lambdas and comprehension bodies were scanned as user methods and could
+// fire a rule on their own (a lambda multiplying qty has no guard in its own body).
+cpg.method.isExternal(false).nameNot("<.*>\\d*", "__.*__").foreach { m => methodsSeen += 1; try {
   val name = m.name
   val file = m.filename
   val line = m.lineNumber.getOrElse(-1)
