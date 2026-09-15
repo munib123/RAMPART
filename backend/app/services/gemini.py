@@ -151,6 +151,18 @@ def _err_verdict(it: dict, msg: str) -> dict:
             "vuln_class": it.get("title", ""), "explanation": f"LLM verification failed: {msg}", "fix_suggestion": ""}
 
 
+def _transient(e: Exception) -> bool:
+    """A Gemini error worth retrying with backoff: the free tier's per-minute 429, and the
+    503 'high demand' / UNAVAILABLE blips that a demo run hits a few times an hour. A daily
+    quota (429 RESOURCE_EXHAUSTED with 'exceeded your current quota') is NOT transient and
+    is retried only as far as the backoff list goes."""
+    m = str(e)
+    name = type(e).__name__
+    return ("429" in m or "quota" in m.lower() or "ResourceExhausted" in name
+            or "503" in m or "UNAVAILABLE" in m or "high demand" in m.lower()
+            or "ServerError" in name or "504" in m or "DEADLINE_EXCEEDED" in m)
+
+
 def analyze_batch(items: list[dict], scope: dict = None, model: str = None) -> list[dict]:
     """Verify all findings in as few calls as possible (chunks of LLM_BATCH). One call ≈ one request.
     `model` defaults to config.GEMINI_MODEL; per-plan routing can override later via PLAN_MODEL."""
@@ -195,7 +207,7 @@ def analyze_batch(items: list[dict], scope: dict = None, model: str = None) -> l
                 break
             except Exception as e:
                 last = f"{type(e).__name__}: {str(e)[:150]}"
-                if ("429" in str(e) or "quota" in str(e).lower()) and attempt < 3:
+                if _transient(e) and attempt < 3:
                     time.sleep([5, 12, 24][attempt]); continue
                 if isinstance(e, (json.JSONDecodeError, KeyError, ValueError, AttributeError, TypeError)) and attempt < 1:
                     continue   # malformed output - one fresh generation usually parses
@@ -247,7 +259,7 @@ def generate_fix(finding: dict, code: str, exemplars: list[dict] = None, model: 
                                      "summary": (data.get("summary") or "").strip()})
         except Exception as e:
             last = f"{type(e).__name__}: {str(e)[:180]}"
-            if ("429" in str(e) or "quota" in str(e).lower()) and attempt < 3:
+            if _transient(e) and attempt < 3:
                 time.sleep([5, 12, 24][attempt]); continue
             if isinstance(e, (json.JSONDecodeError, ValueError)) and attempt < 1:
                 continue   # malformed output - one fresh generation usually parses
@@ -278,7 +290,7 @@ def analyze(finding: dict, code: str, exemplars: list[dict]) -> dict:
             return _strip_em_dashes(data)
         except Exception as e:
             last = f"{type(e).__name__}: {str(e)[:180]}"
-            is_rate = "429" in str(e) or "ResourceExhausted" in type(e).__name__ or "quota" in str(e).lower()
+            is_rate = _transient(e)
             if is_rate and attempt < len(backoffs):
                 time.sleep(backoffs[attempt])
                 continue
