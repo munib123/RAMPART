@@ -52,8 +52,11 @@ def jstr(s: String): String = "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"
 //   AUTHN_ONLY proves the caller is logged in           -> never suppresses; becomes evidence
 //              the LLM sees ("AUTHENTICATED_NOT_AUTHORIZED"), which is strictly better input
 //              than silence.
+// Fix 5: abort(401) / abort(403) are authorization outcomes; abort(404) is not-found and
+// abort(400) is validation. The bare "abort(" token made a not-found guard read as authz.
 val AUTHZ = List("is_owner", "owner_id", "check_owner", "has_permission", "authorize",
-  "access_denied", "unauthorized", "forbidden", "abort(")
+  "access_denied", "unauthorized", "forbidden", "abort(401", "abort(403",
+  "permissiondenied", "permission_denied", "httpforbidden", "raise_403", "http_403")
 val AUTHN_ONLY = List("current_user", "login_required", "requires_auth", "requires_login",
   "authenticated", "g.user", "current_identity", "session[", "session.get(")
 val LOCK = List("lock", "acquire", "atomic", "select_for_update", "with_for_update", "for update",
