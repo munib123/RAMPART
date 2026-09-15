@@ -103,3 +103,55 @@ Metrics: `recall = tp/(tp+fn)`, `reachable_recall`, `precision = tp/(tp+fp+bait_
 
 For the Django testbed (plan P6) the key is authored and frozen **before** its vocabulary pack
 exists, and split DEV / HELD-OUT with HELD-OUT touched once.
+
+## How to test it yourself
+
+All commands from the repo root with the backend venv. Two things to know first: (1) if the
+backend is running it holds the Joern sidecar port, so these runs use the slower script mode
+(~45 s per CPG build) - results are identical; (2) never run anything against
+`testbeds/djshop-heldout` - it is evaluated once and `runs/heldout.log` records every touch.
+
+**The harness itself (no JVM, ~1 s):**
+```
+backend\.venv\Scripts\python.exe -m pytest bench/tests -q          # scoring policy, freeze, sectioning
+backend\.venv\Scripts\python.exe -m bench.validate_key shopfast --check   # every anchor resolves uniquely
+backend\.venv\Scripts\python.exe -m bench.freeze --check                  # frozen trees unchanged
+```
+
+**One arm, one benchmark (~1 s for bandit, ~50 s for joern, ~2 min for full):**
+```
+backend\.venv\Scripts\python.exe -m bench.run --backend null    --benchmark shopfast    # must be 0 TP
+backend\.venv\Scripts\python.exe -m bench.run --backend bandit  --benchmark shopfast    # 12 TP
+backend\.venv\Scripts\python.exe -m bench.run --backend joern   --benchmark shopfast    # 4 TP + 1 bait
+backend\.venv\Scripts\python.exe -m bench.run --backend joern   --benchmark probe       # 5 TP, 2 TN
+backend\.venv\Scripts\python.exe -m bench.run --backend joern   --benchmark djshop-dev --pack _base    # 2 TP
+backend\.venv\Scripts\python.exe -m bench.run --backend joern   --benchmark djshop-dev --pack django   # 5 TP, 0 FP
+backend\.venv\Scripts\python.exe -m bench.run --backend full    --benchmark shopfast --scanner semgrep # needs GEMINI_API_KEY
+backend\.venv\Scripts\python.exe -m bench.report --latest
+```
+Each run prints TP/FN/FP/bait/TN and writes `runs/<stamp>-<benchmark>-<arm>.json` with every
+candidate, its outcome, the matched key row, and the vocabulary entries that fired it.
+
+**Break a rule on purpose and watch the harness catch it** (the point of the whole thing):
+edit `backend/app/services/joern/rules/locators.sc`, e.g. add `"login_required"` back into
+the authz guard by putting it in `_base.json`'s `authz_guard` - the validator refuses it
+(authz inside authn); force it and `probe` drops from 5 TP to 4. Revert, re-freeze digests.
+
+**The remediation loop (O3): does the fix remove the exploitable path?**
+The CPG is rebuilt on the patched code and the locator is asked again. From the terminal:
+```
+cd backend
+.venv\Scripts\python.exe -m app.services.joern.reverify ^
+    --target D:\d\RAMPART\testbeds\shopfast --file D:\d\RAMPART\testbeds\shopfast\orders.py ^
+    --function get_order --rule joern-idor-missing-ownership --fix my_fix.py
+```
+`my_fix.py` holds the replacement for the whole function (the line span is found by `ast`).
+The fix is applied to a scratch copy - your tree is never touched - and the verdict prints:
+`converged`, `locator_refires`, `guard_evidence` (`method:permissiondenied`,
+`class:isowner`, `instantiated_class:min_value=1`, `method:, g.user.id)` …), `regressions`
+(new candidates elsewhere), and a one-line `reason`. Exit code 0 = converged.
+Try three fixes: an ownership check (`converged: true`), a cosmetic rename (`false`, still
+fires), and a docstring that claims "authorized" (`false` - literals never count).
+Post-apply mode (no `--fix`) checks the live tree and takes `--before <.fix_snapshots/<id>/tree>`
+for the regression diff. The same check runs in the UI as **Verify with CPG** and over
+`POST /api/fix/verify`; `backend/tests/test_reverify.py -k exit_gate` is the end-to-end test.

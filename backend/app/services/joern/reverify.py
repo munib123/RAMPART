@@ -326,3 +326,78 @@ def verify(target: str, path: str, function: str, rule_id: str, *,
         if scratch is not None:
             root = scratch if scratch.name != "tree" else scratch.parent
             shutil.rmtree(root, ignore_errors=True)
+
+
+# --------------------------------------------------------------------------- #
+# CLI: test the remediation loop from a terminal, no UI, no database
+# --------------------------------------------------------------------------- #
+
+def _function_span(path: Path, function: str) -> Optional[tuple[int, int, str]]:
+    """(start_line, end_line, original_code) of `Class.method` / `func` in `path`, via ast."""
+    cls, method = _split_function(function)
+    src = path.read_text(encoding="utf-8", errors="replace")
+    lines = src.splitlines()
+    tree = ast.parse(src)
+
+    def walk(node, owner):
+        for ch in ast.iter_child_nodes(node):
+            if isinstance(ch, ast.ClassDef):
+                yield from walk(ch, ch.name)
+            elif isinstance(ch, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                yield owner, ch
+                yield from walk(ch, owner)
+            else:
+                yield from walk(ch, owner)
+    for owner, node in walk(tree, ""):
+        if node.name == method and (not cls or owner == cls):
+            s, e = node.lineno, node.end_lineno or node.lineno
+            return s, e, "\n".join(lines[s - 1:e])
+    return None
+
+
+def main(argv: list[str]) -> int:
+    """
+    python -m app.services.joern.reverify --target <dir> --file <path.py> --function get_order \
+        --rule joern-idor-missing-ownership --fix fixed.py            # preview on a scratch copy
+    python -m app.services.joern.reverify --target <dir> --file <path.py> --function get_order \
+        --rule joern-idor-missing-ownership [--before <snapshot-tree>] # post-apply, live tree
+
+    --fix FILE holds the replacement for the whole function (what the LLM's "Suggest a fix"
+    produces); the function's current span is found with ast, so no line numbers are typed.
+    Prints the verdict as JSON and exits 0 when converged, 1 otherwise, 2 on a usage error.
+    """
+    import argparse
+    import json as _json
+    import sys
+    ap = argparse.ArgumentParser(description=main.__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--target", required=True, help="the scanned root (a directory, or one .py file)")
+    ap.add_argument("--file", required=True, help="the file the finding is in")
+    ap.add_argument("--function", required=True, help="func or Class.method")
+    ap.add_argument("--rule", required=True, help="joern-idor-missing-ownership | joern-mass-assignment | joern-unchecked-quantity | joern-toctou-check-then-write")
+    ap.add_argument("--fix", help="file with the fixed function; omit for post-apply mode")
+    ap.add_argument("--before", help="post-apply mode: the pre-fix tree (a .fix_snapshots/<id>/tree) for the regression diff")
+    ap.add_argument("--pack", help="vocabulary pack (default: JOERN_PACK / auto)")
+    a = ap.parse_args(argv)
+
+    kw: dict = {"pack": a.pack}
+    if a.fix:
+        span = _function_span(Path(a.file), a.function)
+        if span is None:
+            print(f"function {a.function!r} not found in {a.file}", file=sys.stderr)
+            return 2
+        s, e, original = span
+        kw.update(fixed_code=Path(a.fix).read_text(encoding="utf-8").rstrip("\n"),
+                  start_line=s, end_line=e, original_code=original)
+    else:
+        kw["before_dir"] = a.before
+    r = verify(a.target, a.file, a.function, a.rule, **kw)
+    print(_json.dumps({k: v for k, v in r.items() if k != "evidence"}, indent=1))
+    ev = r.get("evidence") or {}
+    if ev:
+        print(_json.dumps({"evidence": {k: ev.get(k) for k in ("method", "before", "after", "cpg_mode", "cpg_ms")}}, indent=1))
+    return 0 if r.get("ok") and r.get("converged") else 1
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main(sys.argv[1:]))
