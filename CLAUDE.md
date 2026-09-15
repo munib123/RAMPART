@@ -75,7 +75,7 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   July rules, byte-identical — the eight August fixes are P2). Wired in `pipeline.py` with a
   reserved `JOERN_LLM_QUOTA`; `/api/health` reports `scanners.joern`. **First real execution ever:**
   5 candidates on `testbeds/shopfast` = 4 TP + the known `find_product` bait FP, 34.7 s cold /
-  14.7 s warm, bandit/joern overlap 0. Log: `docs/joern-runs/2026-09-15-first-run.md`.
+  14.7 s warm, bandit/joern overlap 0. Log: `bench/runs/2026-09-15-first-run.md`.
   Next: P1 (`bench/` harness + line-anchored key), then P2 (the eight fixes, each behind a number).
   Install on a fresh clone: `python -m app.services.joern.runtime --install`.
 

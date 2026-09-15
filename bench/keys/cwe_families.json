@@ -1,0 +1,93 @@
+{
+  "_doc": "CWE id -> family. Scoring matches on FAMILY, not exact CWE, because scanners label the same defect differently (bandit calls eval() CWE-78; the answer key calls it CWE-95). A CWE belongs to exactly one family. Unknown CWEs map to 'unknown' and never match. CWE-96 (static code injection) and CWE-1336 (template engine) are both SSTI; semgrep emits 96, the key says 1336.",
+  "families": {
+    "injection": [
+      "CWE-77",
+      "CWE-78",
+      "CWE-88",
+      "CWE-89",
+      "CWE-94",
+      "CWE-95"
+    ],
+    "deserialization": [
+      "CWE-502"
+    ],
+    "xss": [
+      "CWE-79",
+      "CWE-80",
+      "CWE-96",
+      "CWE-1336"
+    ],
+    "ssrf": [
+      "CWE-918"
+    ],
+    "xxe": [
+      "CWE-611",
+      "CWE-776"
+    ],
+    "path-traversal": [
+      "CWE-22",
+      "CWE-23",
+      "CWE-73"
+    ],
+    "authn": [
+      "CWE-287",
+      "CWE-306",
+      "CWE-347",
+      "CWE-384"
+    ],
+    "weak-crypto": [
+      "CWE-327",
+      "CWE-328",
+      "CWE-916"
+    ],
+    "insecure-random": [
+      "CWE-330",
+      "CWE-338"
+    ],
+    "secrets": [
+      "CWE-798",
+      "CWE-259",
+      "CWE-321"
+    ],
+    "default-creds": [
+      "CWE-1188",
+      "CWE-1392"
+    ],
+    "open-redirect": [
+      "CWE-601"
+    ],
+    "cleartext": [
+      "CWE-319"
+    ],
+    "debug-config": [
+      "CWE-489",
+      "CWE-215",
+      "CWE-605"
+    ],
+    "cors": [
+      "CWE-942",
+      "CWE-346"
+    ],
+    "authz": [
+      "CWE-639",
+      "CWE-862",
+      "CWE-284",
+      "CWE-285",
+      "CWE-863"
+    ],
+    "mass-assign": [
+      "CWE-915"
+    ],
+    "logic-bound": [
+      "CWE-840",
+      "CWE-20",
+      "CWE-129",
+      "CWE-1284"
+    ],
+    "race": [
+      "CWE-362",
+      "CWE-367"
+    ]
+  }
+}
