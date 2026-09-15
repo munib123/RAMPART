@@ -76,3 +76,8 @@ AGENTS.md
 # ---- graphify knowledge graph (local-only) ----
 graphify-out/
 .graphifyignore
+
+# ---- Joern runtime (installed by app.services.joern.runtime; ~2 GB) ----
+tools/
+_rampart_joern_tmp/
+workspace/
