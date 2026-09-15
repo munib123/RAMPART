@@ -195,7 +195,10 @@ def pack_path(pack_id: str) -> Path:
 
 
 def shipped() -> list[str]:
-    return sorted(p.stem for p in PACKS.glob("*.json") if p.name != DIGESTS.name)
+    """Pack ids under packs/: every *.json except the digest allowlist and the authoring
+    transcripts (<id>.transcript.json), which sit next to their packs."""
+    return sorted(p.stem for p in PACKS.glob("*.json")
+                  if p.name != DIGESTS.name and not p.name.endswith(".transcript.json"))
 
 
 def read_file(path: Path) -> tuple[Optional[dict], list[str]]:

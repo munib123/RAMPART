@@ -1,0 +1,94 @@
+{
+  "pack_id": "django",
+  "schema_version": 1,
+  "authored_from": "framework_docs",
+  "extends": "_base",
+  "transcript": "django.transcript.json",
+  "description": "Django 5.1 + Django REST Framework vocabulary, drafted under the held-out protocol from the official docs only (no testbed read). Adds to _base; never removes. Covers the ORM's single-object reads and shortcuts, the request.user ownership idioms and DRF object-permission hooks, request.POST / request.data as mass-assignment sources with ModelForm / serializer validation as the allow-list, F() for check-then-write, min_value as the numeric bound, and the ORM's write methods.",
+  "sources": [
+    "https://docs.djangoproject.com/en/5.1/topics/http/shortcuts/  (get_object_or_404, aget_object_or_404)",
+    "https://docs.djangoproject.com/en/5.1/ref/models/querysets/  (first/last/earliest/latest + async a*, create/update/delete/bulk_*)",
+    "https://docs.djangoproject.com/en/5.1/ref/models/instances/  (save(update_fields=), asave, adelete)",
+    "https://docs.djangoproject.com/en/5.1/ref/models/expressions/  (F() race-condition section, RawSQL)",
+    "https://docs.djangoproject.com/en/5.1/topics/db/transactions/  (transaction.atomic)",
+    "https://docs.djangoproject.com/en/5.1/topics/db/sql/  (Manager.raw, cursor.execute)",
+    "https://docs.djangoproject.com/en/5.1/topics/auth/default/  (permission_required, user_passes_test, has_perm, is_staff, is_superuser)",
+    "https://docs.djangoproject.com/en/5.1/ref/request-response/  (request.POST/GET/body, QueryDict.dict/lists)",
+    "https://docs.djangoproject.com/en/5.1/topics/forms/modelforms/  (Meta.fields, is_valid, save, modelform_factory)",
+    "https://docs.djangoproject.com/en/5.1/ref/forms/fields/  (min_value -> MinValueValidator)",
+    "https://docs.djangoproject.com/en/5.1/ref/models/fields/  (PositiveIntegerField family)",
+    "https://www.django-rest-framework.org/api-guide/permissions/  (check_object_permissions, has_object_permission, IsAdminUser, DjangoObjectPermissions)",
+    "https://www.django-rest-framework.org/api-guide/generic-views/  (get_object, get_serializer, perform_create/update/destroy)",
+    "https://www.django-rest-framework.org/api-guide/views/  (@permission_classes, @authentication_classes, check_permissions)",
+    "https://www.django-rest-framework.org/api-guide/requests/  (request.data, request.query_params, request.auth)",
+    "https://www.django-rest-framework.org/api-guide/serializers/  (validated_data, is_valid, Meta.fields, read_only_fields)",
+    "https://www.django-rest-framework.org/api-guide/filtering/  (get_queryset filtered on self.request.user)"
+  ],
+  "slots": {
+    "authz_guard": {
+      "sink": "guard_text",
+      "values": ["== request.user", "request.user ==", "!= request.user", "request.user !=",
+                 "== self.request.user", "!= self.request.user",
+                 "== request.user.id", "request.user.id ==", "!= request.user.id", "request.user.id !=",
+                 "== request.user.pk", "request.user.pk ==", "!= request.user.pk", "request.user.pk !=",
+                 "user=request.user", "owner=request.user", "user=self.request.user", "owner=self.request.user",
+                 "user_id=request.user.id",
+                 "check_object_permissions", "has_object_permission", "djangoobjectpermissions",
+                 "djangomodelpermissions", "isadminuser", "permission_required", "has_perm(", "has_perms(",
+                 "user.is_staff", "user.is_superuser", "staff_member_required"],
+      "note": "Docs ownership idiom: `obj.owner == request.user` (DRF IsOwnerOrReadOnly) or a lookup scoped with `owner=request.user`; both operand orders and .id/.pk forms listed. `request.user` alone proves only login (authn_only). Model-level checks (permission_required, has_perm, is_staff) count as authorization, like the reference pack's role checks."
+    },
+    "authn_only": {
+      "sink": "guard_text",
+      "values": ["request.user", "request.auth", "authentication", "authenticate(", "permission_classes",
+                 "check_permissions", "loginrequiredmixin", "user_passes_test"],
+      "note": "permission_classes / check_permissions prove only that DRF's view-level list ran (typically IsAuthenticated); an object-level class in it is matched by authz_guard. user_passes_test tests the user, not the object."
+    },
+    "lock_guard": {
+      "sink": "guard_text",
+      "values": ["=f(", " f(", "(f(", "models.f(", "skip_locked"],
+      "note": "F(): docs 'Avoiding race conditions using F()' - the database applies the write. Matched only where an F(...) call can sit (`stock=F(`, `= F(`, `(F(`, `models.F(`) so calls whose name merely ends in f are not matched. atomic / select_for_update / transaction come from _base."
+    },
+    "allowlist_guard": {
+      "sink": "guard_text",
+      "values": ["is_valid(", "cleaned_data", "validated_data", "update_fields=", "fields=[", "fields=(",
+                 "read_only_fields", "get_serializer(", "get_form(", "form(request.post", "form(data="],
+      "note": "A ModelForm or serializer declares its writable fields (docs: 'explicitly set all fields'), so writing via is_valid()/cleaned_data/validated_data is an allow-list by construction. save(update_fields=[...]) is an explicit list on the write."
+    },
+    "positive_guard": {
+      "sink": "guard_text",
+      "values": ["minvaluevalidator(", "min_value=0", "min_value=1", "positiveintegerfield",
+                 "positivesmallintegerfield", "positivebigintegerfield", ">= 1", "<= 0", "< 0"],
+      "note": "min_value= on IntegerField/DecimalField maps to MinValueValidator; Positive*Field enforces >= 0. `<= 0` / `< 0` are the negated forms of a clean_<field>() check (`if value < 0: raise ValidationError`)."
+    },
+    "mass_assign_signal": {
+      "sink": "signal_text",
+      "values": ["request.post", "request.data", "request.query_params", "request.body", ".dict()"],
+      "note": "request.GET is absent: lower-cased it is a prefix of request.get_host / get_full_path / get_signed_cookie. QueryDict.dict() is the docs' way to turn POST into a plain mapping."
+    },
+    "qty_terms":   {"sink": "token", "values": ["num_", "votes"],
+                    "note": "num_ is the docs' counter prefix (num_employees, num_chairs, num_books); votes is the tutorial's counter."},
+    "price_terms": {"sink": "token", "values": ["cost", "fee", "credit", "payment", "funds"],
+                    "note": "General money words; the docs only use price, which _base has."},
+    "orm_read_calls": {
+      "sink": "call_name",
+      "values": ["get_object_or_404", "aget_object_or_404", "get_object", "aget", "last", "afirst", "alast",
+                 "earliest", "latest", "aearliest", "alatest"],
+      "note": "Not `get`: dict.get / request.POST.get would make every method with an id parameter a candidate; async aget has no such collision. get_object is DRF's detail read; object permissions apply only if check_object_permissions runs, which authz_guard matches."
+    },
+    "dyn_write_calls": {"sink": "call_name", "values": ["update", "update_or_create"],
+                        "note": "QuerySet.update(**mapping), update_or_create(defaults=mapping). `create` left out: the docs' create() takes explicit kwargs and would fire on every ordinary insert."},
+    "mapping_iter_calls": {"sink": "call_name", "values": ["lists", "model_to_dict"]},
+    "commit_calls": {
+      "sink": "call_name",
+      "values": ["save", "delete", "update", "create", "bulk_create", "bulk_update",
+                 "asave", "adelete", "aupdate", "acreate",
+                 "perform_create", "perform_update", "perform_destroy"],
+      "note": "Django autocommits, so the ORM write itself is the commit. perform_* are DRF's save/deletion hooks."
+    },
+    "exec_calls":      {"sink": "call_name", "values": ["raw", "RawSQL", "executemany"]},
+    "id_param_exact":  {"sink": "param_exact", "values": ["pk", "slug", "uuid"],
+                        "note": "DetailView pk_url_kwarg / slug_url_kwarg defaults, DRF lookup_field='pk', the <uuid:> converter."},
+    "id_param_suffix": {"sink": "param_suffix", "values": ["_pk", "_slug", "_uuid"]}
+  }
+}
