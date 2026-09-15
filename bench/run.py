@@ -50,6 +50,16 @@ def run(backend_name: str, benchmark: str, scanner: str = "auto", quiet: bool = 
     elapsed = time.time() - t0
     s = score(cands, key, target, verdict_gated=backend.verdict_gated)
 
+    # P7: the finding's own route_reachable flag (meta.route) against the key row it matched.
+    # Reported, never scored: the call graph is name-based and a file with no route markers
+    # says "unknown" rather than guessing.
+    by_no = {k.key_no: k for k in key}
+    route_pairs = [(c.meta.get("route"), "yes" if by_no[c.matched_key].route_reachable else "no")
+                   for c in cands if c.matched_key in by_no and c.meta.get("route")]
+    known = [p for p in route_pairs if p[0] in ("yes", "no")]
+    route_agreement = {"compared": len(known), "agree": sum(1 for g, w in known if g == w),
+                       "unknown": sum(1 for g, _ in route_pairs if g == "unknown")}
+
     usable = [k for k in key if k.usable]
     result = {
         "run_id": dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ") + f"-{benchmark}-{backend_name}"
@@ -71,6 +81,7 @@ def run(backend_name: str, benchmark: str, scanner: str = "auto", quiet: bool = 
             "proposed": sum(1 for k in usable if k.status != "accepted"),
         },
         "score": s.to_dict(),
+        "route_agreement": route_agreement,
         "candidates": [c.to_dict() for c in cands],
     }
     paths.RUNS.mkdir(parents=True, exist_ok=True)
@@ -100,6 +111,9 @@ def _print(r: dict, out) -> None:
           f"TN {s['tn']}  cleared {s['cleared']}")
     print(f"      recall {s['recall']}  reachable-recall {s['reachable_recall']}  "
           f"precision {s['precision']}  f1 {s['f1']}")
+    ra = r.get("route_agreement") or {}
+    if ra.get("compared") or ra.get("unknown"):
+        print(f"      route flags: {ra['agree']}/{ra['compared']} agree with the key, {ra['unknown']} unknown")
     if s["matched_keys"]:
         print(f"      matched keys : {s['matched_keys']}")
     if s["missed_keys"]:

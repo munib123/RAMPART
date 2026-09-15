@@ -143,6 +143,8 @@ def _parse_tsv(text: str, input_dir: str) -> list[Finding]:
             meta["pack"] = parts[8]
         if len(parts) > 9 and parts[9]:
             meta["slots"] = parts[9]
+        if len(parts) > 10 and parts[10]:                   # column 11 (P7): route reachability
+            meta["route"] = parts[10]
         try:
             ln = int(line)
         except ValueError:

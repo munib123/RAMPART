@@ -22,7 +22,7 @@ def _base() -> dict:
 
 
 def _child(**slots) -> dict:
-    return {"pack_id": "t", "schema_version": 1, "authored_from": "hand_written",
+    return {"pack_id": "t", "schema_version": 2, "authored_from": "hand_written",
             "extends": "_base", "slots": slots}
 
 
@@ -103,9 +103,9 @@ def test_caps(tmp_path):
     many = _child(authz_guard={"sink": "guard_text", "values": [f"guard_{i:03d}" for i in range(65)]})
     eff, info = v.load(str(_write(tmp_path, many)), allow_unlisted=True)
     assert eff is None and any("exceeds cap 64" in e for e in info["errors"])
-    big = _child(); big["description"] = "x" * 9000
+    big = _child(); big["description"] = "x" * 17000
     eff, info = v.load(str(_write(tmp_path, big)), allow_unlisted=True)
-    assert eff is None and any("exceeds cap 8192" in e for e in info["errors"])
+    assert eff is None and any("exceeds cap 16384" in e for e in info["errors"])
 
 
 def test_cross_slot_rules(tmp_path):
@@ -241,9 +241,9 @@ def test_rules_file_has_no_hardcoded_vocabulary():
 
 def test_tsv_provenance_columns_reach_meta(tmp_path):
     row = "\t".join(["CWE-639", "high", "orders.py", "5", "get_order", "joern-idor-missing-ownership",
-                     "msg", "ev", "flask-sqlite3@4a85ea8346ac", "id_param_suffix=_id;orm_read_calls=fetchone"])
+                     "msg", "ev", "flask-sqlite3@4a85ea8346ac", "id_param_suffix=_id;orm_read_calls=fetchone", "yes"])
     old = "\t".join(["CWE-639", "high", "orders.py", "5", "get_order", "joern-idor-missing-ownership", "msg", "ev"])
     fs = joern_scan._parse_tsv(row + "\n" + old + "\n", str(tmp_path))
-    assert fs[0].meta == {"pack": "flask-sqlite3@4a85ea8346ac", "slots": "id_param_suffix=_id;orm_read_calls=fetchone"}
+    assert fs[0].meta == {"pack": "flask-sqlite3@4a85ea8346ac", "slots": "id_param_suffix=_id;orm_read_calls=fetchone", "route": "yes"}
     assert fs[1].meta == {}                                  # 8-column rows still parse
     assert "meta" in fs[0].to_dict()

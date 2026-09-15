@@ -50,6 +50,8 @@ export function cpgProvenance(f: Finding): string {
   const parts: string[] = [];
   if (m.pack) parts.push('vocabulary pack ' + m.pack.split('@')[0]);
   if (m.slots) parts.push('fired on ' + m.slots.split(';').filter(Boolean).join(', '));
+  if (m.route === 'yes') parts.push('reachable from a route');
+  else if (m.route === 'no') parts.push('no route reaches this function (reported, not filtered)');
   return parts.join(' · ');
 }
 

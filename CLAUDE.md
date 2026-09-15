@@ -111,7 +111,14 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   `django` 7/9, bandit/semgrep 0/9; 12 failure causes = 7 vocabulary + 5 structural (class-scope
   guard, receiver-chain ownership, cross-file bound, validation-vs-DB comparison). **Never re-run
   `djshop-heldout` after changing a pack or rule** - that is tuning on the test set; measure on DEV,
-  report on a new held-out split. Log: `bench/runs/2026-09-15-p6-django-heldout.md`. Next: P7.
+  report on a new held-out split. Log: `bench/runs/2026-09-15-p6-django-heldout.md`.
+  **P7 done:** the rules now use the graph. TOCTOU = write control-dependent on a resource
+  comparison + same receiver (`x.stock >= q` … `x.save()`); class scope via `typeDecl` (class body +
+  bases in the guard channel; DRF `get_object` reads honour `get_queryset` text and any project class
+  defining `has_object_permission`; an instantiated form's `min_value` bounds the quantity rule);
+  `meta.route` = yes|no|unknown from route markers + 2 hops of `callIn`, reported never gated.
+  Schema v2 (+4 slots), pack cap 16 KB. DEV/django 5 TP / 0 FP / 0 bait; regressions unchanged.
+  Held-out deliberately not re-run. Log: `bench/runs/2026-09-15-p7-graph.md`. Next: P8 O3 re-verify.
   Gemini key is in `.env` (pasted in chat 2026-09-15 - rotate it).
   Open: the `full` arm Confirmed the find_product bait; extract.py gives module-level findings
   a slice that reaches into the next function. A second process on the same machine cannot bind

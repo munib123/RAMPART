@@ -100,7 +100,7 @@ export interface Finding {
   exemplars?: Exemplar[];
   verdict?: Verdict;
   /** engine provenance; joern: { pack: "<id>@<sha12>", slots: "slot=value;..." } */
-  meta?: { pack?: string; slots?: string };
+  meta?: { pack?: string; slots?: string; route?: 'yes' | 'no' | 'unknown' | string };
 }
 
 /** Per-rule outcome of one Joern run (server mode compiles each rule separately). */

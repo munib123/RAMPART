@@ -8,8 +8,9 @@
 //
 // __INPUT_DIR__, __OUT_FILE__, __DIAG_FILE__, __PROJECT__, __PACK_FILE__, __BASE_PACK_FILE__
 // and __PACK_TAG__ are substituted by scan.py (forward-slash paths). Output is TSV:
-//   cwe \t severity \t file \t line \t method \t rule \t message \t evidence \t pack_tag \t slot_trace
+//   cwe \t severity \t file \t line \t method \t rule \t message \t evidence \t pack_tag \t slot_trace \t route
 // Columns 9-10 are provenance (P5): which pack, and which slot=value made the rule fire.
+// Column 11 (P7) is route reachability: yes | no | unknown. Reported, never a gate.
 //
 // VOCABULARY IS DATA (P5). This file holds the four rule SHAPES and nothing framework-specific.
 // Every token list - what an ownership check, a lock, an allow-list or an object id LOOKS LIKE -
@@ -41,8 +42,8 @@ val packTag      = "__PACK_TAG__"        // "<pack_id>@<sha256[:12]>", column 9 
 
 val findings = ListBuffer[String]()
 def san(s: String): String = s.replace("\t", " ").replace("\r", " ").replace("\n", " ").trim
-def add(cwe: String, sev: String, file: String, line: Int, meth: String, rule: String, msg: String, ev: String, trace: String): Unit =
-  findings += List(cwe, sev, file, line.toString, meth, rule, san(msg), san(ev), packTag, san(trace)).mkString("\t")
+def add(cwe: String, sev: String, file: String, line: Int, meth: String, rule: String, msg: String, ev: String, trace: String, route: String = ""): Unit =
+  findings += List(cwe, sev, file, line.toString, meth, rule, san(msg), san(ev), packTag, san(trace), route).mkString("\t")
 // slot trace helpers: "slot=value" for the first value of `toks` found in `text` (contains),
 // so the report can say WHICH vocabulary entry made the rule fire.
 def hit(slot: String, toks: List[String], text: String): String =
@@ -129,6 +130,11 @@ val SQL_WRITE   = slot("sql_write_kw")
 val SQL_DELETE  = slot("sql_delete_kw")
 val ID_EXACT    = slot("id_param_exact")
 val ID_SUFFIX   = slot("id_param_suffix")
+// P7 slots: class scope and routes. Empty in _base; framework packs fill them.
+val SCOPED_READ = slot("scoped_read_calls")      // reads that go through the class queryset hook
+val QS_HOOKS    = slot("queryset_hooks")         // class methods whose body scopes those reads
+val OBJPERM_HOOKS = slot("object_permission_hooks") // a class defining one is object-level auth
+val ROUTE_MARKERS = slot("route_markers")        // module-level calls that register a route
 
 // @@ context
 // Fix 7 (part 1): the module-scope call table is computed ONCE. The July code ran
@@ -140,19 +146,95 @@ val moduleCallsByFile: Map[String, List[String]] =
     .map(mm => mm.filename -> mm.call.code.l.map(c => norm(c.toLowerCase)))
     .groupBy(_._1).map { case (f, xs) => f -> xs.flatMap(_._2) }
 
+// ---- P7 (2): class scope ------------------------------------------------------------------
+// pysrc2cpg puts a class body into a `<body>` method of the TYPE_DECL and lists the class's
+// methods and attributes as MEMBERs. A guard that lives on the class - DRF permission_classes,
+// a LoginRequiredMixin base, get_queryset() scoping every get_object() - is invisible to a
+// per-method token bag; these tables make it visible. Computed once for every project class.
+type TypeDeclNode = io.shiftleft.codepropertygraph.generated.nodes.TypeDecl
+val projectTypeDecls: List[TypeDeclNode] = cpg.typeDecl.isExternal(false).nameNot("<.*>\\d*").l
+// class name -> normalised lower-cased text of its body (member initialisers, nested Meta,
+// decorators) plus the names of its bases; and the identifiers the body names (the classes
+// listed in permission_classes = [...])
+val classTextByName: Map[String, String] = projectTypeDecls.map { t =>
+  val body  = t.ast.isCall.code.l ++ t.ast.isIdentifier.name.l
+  val bases = t.inheritsFromTypeFullName.l
+  t.name -> norm((body ++ bases).mkString("   ").toLowerCase)
+}.toMap
+val classIdentsByName: Map[String, Set[String]] =
+  projectTypeDecls.map(t => t.name -> t.ast.isIdentifier.name.toSet).toMap
+val CMP_OPS = Set("<operator>.greaterThan", "<operator>.greaterEqualsThan",
+                  "<operator>.lessThan", "<operator>.lessEqualsThan")
+// classes that define an object-level permission hook (DRF has_object_permission)
+val objectPermClasses: Set[String] =
+  if (OBJPERM_HOOKS.isEmpty) Set.empty
+  else projectTypeDecls.filter(_.member.name.exists(OBJPERM_HOOKS.contains)).name.toSet
+// class name -> guard text of its queryset hooks (get_queryset), which scope every scoped read
+val querysetTextByClass: Map[String, String] =
+  if (QS_HOOKS.isEmpty) Map.empty
+  else cpg.method.isExternal(false).nameExact(QS_HOOKS: _*).l.flatMap { hm =>
+    hm.typeDecl.headOption.map { t =>
+      t.name -> norm((hm.ast.isCall.code.l ++ hm.ast.isIdentifier.name.l).mkString("   ").toLowerCase)
+    }
+  }.groupBy(_._1).map { case (k, xs) => k -> xs.map(_._2).mkString("   ") }
+
+// ---- P7 (3): route reachability ------------------------------------------------------------
+// A module-level call whose code contains a route marker registers a route; every name it
+// references is routed (`path("x/", views.order_detail)`, `router.register("y", api.OrderViewSet)`,
+// `.as_view()`), and so is a function wrapped by a marker decorator (`@app.route(...)`).
+// A routed CLASS routes all its methods. Then two hops of the (name-based) call graph.
+// Reported on every finding, never used to gate a rule.
+val routedNames: Set[String] = cpg.method.nameExact("<module>").ast.isCall.l
+  .filter(c => ROUTE_MARKERS.exists(norm(c.code.toLowerCase).contains))
+  .flatMap(c => c.ast.isFieldIdentifier.canonicalName.l ++ c.ast.isIdentifier.name.l)
+  .toSet
+val hasRouteMarkers: Boolean = routedNames.nonEmpty
+def routedDirect(m: io.shiftleft.codepropertygraph.generated.nodes.Method): Boolean =
+  routedNames.contains(m.name) ||
+  m.typeDecl.headOption.exists(t => routedNames.contains(t.name)) ||
+  moduleCallsByFile.getOrElse(m.filename, Nil).exists(c => c.contains("(def " + m.name.toLowerCase + "(") && ROUTE_MARKERS.exists(c.contains))
+val routedMethods: Set[String] = {
+  val direct = cpg.method.isExternal(false).l.filter(routedDirect).map(_.fullName).toSet
+  // two hops of callIn: what a routed method calls is reachable too
+  val hop1 = cpg.method.isExternal(false).l.filter(_.callIn.method.fullName.l.exists(direct.contains)).map(_.fullName).toSet
+  val hop2 = cpg.method.isExternal(false).l.filter(_.callIn.method.fullName.l.exists((direct ++ hop1).contains)).map(_.fullName).toSet
+  direct ++ hop1 ++ hop2
+}
+
 // Everything a rule needs about one method, computed in ONE traversal. Rules iterate `ctxs`,
 // so in server mode a rule that fails to compile leaves the contexts intact for the others.
 case class Ctx(name: String, file: String, line: Int, params: List[String],
                signalText: String, guardText: String, execCode: List[String],
                hasAuthz: Boolean, authnNote: String,
                readCalls: List[String], setattrCalls: List[String],
-               iterCalls: Int, multCode: List[String], cmpCode: List[String], commitCalls: Int) {
+               iterCalls: Int, multCode: List[String], cmpCode: List[String], commitCalls: Int,
+               // P7
+               className: String, classText: String, instText: String,
+               scopedRead: Boolean, classAuthz: String,
+               ctlWrites: List[(String, String)],   // (write code, controlling comparison code)
+               route: String) {
   def blobHas(toks: List[String])  = toks.exists(signalText.contains)
   def guardHas(toks: List[String]) = toks.exists(guardText.contains)
+  // P7 (2): a guard may live on the enclosing class (permission_classes, mixins) ...
+  def classHas(toks: List[String]) = toks.exists(classText.contains)
+  // ... or in a project class the method instantiates (a form/serializer field's min_value)
+  def instHas(toks: List[String])  = toks.exists(instText.contains)
   def execHas(kws: List[String]) = kws.exists(kw => execCode.exists(_.toUpperCase.contains(kw)))
   def execHit(slotName: String, kws: List[String]): String =
     kws.find(kw => execCode.exists(_.toUpperCase.contains(kw))).map(v => slotName + "=" + v).getOrElse("")
 }
+
+// P7 (1): the receiver of `x.y.save()` is `x`; of `product.stock` is `product`. Crude on
+// purpose - the identity test only has to hold within one method's own spelling.
+def receiverOf(code: String): String = {
+  val c = code.trim
+  val end = c.indexWhere(ch => ch == '.' || ch == '(' || ch == '[' || ch == ' ')
+  if (end > 0) c.substring(0, end) else ""
+}
+// receivers of every `obj.field` in a comparison whose field mentions a resource term
+val fieldRef = """([a-z_][a-z0-9_]*)\.([a-z_][a-z0-9_]*)""".r
+def resourceReceivers(cmp: String): Set[String] =
+  fieldRef.findAllMatchIn(cmp.toLowerCase).filter(mm => QTY.exists(mm.group(2).contains)).map(_.group(1)).toSet
 
 // Fix 8: every .name(s) / .code(s) / .filename(s) accessor treats s as a REGEX. The July
 // prototype lost an entire run to a Windows path in .filename() and then routed around it
@@ -184,10 +266,40 @@ def ctx(m: io.shiftleft.codepropertygraph.generated.nodes.Method): Ctx = {
   // undecorated sibling get_note with a guard it does not have.
   val decoAnchor  = "(def " + name.toLowerCase + "("
   val moduleCalls = moduleCallsByFile.getOrElse(file, Nil).filter(_.contains(decoAnchor))
-  val hasAuthz = AUTHZ.exists(guardText.contains) || moduleCalls.exists(c => AUTHZ.exists(c.contains))
+
+  // P7 (2): the enclosing class, if the method is a method. The module's own pseudo-class is
+  // not a class; only project TYPE_DECLs count.
+  val className = m.typeDecl.headOption.map(_.name).filter(classTextByName.contains).getOrElse("")
+  val classText = classTextByName.getOrElse(className, "")
+  // project classes this method instantiates (AddToCartForm(request.POST) -> the form's body)
+  val instText  = m.call.name.l.distinct.flatMap(classTextByName.get).mkString("   ")
+  val scopedRead = SCOPED_READ.nonEmpty && m.call.nameExact(SCOPED_READ: _*).nonEmpty
+  // which class-scope guard, if any, authorises this method's read
+  val classAuthz: String = {
+    val onClass = AUTHZ.find(classText.contains).map("class:" + _)
+    val viaQueryset = if (!scopedRead) None
+      else AUTHZ.find(querysetTextByClass.getOrElse(className, "").contains).map("queryset_hook:" + _)
+    val viaObjPerm = if (!scopedRead) None
+      else classIdentsByName.getOrElse(className, Set.empty).intersect(objectPermClasses).headOption.map("object_permission:" + _)
+    (onClass orElse viaQueryset orElse viaObjPerm).getOrElse("")
+  }
+  val hasAuthz = AUTHZ.exists(guardText.contains) || moduleCalls.exists(c => AUTHZ.exists(c.contains)) || classAuthz.nonEmpty
   val authnTok = (AUTHN_ONLY.filter(guardText.contains) ++
-                  AUTHN_ONLY.filter(a => moduleCalls.exists(_.contains(a)))).distinct
+                  AUTHN_ONLY.filter(a => moduleCalls.exists(_.contains(a))) ++
+                  AUTHN_ONLY.filter(classText.contains)).distinct
   val authnNote = if (authnTok.nonEmpty && !hasAuthz) s" AUTHENTICATED_NOT_AUTHORIZED(${authnTok.mkString(",")})" else ""
+
+  // P7 (1): every write paired with the comparisons it is CONTROL-DEPENDENT on. A comparison
+  // hidden inside `a or b` is reached through the controlling node's AST.
+  val execWrites = m.call.nameExact(EXEC_CALLS: _*).l.filter(c => (SQL_WRITE ++ SQL_DELETE).exists(c.code.toUpperCase.contains))
+  val ormWrites  = m.call.nameExact(COMMIT_CALLS: _*).l
+  val ctlWrites: List[(String, String)] = (execWrites ++ ormWrites).flatMap { w =>
+    w.controlledBy.isCall.ast.isCall.filter(c => CMP_OPS.contains(c.name)).code.l.distinct.map(c => w.code -> c)
+  }
+
+  // P7 (3)
+  val route = if (!hasRouteMarkers) "unknown" else if (routedMethods.contains(m.fullName)) "yes" else "no"
+
   Ctx(
     name = name, file = file, line = m.lineNumber.getOrElse(-1),
     params = m.parameter.name.l.map(_.toLowerCase),
@@ -195,7 +307,7 @@ def ctx(m: io.shiftleft.codepropertygraph.generated.nodes.Method): Ctx = {
     // call_name slots reach nameExact ONLY - exact string equality, never a regex.
     execCode = m.call.nameExact(EXEC_CALLS: _*).code.l,
     hasAuthz = hasAuthz, authnNote = authnNote,
-    readCalls = m.call.nameExact(READ_CALLS: _*).code.l,
+    readCalls = m.call.nameExact((READ_CALLS ++ SCOPED_READ).distinct: _*).code.l,
     setattrCalls = m.call.nameExact(DYN_WRITE: _*).code.l,
     iterCalls = m.call.nameExact(ITER_CALLS: _*).size,
     // the operators are rule SHAPE, not vocabulary: they stay here
@@ -203,6 +315,8 @@ def ctx(m: io.shiftleft.codepropertygraph.generated.nodes.Method): Ctx = {
     cmpCode = m.call.nameExact("<operator>.greaterThan", "<operator>.greaterEqualsThan",
                                "<operator>.lessThan", "<operator>.lessEqualsThan").code.l,
     commitCalls = m.call.nameExact(COMMIT_CALLS: _*).size,
+    className = className, classText = classText, instText = instText,
+    scopedRead = scopedRead, classAuthz = classAuthz, ctlWrites = ctlWrites, route = route,
   )
 }
 
@@ -225,8 +339,8 @@ ctxs.foreach { c => guarded("joern-idor-missing-ownership") {
     val readTrace = READ_CALLS.find(r => c.readCalls.exists(_.contains(r + "("))).map("orm_read_calls=" + _)
                       .getOrElse(c.execHit("sql_read_kw", SQL_READ))
     add("CWE-639", "high", c.file, c.line, c.name, "joern-idor-missing-ownership",
-      s"Reads a record by the caller-supplied id '${idName}' with no ownership or authorization check in the method. If this record is user-owned, any authenticated user can read another user's data (IDOR).${c.authnNote}", ev,
-      trace(idTrace, readTrace))
+      s"Reads a record by the caller-supplied id '${idName}' with no ownership or authorization check in the method${if (c.className.nonEmpty) " or on its class " + c.className else ""}. If this record is user-owned, any authenticated user can read another user's data (IDOR).${c.authnNote}", ev,
+      trace(idTrace, readTrace, if (c.scopedRead) "scoped_read" else ""), c.route)
   }
 }}
 
@@ -243,7 +357,7 @@ ctxs.foreach { c => guarded("joern-mass-assignment") {
                   else c.execHit("sql_write_kw", SQL_WRITE)
     add("CWE-915", "high", c.file, c.line, c.name, "joern-mass-assignment",
       "Writes every field of a caller-supplied data mapping into a record with no allow-list, so a client can set fields that were never meant to be user-writable (e.g. is_admin, role, balance).", ev,
-      trace(sigTrace, wrTrace))
+      trace(sigTrace, wrTrace), c.route)
   }
 }}
 
@@ -252,30 +366,39 @@ ruleRan += "joern-unchecked-quantity"
 ctxs.foreach { c => guarded("joern-unchecked-quantity") {
   val multLc = c.multCode.map(_.toLowerCase)
   val qtyMult = multLc.exists(x => QTY.exists(x.contains))
-  val posGuard = c.cmpCode.exists(x => QTY.exists(x.toLowerCase.contains)) || c.guardHas(POS_GUARD)
+  // P7 (2): the bound may be declared on a project class the method instantiates - a form or
+  // serializer field's min_value / PositiveIntegerField - not in the view that multiplies.
+  val posGuard = c.cmpCode.exists(x => QTY.exists(x.toLowerCase.contains)) || c.guardHas(POS_GUARD) || c.instHas(POS_GUARD)
   if (qtyMult && !posGuard) {
     val ev = c.multCode.headOption.getOrElse("")
     add("CWE-840", "medium", c.file, c.line, c.name, "joern-unchecked-quantity",
       "Computes a monetary amount from a caller-supplied quantity/price with no lower-bound (>0) guard. A negative or zero quantity can yield a negative total (store credit / free goods).", ev,
-      trace(hitAny("qty_terms", QTY_TERMS, multLc), hitAny("price_terms", PRICE_TERMS, multLc)))
+      trace(hitAny("qty_terms", QTY_TERMS, multLc), hitAny("price_terms", PRICE_TERMS, multLc)), c.route)
   }
 }}
 
 // @@ rule joern-toctou-check-then-write
 ruleRan += "joern-toctou-check-then-write"
 ctxs.foreach { c => guarded("joern-toctou-check-then-write") {
-  val hasCheck = c.cmpCode.nonEmpty
-  val hasWrite = c.execHas(SQL_WRITE) || c.execHas(SQL_DELETE) || c.commitCalls > 0
-  val cmpLc = c.cmpCode.map(_.toLowerCase)
-  val checkOnResource = cmpLc.exists(x => QTY.exists(x.contains))
-  if (hasCheck && hasWrite && checkOnResource && !c.guardHas(LOCK)) {
-    val ev = c.execCode.headOption.getOrElse("")
-    val wrTrace = if (c.execHas(SQL_WRITE)) c.execHit("sql_write_kw", SQL_WRITE)
-                  else if (c.execHas(SQL_DELETE)) c.execHit("sql_delete_kw", SQL_DELETE)
-                  else "commit_calls"
+  // P7 (1): the July rule accepted ANY comparison plus ANY write in any order. Now the write
+  // must be CONTROL-DEPENDENT on a comparison over a resource term (the write sits in the
+  // branch the check decides), and - for an ORM write like `product.save()` - its receiver
+  // must be the object that was compared (`product.stock >= qty`). A validation bound on
+  // request input (`if qty <= 0: return`) followed by an unrelated create() is no longer a
+  // race. Raw SQL writes have no receiver; they keep the token test.
+  val isExecWrite = (w: String) => (SQL_WRITE ++ SQL_DELETE).exists(w.toUpperCase.contains) && EXEC_CALLS.exists(e => w.contains(e + "("))
+  val pairs = c.ctlWrites.filter { case (w, cmp) =>
+    val cmpLc = cmp.toLowerCase
+    QTY.exists(cmpLc.contains) && (isExecWrite(w) || resourceReceivers(cmpLc).contains(receiverOf(w).toLowerCase))
+  }
+  if (pairs.nonEmpty && !c.guardHas(LOCK)) {
+    val (w, cmp) = pairs.head
+    val cmpLc = cmp.toLowerCase
+    val wrTrace = if (isExecWrite(w)) { val t = c.execHit("sql_write_kw", SQL_WRITE); if (t.isEmpty) c.execHit("sql_delete_kw", SQL_DELETE) else t }
+                  else COMMIT_CALLS.find(cc => w.contains("." + cc + "(")).map("commit_calls=" + _).getOrElse("commit_calls")
     add("CWE-362", "high", c.file, c.line, c.name, "joern-toctou-check-then-write",
-      "Checks a resource value (e.g. stock/balance) and then mutates it in the same method with no lock or atomic transaction. Concurrent requests can both pass the check before either writes (TOCTOU race), oversubscribing the resource.", ev,
-      trace(hitAny("qty_terms", QTY_TERMS, cmpLc), hitAny("price_terms", PRICE_TERMS, cmpLc), wrTrace))
+      s"Checks a resource value (${san(cmp)}) and then writes it in the branch that check decides, with no lock or atomic transaction. Concurrent requests can both pass the check before either writes (TOCTOU race), oversubscribing the resource.", w,
+      trace(hitAny("qty_terms", QTY_TERMS, List(cmpLc)), hitAny("price_terms", PRICE_TERMS, List(cmpLc)), wrTrace, "controlled_by"), c.route)
   }
 }}
 

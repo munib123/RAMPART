@@ -1,31 +1,19 @@
 {
   "pack_id": "flask-sqlite3",
-  "schema_version": 1,
+  "schema_version": 2,
   "authored_from": "framework_docs",
   "extends": "_base",
   "description": "The hand-written reference pack: Flask + Flask-Login + Flask-SQLAlchemy + WTForms + sqlite3 vocabulary, from their documentation. Adds to _base; never removes. Selected automatically when the target imports flask or lists it in requirements.txt.",
-  "sources": [
-    "https://flask.palletsprojects.com/en/stable/api/  (request.args / values / get_json / form.to_dict, abort)",
-    "https://flask-login.readthedocs.io/en/latest/  (current_user, login_required, fresh_login_required, get_id)",
-    "https://flask-sqlalchemy.readthedocs.io/en/stable/queries/  (get_or_404, first_or_404, one_or_none, session.commit/flush, query.update)",
-    "https://wtforms.readthedocs.io/en/stable/  (populate_obj, validate_on_submit, NumberRange)",
-    "https://docs.python.org/3/library/sqlite3.html  (executemany, executescript, isolation_level, BEGIN IMMEDIATE/EXCLUSIVE, REPLACE)",
-    "https://flask-principal.readthedocs.io/  (permission.require, permission.can)",
-    "https://flask-security-too.readthedocs.io/  (roles_required, roles_accepted)"
-  ],
+  "sources": ["https://flask.palletsprojects.com/en/stable/api/  (request.args / values / get_json / form.to_dict, abort)", "https://flask-login.readthedocs.io/en/latest/  (current_user, login_required, fresh_login_required, get_id)", "https://flask-sqlalchemy.readthedocs.io/en/stable/queries/  (get_or_404, first_or_404, one_or_none, session.commit/flush, query.update)", "https://wtforms.readthedocs.io/en/stable/  (populate_obj, validate_on_submit, NumberRange)", "https://docs.python.org/3/library/sqlite3.html  (executemany, executescript, isolation_level, BEGIN IMMEDIATE/EXCLUSIVE, REPLACE)", "https://flask-principal.readthedocs.io/  (permission.require, permission.can)", "https://flask-security-too.readthedocs.io/  (roles_required, roles_accepted)"],
   "slots": {
     "authz_guard": {
       "sink": "guard_text",
-      "values": ["current_user.id ==", "== current_user.id", "current_user.id !=", "!= current_user.id",
-                 "current_user.get_id() ==", "== current_user.get_id()",
-                 "roles_required", "roles_accepted", "permission.require", "permission.can",
-                 "current_user.is_admin", "current_user.has_role"],
+      "values": ["current_user.id ==", "== current_user.id", "current_user.id !=", "!= current_user.id", "current_user.get_id() ==", "== current_user.get_id()", "roles_required", "roles_accepted", "permission.require", "permission.can", "current_user.is_admin", "current_user.has_role"],
       "note": "The Flask-Login ownership idiom is `if order.user_id != current_user.id: abort(403)`. The comparison operands are what proves the check exists; `current_user` alone proves only login and stays in authn_only. Operands are matched in both orders."
     },
     "authn_only": {
       "sink": "guard_text",
-      "values": ["fresh_login_required", "flask_login", "login_manager", "verify_password",
-                 "auth.login_required", "session.pop(", "current_user.is_authenticated"]
+      "values": ["fresh_login_required", "flask_login", "login_manager", "verify_password", "auth.login_required", "session.pop(", "current_user.is_authenticated"]
     },
     "lock_guard": {
       "sink": "guard_text",
@@ -33,8 +21,7 @@
     },
     "allowlist_guard": {
       "sink": "guard_text",
-      "values": ["validate_on_submit", "form.validate", "schema.load(", "only=(", "only=[",
-                 "fields=(", "fields=[", "load_only", "exclude=("],
+      "values": ["validate_on_submit", "form.validate", "schema.load(", "only=(", "only=[", "fields=(", "fields=[", "load_only", "exclude=("],
       "note": "A WTForm or a marshmallow schema declares its fields, so writing through one is an allow-list by construction."
     },
     "positive_guard": {
@@ -45,18 +32,47 @@
       "sink": "signal_text",
       "values": ["request.args", "request.values", "request.get_json", "form.to_dict", "request.data", "**form"]
     },
-    "qty_terms":   {"sink": "token", "values": ["units", "num_items"]},
-    "price_terms": {"sink": "token", "values": ["cost", "credit", "discount", "refund"]},
+    "qty_terms": {
+      "sink": "token",
+      "values": ["units", "num_items"]
+    },
+    "price_terms": {
+      "sink": "token",
+      "values": ["cost", "credit", "discount", "refund"]
+    },
     "orm_read_calls": {
       "sink": "call_name",
       "values": ["get_or_404", "first_or_404", "one_or_none", "scalar_one", "scalar_one_or_none"],
       "note": "Not `get`: dict.get / request.args.get would make every method with an id parameter a candidate."
     },
-    "dyn_write_calls": {"sink": "call_name", "values": ["update", "populate_obj"]},
-    "commit_calls":    {"sink": "call_name", "values": ["flush"]},
-    "exec_calls":      {"sink": "call_name", "values": ["executemany", "executescript"]},
-    "sql_write_kw":    {"sink": "exec_sql_kw", "values": ["REPLACE"]},
-    "id_param_exact":  {"sink": "param_exact", "values": ["pk", "uid", "slug", "uuid"]},
-    "id_param_suffix": {"sink": "param_suffix", "values": ["_pk", "_uuid", "_slug", "_no", "_num"]}
+    "dyn_write_calls": {
+      "sink": "call_name",
+      "values": ["update", "populate_obj"]
+    },
+    "commit_calls": {
+      "sink": "call_name",
+      "values": ["flush"]
+    },
+    "exec_calls": {
+      "sink": "call_name",
+      "values": ["executemany", "executescript"]
+    },
+    "sql_write_kw": {
+      "sink": "exec_sql_kw",
+      "values": ["REPLACE"]
+    },
+    "id_param_exact": {
+      "sink": "param_exact",
+      "values": ["pk", "uid", "slug", "uuid"]
+    },
+    "id_param_suffix": {
+      "sink": "param_suffix",
+      "values": ["_pk", "_uuid", "_slug", "_no", "_num"]
+    },
+    "route_markers": {
+      "sink": "signal_text",
+      "values": [".get(\"", ".post(\"", ".put(\"", ".patch(\"", ".delete(\"", "add_url_rule(", ".route("],
+      "note": "P7. Flask 2+ method shortcuts (@app.get(\"/x\")) and add_url_rule; the quote keeps dict.get( out."
+    }
   }
 }

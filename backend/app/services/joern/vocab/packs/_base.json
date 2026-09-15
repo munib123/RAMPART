@@ -1,31 +1,26 @@
 {
   "pack_id": "_base",
-  "schema_version": 1,
+  "schema_version": 2,
   "authored_from": "hand_written",
   "description": "Exactly the token lists rules/locators.sc carried as Scala vals through P2 (July rules + eight August fixes). Framework-neutral. Every other pack extends this one and can only add. Running with --pack _base IS the no_vocab_pack ablation arm.",
   "slots": {
     "authz_guard": {
       "sink": "guard_text",
-      "values": ["is_owner", "owner_id", "check_owner", "has_permission", "authorize",
-                 "access_denied", "unauthorized", "forbidden", "abort(401", "abort(403",
-                 "permissiondenied", "permission_denied", "httpforbidden", "raise_403", "http_403"],
+      "values": ["is_owner", "owner_id", "check_owner", "has_permission", "authorize", "access_denied", "unauthorized", "forbidden", "abort(401", "abort(403", "permissiondenied", "permission_denied", "httpforbidden", "raise_403", "http_403"],
       "note": "Fix 5: abort(401/abort(403 are authorization outcomes; a bare abort( made a not-found guard read as authz."
     },
     "authn_only": {
       "sink": "guard_text",
-      "values": ["current_user", "login_required", "requires_auth", "requires_login",
-                 "authenticated", "g.user", "current_identity", "session[", "session.get("],
+      "values": ["current_user", "login_required", "requires_auth", "requires_login", "authenticated", "g.user", "current_identity", "session[", "session.get("],
       "note": "Fix 2: authentication is not authorization. These never suppress IDOR; they become AUTHENTICATED_NOT_AUTHORIZED evidence."
     },
     "lock_guard": {
       "sink": "guard_text",
-      "values": ["lock", "acquire", "atomic", "select_for_update", "with_for_update", "for update",
-                 "begin(", "savepoint", "transaction", "serializable", "mutex", "semaphore"]
+      "values": ["lock", "acquire", "atomic", "select_for_update", "with_for_update", "for update", "begin(", "savepoint", "transaction", "serializable", "mutex", "semaphore"]
     },
     "allowlist_guard": {
       "sink": "guard_text",
-      "values": ["allow", "whitelist", "permitted", "allowed_fields", "safe_fields",
-                 "editable_fields", "writable_fields", "fields = (", "fields = [", "only("],
+      "values": ["allow", "whitelist", "permitted", "allowed_fields", "safe_fields", "editable_fields", "writable_fields", "fields = (", "fields = [", "only("],
       "note": "Fix 6: names, not syntax. ' in [' matched every membership test in the method."
     },
     "positive_guard": {
@@ -36,18 +31,71 @@
       "sink": "signal_text",
       "values": ["request.form", "request.json", "**data", "**request", "**kwargs"]
     },
-    "qty_terms":   {"sink": "token", "values": ["qty", "quantity", "count", "stock"]},
-    "price_terms": {"sink": "token", "values": ["price", "total", "subtotal", "balance", "amount"],
-                    "note": "qty_terms + price_terms is the pre-P5 QTY list, split so the two are disjoint."},
-    "orm_read_calls":     {"sink": "call_name", "values": ["fetchone", "first", "one", "scalar"]},
-    "dyn_write_calls":    {"sink": "call_name", "values": ["setattr"]},
-    "mapping_iter_calls": {"sink": "call_name", "values": ["items", "to_dict", "keys", "values"]},
-    "commit_calls":       {"sink": "call_name", "values": ["commit"]},
-    "exec_calls":         {"sink": "call_name", "values": ["execute"]},
-    "sql_read_kw":        {"sink": "exec_sql_kw", "values": ["SELECT"]},
-    "sql_write_kw":       {"sink": "exec_sql_kw", "values": ["INSERT", "UPDATE"]},
-    "sql_delete_kw":      {"sink": "exec_sql_kw", "values": ["DELETE"]},
-    "id_param_exact":     {"sink": "param_exact", "values": ["id"]},
-    "id_param_suffix":    {"sink": "param_suffix", "values": ["_id"]}
+    "qty_terms": {
+      "sink": "token",
+      "values": ["qty", "quantity", "count", "stock"]
+    },
+    "price_terms": {
+      "sink": "token",
+      "values": ["price", "total", "subtotal", "balance", "amount"],
+      "note": "qty_terms + price_terms is the pre-P5 QTY list, split so the two are disjoint."
+    },
+    "orm_read_calls": {
+      "sink": "call_name",
+      "values": ["fetchone", "first", "one", "scalar"]
+    },
+    "dyn_write_calls": {
+      "sink": "call_name",
+      "values": ["setattr"]
+    },
+    "mapping_iter_calls": {
+      "sink": "call_name",
+      "values": ["items", "to_dict", "keys", "values"]
+    },
+    "commit_calls": {
+      "sink": "call_name",
+      "values": ["commit"]
+    },
+    "exec_calls": {
+      "sink": "call_name",
+      "values": ["execute"]
+    },
+    "sql_read_kw": {
+      "sink": "exec_sql_kw",
+      "values": ["SELECT"]
+    },
+    "sql_write_kw": {
+      "sink": "exec_sql_kw",
+      "values": ["INSERT", "UPDATE"]
+    },
+    "sql_delete_kw": {
+      "sink": "exec_sql_kw",
+      "values": ["DELETE"]
+    },
+    "id_param_exact": {
+      "sink": "param_exact",
+      "values": ["id"]
+    },
+    "id_param_suffix": {
+      "sink": "param_suffix",
+      "values": ["_id"]
+    },
+    "scoped_read_calls": {
+      "sink": "call_name",
+      "values": []
+    },
+    "queryset_hooks": {
+      "sink": "call_name",
+      "values": []
+    },
+    "object_permission_hooks": {
+      "sink": "call_name",
+      "values": []
+    },
+    "route_markers": {
+      "sink": "signal_text",
+      "values": [".route("],
+      "note": "P7. Framework-neutral: a decorator call containing .route( registers the wrapped function."
+    }
   }
 }
