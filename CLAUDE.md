@@ -101,8 +101,17 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   `packs/_base.json` (= pre-P5 Scala vals) + `packs/flask-sqlite3.json`. `locators.sc` reads the
   pack via `ujson` in `// @@ vocab`; findings carry `meta.pack` + `meta.slots`; `diag.pack` persists in
   `scans.joern`; `bench.run --pack`. `_base` == `flask-sqlite3` on shopfast/probe (4/1, 5/0/2).
-  **`django.json` is deliberately absent** until the Django testbed is frozen (P6 held-out protocol).
-  Edit a pack → `python -m app.services.joern.vocab.validate --freeze` or tests fail. Next: P6.
+  Edit a pack → `python -m app.services.joern.vocab.validate --freeze` or tests fail.
+  **P6 done:** `testbeds/djshop-dev` + `testbeds/djshop-heldout` (Django 5 + DRF; each SAST-blind bug
+  next to the docs' fix as a `safe` twin), frozen via `bench/freeze.py` (`FREEZE.json`; `bench.run`
+  refuses a drifted tree and logs held-out runs to `bench/runs/heldout.log`). `django.json` was
+  authored AFTER the freeze by a fresh agent from Django/DRF docs only (`packs/django.prompt.md`,
+  `django.transcript.json`). Scala got one general fix from DEV: pysrc2cpg renders `kw = value` with
+  spaces → `norm()` in the vocab section. **Held-out, evaluated once:** SAST-blind `_base` 5/9,
+  `django` 7/9, bandit/semgrep 0/9; 12 failure causes = 7 vocabulary + 5 structural (class-scope
+  guard, receiver-chain ownership, cross-file bound, validation-vs-DB comparison). **Never re-run
+  `djshop-heldout` after changing a pack or rule** - that is tuning on the test set; measure on DEV,
+  report on a new held-out split. Log: `bench/runs/2026-09-15-p6-django-heldout.md`. Next: P7.
   Gemini key is in `.env` (pasted in chat 2026-09-15 - rotate it).
   Open: the `full` arm Confirmed the find_product bait; extract.py gives module-level findings
   a slice that reaches into the next function. A second process on the same machine cannot bind

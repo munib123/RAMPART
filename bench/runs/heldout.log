@@ -1,0 +1,5 @@
+20260915T124848Z-djshop-heldout-joern-pack-_base  tree=9b4f52b3f5f1  backend=joern  pack=_base  tp=5 fn=10 fp=0 bait=2 tn=12
+20260915T124929Z-djshop-heldout-joern-pack-flask-sqlite3  tree=9b4f52b3f5f1  backend=joern  pack=flask-sqlite3  tp=5 fn=10 fp=0 bait=2 tn=12
+20260915T125012Z-djshop-heldout-joern-pack-django  tree=9b4f52b3f5f1  backend=joern  pack=django  tp=7 fn=8 fp=7 bait=3 tn=11
+20260915T125014Z-djshop-heldout-bandit  tree=9b4f52b3f5f1  backend=bandit  pack=auto  tp=4 fn=11 fp=2 bait=0 tn=14
+20260915T125031Z-djshop-heldout-semgrep  tree=9b4f52b3f5f1  backend=semgrep  pack=auto  tp=3 fn=12 fp=2 bait=0 tn=14

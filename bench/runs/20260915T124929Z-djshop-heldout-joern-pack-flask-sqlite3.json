@@ -1,0 +1,276 @@
+{
+ "run_id": "20260915T124929Z-djshop-heldout-joern-pack-flask-sqlite3",
+ "benchmark": "djshop-heldout",
+ "backend": "joern",
+ "pack_arg": "flask-sqlite3",
+ "split": "held_out",
+ "tree_sha256": "9b4f52b3f5f10c08cb64faa2aaeab012ec9c3ca47f21acc3778f2b16cafaafac",
+ "frozen_at": "2026-09-15T12:22:03Z",
+ "verdict_gated": false,
+ "elapsed_s": 41.2,
+ "fingerprint": {
+  "backend": "joern",
+  "rampart_git_sha": "82921d1f",
+  "joern_version": "4.0.589",
+  "mode": "script",
+  "java_major": 21,
+  "rules_file": "locators.sc",
+  "rules_sha256": "459a9902f1993db2",
+  "pack": {
+   "requested": "flask-sqlite3",
+   "resolved": "flask-sqlite3",
+   "reason": "requested",
+   "listed": true,
+   "id": "flask-sqlite3",
+   "sha256": "4a85ea8346acaa1727185247d2a44a7cae8bbaae238394f340d850e579ffff0a",
+   "chain": [
+    "_base",
+    "flask-sqlite3"
+   ],
+   "authored_from": "framework_docs",
+   "unlisted": false,
+   "values": 152,
+   "tag": "flask-sqlite3@4a85ea8346ac",
+   "loaded": "flask-sqlite3",
+   "source": "pack"
+  },
+  "diag": {
+   "used": true,
+   "reason": "",
+   "elapsed_ms": 26493,
+   "candidates": 7,
+   "rules_file": "locators.sc",
+   "mode": "script",
+   "target": "D:\\d\\RAMPART\\testbeds\\djshop-heldout",
+   "pack": {
+    "requested": "flask-sqlite3",
+    "resolved": "flask-sqlite3",
+    "reason": "requested",
+    "listed": true,
+    "id": "flask-sqlite3",
+    "sha256": "4a85ea8346acaa1727185247d2a44a7cae8bbaae238394f340d850e579ffff0a",
+    "chain": [
+     "_base",
+     "flask-sqlite3"
+    ],
+    "authored_from": "framework_docs",
+    "unlisted": false,
+    "values": 152,
+    "tag": "flask-sqlite3@4a85ea8346ac",
+    "loaded": "flask-sqlite3",
+    "source": "pack"
+   },
+   "methods_seen": 35,
+   "methods_threw": 0,
+   "rule_state": {
+    "joern-idor-missing-ownership": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-mass-assignment": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-unchecked-quantity": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-toctou-check-then-write": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    }
+   }
+  }
+ },
+ "key": {
+  "version": "djshop-heldout-key-v1",
+  "rows": 29,
+  "usable": 29,
+  "accepted": 0,
+  "proposed": 29
+ },
+ "score": {
+  "tp": 5,
+  "fn": 10,
+  "fp": 0,
+  "bait_fp": 2,
+  "tn": 12,
+  "cleared": 0,
+  "unresolvable_keys": 0,
+  "reachable_tp": 5,
+  "reachable_fn": 7,
+  "vuln_rows": 15,
+  "safe_rows": 14,
+  "candidates": 7,
+  "reported": 7,
+  "matched_keys": [
+   1,
+   4,
+   5,
+   6,
+   7
+  ],
+  "missed_keys": [
+   2,
+   3,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "recall": 0.3333,
+  "reachable_recall": 0.4167,
+  "precision": 0.7143,
+  "f1": 0.4545
+ },
+ "candidates": [
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 30,
+   "end_line": 30,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "flask-sqlite3@4a85ea8346ac",
+    "slots": "id_param_suffix=_id;orm_read_calls=first"
+   },
+   "rel_path": "billing/views.py",
+   "function": "invoice_detail",
+   "family": "authz",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 1
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 39,
+   "end_line": 39,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "flask-sqlite3@4a85ea8346ac",
+    "slots": "id_param_suffix=_id;orm_read_calls=first"
+   },
+   "rel_path": "billing/views.py",
+   "function": "invoice_detail_safe",
+   "family": "authz",
+   "reported": true,
+   "outcome": "bait_fp",
+   "matched_key": 101
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\api.py",
+   "line": 53,
+   "end_line": 53,
+   "cwe_id": "CWE-915",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "flask-sqlite3@4a85ea8346ac",
+    "slots": "mapping_iter_calls;dyn_write_calls=setattr"
+   },
+   "rel_path": "billing/api.py",
+   "function": "WalletViewSet.settings",
+   "family": "mass-assign",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 5
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 69,
+   "end_line": 69,
+   "cwe_id": "CWE-915",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "flask-sqlite3@4a85ea8346ac",
+    "slots": "mapping_iter_calls;dyn_write_calls=setattr"
+   },
+   "rel_path": "billing/views.py",
+   "function": "ticket_update",
+   "family": "mass-assign",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 4
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 113,
+   "end_line": 113,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "flask-sqlite3@4a85ea8346ac",
+    "slots": "qty_terms=qty;price_terms=price"
+   },
+   "rel_path": "billing/views.py",
+   "function": "refund_line",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 6
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 126,
+   "end_line": 126,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "flask-sqlite3@4a85ea8346ac",
+    "slots": "qty_terms=qty;price_terms=price"
+   },
+   "rel_path": "billing/views.py",
+   "function": "refund_line_form",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "bait_fp",
+   "matched_key": 108
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 157,
+   "end_line": 157,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "flask-sqlite3@4a85ea8346ac",
+    "slots": "price_terms=amount"
+   },
+   "rel_path": "billing/views.py",
+   "function": "topup_bonus",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 7
+  }
+ ]
+}

@@ -1,0 +1,476 @@
+{
+ "run_id": "20260915T125012Z-djshop-heldout-joern-pack-django",
+ "benchmark": "djshop-heldout",
+ "backend": "joern",
+ "pack_arg": "django",
+ "split": "held_out",
+ "tree_sha256": "9b4f52b3f5f10c08cb64faa2aaeab012ec9c3ca47f21acc3778f2b16cafaafac",
+ "frozen_at": "2026-09-15T12:22:03Z",
+ "verdict_gated": false,
+ "elapsed_s": 42.4,
+ "fingerprint": {
+  "backend": "joern",
+  "rampart_git_sha": "82921d1f",
+  "joern_version": "4.0.589",
+  "mode": "script",
+  "java_major": 21,
+  "rules_file": "locators.sc",
+  "rules_sha256": "459a9902f1993db2",
+  "pack": {
+   "requested": "django",
+   "resolved": "django",
+   "reason": "requested",
+   "listed": true,
+   "id": "django",
+   "sha256": "b38082f8d2b61f45bf2bfba3f836fef4f76bc8350da5597d76cd0ff47d4d7d38",
+   "chain": [
+    "_base",
+    "django"
+   ],
+   "authored_from": "framework_docs",
+   "unlisted": false,
+   "values": 194,
+   "tag": "django@b38082f8d2b6",
+   "loaded": "django",
+   "source": "pack"
+  },
+  "diag": {
+   "used": true,
+   "reason": "",
+   "elapsed_ms": 24715,
+   "candidates": 17,
+   "rules_file": "locators.sc",
+   "mode": "script",
+   "target": "D:\\d\\RAMPART\\testbeds\\djshop-heldout",
+   "pack": {
+    "requested": "django",
+    "resolved": "django",
+    "reason": "requested",
+    "listed": true,
+    "id": "django",
+    "sha256": "b38082f8d2b61f45bf2bfba3f836fef4f76bc8350da5597d76cd0ff47d4d7d38",
+    "chain": [
+     "_base",
+     "django"
+    ],
+    "authored_from": "framework_docs",
+    "unlisted": false,
+    "values": 194,
+    "tag": "django@b38082f8d2b6",
+    "loaded": "django",
+    "source": "pack"
+   },
+   "methods_seen": 35,
+   "methods_threw": 0,
+   "rule_state": {
+    "joern-idor-missing-ownership": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-mass-assignment": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-unchecked-quantity": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-toctou-check-then-write": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    }
+   }
+  }
+ },
+ "key": {
+  "version": "djshop-heldout-key-v1",
+  "rows": 29,
+  "usable": 29,
+  "accepted": 0,
+  "proposed": 29
+ },
+ "score": {
+  "tp": 7,
+  "fn": 8,
+  "fp": 7,
+  "bait_fp": 3,
+  "tn": 11,
+  "cleared": 0,
+  "unresolvable_keys": 0,
+  "reachable_tp": 7,
+  "reachable_fn": 5,
+  "vuln_rows": 15,
+  "safe_rows": 14,
+  "candidates": 17,
+  "reported": 17,
+  "matched_keys": [
+   1,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "missed_keys": [
+   2,
+   3,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15
+  ],
+  "recall": 0.4667,
+  "reachable_recall": 0.5833,
+  "precision": 0.4118,
+  "f1": 0.4375
+ },
+ "candidates": [
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\api.py",
+   "line": 38,
+   "end_line": 38,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "id_param_exact=pk;orm_read_calls=get_object"
+   },
+   "rel_path": "billing/api.py",
+   "function": "WalletViewSet.statement",
+   "family": "authz",
+   "reported": true,
+   "outcome": "bait_fp",
+   "matched_key": 103
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 30,
+   "end_line": 30,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "id_param_suffix=_id;orm_read_calls=first"
+   },
+   "rel_path": "billing/views.py",
+   "function": "invoice_detail",
+   "family": "authz",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 1
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 39,
+   "end_line": 39,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "id_param_suffix=_id;orm_read_calls=first"
+   },
+   "rel_path": "billing/views.py",
+   "function": "invoice_detail_safe",
+   "family": "authz",
+   "reported": true,
+   "outcome": "bait_fp",
+   "matched_key": 101
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 113,
+   "end_line": 113,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "id_param_suffix=_id;orm_read_calls=get_object_or_404"
+   },
+   "rel_path": "billing/views.py",
+   "function": "refund_line",
+   "family": "authz",
+   "reported": true,
+   "outcome": "fp",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 126,
+   "end_line": 126,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "id_param_suffix=_id;orm_read_calls=get_object_or_404"
+   },
+   "rel_path": "billing/views.py",
+   "function": "refund_line_form",
+   "family": "authz",
+   "reported": true,
+   "outcome": "fp",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 142,
+   "end_line": 142,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "id_param_suffix=_id;orm_read_calls=get_object_or_404"
+   },
+   "rel_path": "billing/views.py",
+   "function": "refund_line_safe",
+   "family": "authz",
+   "reported": true,
+   "outcome": "fp",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 282,
+   "end_line": 282,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "id_param_suffix=_id;orm_read_calls=get_object_or_404"
+   },
+   "rel_path": "billing/views.py",
+   "function": "receipt_pdf",
+   "family": "authz",
+   "reported": true,
+   "outcome": "fp",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\api.py",
+   "line": 53,
+   "end_line": 53,
+   "cwe_id": "CWE-915",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "mapping_iter_calls;dyn_write_calls=setattr"
+   },
+   "rel_path": "billing/api.py",
+   "function": "WalletViewSet.settings",
+   "family": "mass-assign",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 5
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 69,
+   "end_line": 69,
+   "cwe_id": "CWE-915",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "mapping_iter_calls;dyn_write_calls=setattr"
+   },
+   "rel_path": "billing/views.py",
+   "function": "ticket_update",
+   "family": "mass-assign",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 4
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 242,
+   "end_line": 242,
+   "cwe_id": "CWE-915",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "mass_assign_signal=request.post;dyn_write_calls=update"
+   },
+   "rel_path": "billing/views.py",
+   "function": "withdraw_safe",
+   "family": "mass-assign",
+   "reported": true,
+   "outcome": "fp",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 113,
+   "end_line": 113,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "qty_terms=qty;price_terms=price"
+   },
+   "rel_path": "billing/views.py",
+   "function": "refund_line",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 6
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 126,
+   "end_line": 126,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "qty_terms=qty;price_terms=price"
+   },
+   "rel_path": "billing/views.py",
+   "function": "refund_line_form",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "bait_fp",
+   "matched_key": 108
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 157,
+   "end_line": 157,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "price_terms=amount"
+   },
+   "rel_path": "billing/views.py",
+   "function": "topup_bonus",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 7
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-toctou-check-then-write",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 142,
+   "end_line": 142,
+   "cwe_id": "CWE-362",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "qty_terms=qty;commit_calls"
+   },
+   "rel_path": "billing/views.py",
+   "function": "refund_line_safe",
+   "family": "race",
+   "reported": true,
+   "outcome": "fp",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-toctou-check-then-write",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 169,
+   "end_line": 169,
+   "cwe_id": "CWE-362",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "price_terms=amount;commit_calls"
+   },
+   "rel_path": "billing/views.py",
+   "function": "topup_bonus_safe",
+   "family": "race",
+   "reported": true,
+   "outcome": "fp",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-toctou-check-then-write",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 186,
+   "end_line": 186,
+   "cwe_id": "CWE-362",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "qty_terms=count;commit_calls"
+   },
+   "rel_path": "billing/views.py",
+   "function": "redeem_coupon",
+   "family": "race",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 8
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-toctou-check-then-write",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-heldout\\billing\\views.py",
+   "line": 228,
+   "end_line": 228,
+   "cwe_id": "CWE-362",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "django@b38082f8d2b6",
+    "slots": "price_terms=amount;commit_calls"
+   },
+   "rel_path": "billing/views.py",
+   "function": "withdraw",
+   "family": "race",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 9
+  }
+ ]
+}
