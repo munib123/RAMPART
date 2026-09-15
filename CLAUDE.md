@@ -17,9 +17,13 @@ cd frontend && npm run dev:web                              # UI   http://localh
 - **Python 3.13 is required** — `apply.py:73,87` use `Path.read_text(newline=)` which is 3.13+.
   The venv was built with `uv venv backend/.venv --python 3.13`.
 - Node v24 / npm 11 installed. `npm run typecheck` is clean.
-- `.env` holds `JWT_SECRET`, `DATABASE_URL` (a disposable Postgres 17 in Docker: `rampart-pg`,
-  port 55432, user/pass/db all `rampart`), and an empty `GEMINI_API_KEY`. Without a key every
-  verdict is "Unverified" and the research views are empty by construction.
+- `.env` holds `JWT_SECRET`, `GEMINI_API_KEY`, and `DATABASE_URL` = **the team's Supabase project**
+  (`yydcsagedkzvhtnrliru`, session pooler `aws-0-ap-northeast-1.pooler.supabase.com:5432`, Postgres
+  17.6) since 2026-09-15; migrations `0001_schema` + `0002_joern` are applied there (11 users,
+  33 scans, 81 pre-provenance findings at attach time). The disposable local Postgres
+  (`docker start rampart-pg`, `postgresql://rampart:rampart@127.0.0.1:55432/rampart`) stays as a
+  commented fallback line in `.env`. The DB password was pasted in chat - rotate it in Supabase
+  (Project Settings → Database → Reset password) and update `.env`. Never commit `.env`.
 - The **frontend is hard-gated on the DB**: `/setup`, `/scan`, `/history`, `/profile` need a JWT.
   Test account: `uiverify001@example.com` / `Passw0rd!2345`.
 

@@ -103,8 +103,12 @@ cd frontend && npm install            # npm 11 may skip esbuild's postinstall (a
 **Database (required for the UI).** The API answers anonymous `POST /api/scan` and
 `GET /api/health` without a database, but the SPA is gated on a signed-in JWT: `/setup`,
 `/scan`, `/history` and `/profile` all need `DATABASE_URL` and `JWT_SECRET` set, so a fresh
-clone without Postgres shows only the sign-in page. A disposable Postgres 17 in Docker is
-enough:
+clone without Postgres shows only the sign-in page. The team's shared database is the
+**Supabase project** - ask a teammate for the `.env` values (use the IPv4 *session pooler* DSN,
+`postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres`; the
+direct `db.<ref>.supabase.co` host is IPv6-only). The schema and migrations are applied
+automatically the first time a backend starts against it. For offline work a disposable
+Postgres 17 in Docker is enough:
 
 ```bash
 docker run -d --name rampart-pg -e POSTGRES_USER=rampart -e POSTGRES_PASSWORD=rampart -e POSTGRES_DB=rampart -p 55432:5432 postgres:17
