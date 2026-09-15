@@ -6,12 +6,14 @@
 // query reasons within a single method. Joern LOCATES candidates structurally; it does not
 // prove them. The LLM verification step downstream confirms or rejects each one.
 //
-// __INPUT_DIR__ and __OUT_FILE__ are substituted by joern_scan.py (forward-slash paths).
-// Output is TSV: cwe \t severity \t file \t line \t method \t rule \t message \t evidence
+// __INPUT_DIR__, __OUT_FILE__, __DIAG_FILE__ and __PROJECT__ are substituted by scan.py
+// (forward-slash paths). Output is TSV: cwe \t severity \t file \t line \t method \t rule \t message \t evidence
 import scala.collection.mutable.ListBuffer
+import scala.util.control.NonFatal
 
 val inputDir = "__INPUT_DIR__"
 val outFile  = "__OUT_FILE__"
+val diagFile = "__DIAG_FILE__"
 val projName = "__PROJECT__"
 
 importCode.python(inputDir, projName)
@@ -20,6 +22,24 @@ val findings = ListBuffer[String]()
 def san(s: String): String = s.replace("\t", " ").replace("\r", " ").replace("\n", " ").trim
 def add(cwe: String, sev: String, file: String, line: Int, meth: String, rule: String, msg: String, ev: String): Unit =
   findings += List(cwe, sev, file, line.toString, meth, rule, san(msg), san(ev)).mkString("\t")
+
+// Fix 1: a rule that THROWS must never look like a rule that found nothing. Every rule body and
+// every method body is wrapped; a throw is recorded and the run continues. scan.py reads
+// diag.json after the run, so "ok" and "threw" are distinguishable per rule. Before this, one
+// throw anywhere skipped the os.write below and the whole target reported UNSCANNED.
+val RULES = List("joern-idor-missing-ownership", "joern-mass-assignment",
+                 "joern-unchecked-quantity", "joern-toctou-check-then-write")
+val ruleErrors = scala.collection.mutable.Map[String, Int]().withDefaultValue(0)
+val ruleFirst  = scala.collection.mutable.Map[String, String]()
+var methodsSeen  = 0
+var methodsThrew = 0
+def guarded(rule: String)(body: => Unit): Unit =
+  try body catch { case NonFatal(e) =>
+    ruleErrors(rule) += 1
+    if (!ruleFirst.contains(rule))
+      ruleFirst(rule) = san(s"${e.getClass.getSimpleName}: ${Option(e.getMessage).getOrElse("")}").take(200)
+  }
+def jstr(s: String): String = "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
 // Tokens whose PRESENCE in a method suppresses a candidate (a guard is there).
 val AUTH = List("current_user", "login_required", "requires_auth", "requires_login", "authorize",
@@ -30,7 +50,7 @@ val LOCK = List("lock", "acquire", "atomic", "select_for_update", "with_for_upda
 val ALLOWLIST = List("allow", "whitelist", "permitted", "allowed_fields", " in [", " in (", " in {")
 val QTY = List("qty", "quantity", "amount", "count", "total", "price", "subtotal", "balance", "stock")
 
-cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m =>
+cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m => methodsSeen += 1; try {
   val name = m.name
   val file = m.filename
   val line = m.lineNumber.getOrElse(-1)
@@ -54,48 +74,64 @@ cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m =>
   val protectedM = hasAuth || decoAuth
 
   // ---- IDOR / missing authorization (CWE-639) ----
-  val singleRead = m.call.name("fetchone", "first", "one", "scalar").nonEmpty || execHas("SELECT")
-  val idParam = params.exists(p => p == "id" || p.endsWith("_id"))
-  if (singleRead && idParam && !protectedM) {
-    val idName = params.find(p => p == "id" || p.endsWith("_id")).getOrElse("id")
-    val ev = (m.call.name("fetchone").code.l ++ m.call.name("execute").code.l).headOption.getOrElse("")
-    add("CWE-639", "high", file, line, name, "joern-idor-missing-ownership",
-      s"Reads a record by the caller-supplied id '${idName}' with no ownership or authorization check in the method. If this record is user-owned, any authenticated user can read another user's data (IDOR).", ev)
+  guarded("joern-idor-missing-ownership") {
+    val singleRead = m.call.name("fetchone", "first", "one", "scalar").nonEmpty || execHas("SELECT")
+    val idParam = params.exists(p => p == "id" || p.endsWith("_id"))
+    if (singleRead && idParam && !protectedM) {
+      val idName = params.find(p => p == "id" || p.endsWith("_id")).getOrElse("id")
+      val ev = (m.call.name("fetchone").code.l ++ m.call.name("execute").code.l).headOption.getOrElse("")
+      add("CWE-639", "high", file, line, name, "joern-idor-missing-ownership",
+        s"Reads a record by the caller-supplied id '${idName}' with no ownership or authorization check in the method. If this record is user-owned, any authenticated user can read another user's data (IDOR).", ev)
+    }
   }
 
   // ---- Mass assignment (CWE-915) ----
-  val iteratesData = m.call.name("items", "to_dict", "keys", "values").nonEmpty ||
-    blobHas(List("request.form", "request.json", "**data", "**request", "**kwargs"))
-  val updateWrite = execHas("UPDATE") || execHas("INSERT") || m.call.name("setattr").nonEmpty
-  if (iteratesData && updateWrite && !blobHas(ALLOWLIST)) {
-    val ev = (m.call.name("execute").code.l ++ m.call.name("setattr").code.l).headOption.getOrElse("")
-    add("CWE-915", "high", file, line, name, "joern-mass-assignment",
-      "Writes every field of a caller-supplied data mapping into a record with no allow-list, so a client can set fields that were never meant to be user-writable (e.g. is_admin, role, balance).", ev)
+  guarded("joern-mass-assignment") {
+    val iteratesData = m.call.name("items", "to_dict", "keys", "values").nonEmpty ||
+      blobHas(List("request.form", "request.json", "**data", "**request", "**kwargs"))
+    val updateWrite = execHas("UPDATE") || execHas("INSERT") || m.call.name("setattr").nonEmpty
+    if (iteratesData && updateWrite && !blobHas(ALLOWLIST)) {
+      val ev = (m.call.name("execute").code.l ++ m.call.name("setattr").code.l).headOption.getOrElse("")
+      add("CWE-915", "high", file, line, name, "joern-mass-assignment",
+        "Writes every field of a caller-supplied data mapping into a record with no allow-list, so a client can set fields that were never meant to be user-writable (e.g. is_admin, role, balance).", ev)
+    }
   }
 
   // ---- Unchecked quantity / business logic (CWE-840) ----
-  val qtyMult = m.call.name("<operator>.multiplication").code.exists(c => QTY.exists(c.toLowerCase.contains))
-  val posGuard = m.call.name("<operator>.greaterThan", "<operator>.greaterEqualsThan",
-    "<operator>.lessThan", "<operator>.lessEqualsThan").code.exists(c => QTY.exists(c.toLowerCase.contains)) ||
-    blobHas(List("max(0", "abs(", "> 0", ">= 0", "> 1"))
-  if (qtyMult && !posGuard) {
-    val ev = m.call.name("<operator>.multiplication").code.l.headOption.getOrElse("")
-    add("CWE-840", "medium", file, line, name, "joern-unchecked-quantity",
-      "Computes a monetary amount from a caller-supplied quantity/price with no lower-bound (>0) guard. A negative or zero quantity can yield a negative total (store credit / free goods).", ev)
+  guarded("joern-unchecked-quantity") {
+    val qtyMult = m.call.name("<operator>.multiplication").code.exists(c => QTY.exists(c.toLowerCase.contains))
+    val posGuard = m.call.name("<operator>.greaterThan", "<operator>.greaterEqualsThan",
+      "<operator>.lessThan", "<operator>.lessEqualsThan").code.exists(c => QTY.exists(c.toLowerCase.contains)) ||
+      blobHas(List("max(0", "abs(", "> 0", ">= 0", "> 1"))
+    if (qtyMult && !posGuard) {
+      val ev = m.call.name("<operator>.multiplication").code.l.headOption.getOrElse("")
+      add("CWE-840", "medium", file, line, name, "joern-unchecked-quantity",
+        "Computes a monetary amount from a caller-supplied quantity/price with no lower-bound (>0) guard. A negative or zero quantity can yield a negative total (store credit / free goods).", ev)
+    }
   }
 
   // ---- Race condition / TOCTOU (CWE-362) ----
-  val cmpCalls = m.call.name("<operator>.greaterThan", "<operator>.greaterEqualsThan",
-    "<operator>.lessThan", "<operator>.lessEqualsThan")
-  val hasCheck = cmpCalls.nonEmpty
-  val hasWrite = execHas("UPDATE") || execHas("INSERT") || execHas("DELETE") || m.call.name("commit").nonEmpty
-  val checkOnResource = cmpCalls.code.exists(c => QTY.exists(c.toLowerCase.contains))
-  if (hasCheck && hasWrite && checkOnResource && !blobHas(LOCK)) {
-    val ev = m.call.name("execute").code.l.headOption.getOrElse("")
-    add("CWE-362", "high", file, line, name, "joern-toctou-check-then-write",
-      "Checks a resource value (e.g. stock/balance) and then mutates it in the same method with no lock or atomic transaction. Concurrent requests can both pass the check before either writes (TOCTOU race), oversubscribing the resource.", ev)
+  guarded("joern-toctou-check-then-write") {
+    val cmpCalls = m.call.name("<operator>.greaterThan", "<operator>.greaterEqualsThan",
+      "<operator>.lessThan", "<operator>.lessEqualsThan")
+    val hasCheck = cmpCalls.nonEmpty
+    val hasWrite = execHas("UPDATE") || execHas("INSERT") || execHas("DELETE") || m.call.name("commit").nonEmpty
+    val checkOnResource = cmpCalls.code.exists(c => QTY.exists(c.toLowerCase.contains))
+    if (hasCheck && hasWrite && checkOnResource && !blobHas(LOCK)) {
+      val ev = m.call.name("execute").code.l.headOption.getOrElse("")
+      add("CWE-362", "high", file, line, name, "joern-toctou-check-then-write",
+        "Checks a resource value (e.g. stock/balance) and then mutates it in the same method with no lock or atomic transaction. Concurrent requests can both pass the check before either writes (TOCTOU race), oversubscribing the resource.", ev)
+    }
   }
-}
+} catch { case NonFatal(e) => methodsThrew += 1 } }
 
+// The always-write contract: findings.tsv exists even when clean, so scan.py can tell "clean"
+// from "the locators never ran". diag.json says which rules ran and which threw.
 os.write.over(os.Path(outFile), findings.mkString("\n"))
+val ruleState = RULES.map { r =>
+  val st = if (ruleErrors(r) == 0) "ok" else "threw"
+  s"${jstr(r)}: {\"state\": ${jstr(st)}, \"errors\": ${ruleErrors(r)}, \"first_error\": ${jstr(ruleFirst.getOrElse(r, ""))}}"
+}.mkString(", ")
+os.write.over(os.Path(diagFile),
+  s"""{"methods_seen": $methodsSeen, "methods_threw": $methodsThrew, "findings": ${findings.size}, "rule_state": {$ruleState}}""")
 println(s"JOERN_FINDINGS=${findings.size}")

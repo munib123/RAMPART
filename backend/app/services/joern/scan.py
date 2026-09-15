@@ -156,6 +156,7 @@ def scan(path: str) -> tuple[list[Finding], dict]:
     tmp = _scratch_root() / proj
     tmp.mkdir(parents=True, exist_ok=True)
     out_file = tmp / "findings.tsv"
+    diag_file = tmp / "diag.json"
     script = tmp / "run.sc"
 
     try:
@@ -163,6 +164,7 @@ def scan(path: str) -> tuple[list[Finding], dict]:
         rendered = (template
                     .replace("__INPUT_DIR__", input_dir.replace("\\", "/"))
                     .replace("__OUT_FILE__", str(out_file).replace("\\", "/"))
+                    .replace("__DIAG_FILE__", str(diag_file).replace("\\", "/"))
                     .replace("__PROJECT__", proj))
         script.write_text(rendered, encoding="utf-8")
 
@@ -184,8 +186,23 @@ def scan(path: str) -> tuple[list[Finding], dict]:
             diag["reason"] = f"cpg phase failed (exit {proc.returncode}): " + " | ".join(summary[-3:])
             return [], diag
         out = _parse_tsv(out_file.read_text(encoding="utf-8", errors="replace"), input_dir)
+        # Fix 1: read the per-rule status the script wrote. A rule that threw must be visible.
+        rule_state: dict = {}
+        if diag_file.exists():
+            try:
+                import json
+                d = json.loads(diag_file.read_text(encoding="utf-8"))
+                rule_state = d.get("rule_state", {})
+                diag.update(methods_seen=d.get("methods_seen"), methods_threw=d.get("methods_threw"))
+            except Exception as e:                       # a bad diag must not hide good findings
+                diag["diag_error"] = f"{type(e).__name__}: {e}"
+        diag["rule_state"] = rule_state
+        threw = [r for r, s in rule_state.items() if s.get("state") == "threw"]
         print(f"[joern] ok - {len(out)} candidate(s) from {input_dir} "
               f"in {time.time() - t0:.1f}s")
+        for r in threw:
+            print(f"[joern]     RULE THREW {r}: {rule_state[r].get('errors')} method(s), "
+                  f"first: {rule_state[r].get('first_error')}")
         diag.update(used=True, candidates=len(out))
         return out, diag
     except subprocess.TimeoutExpired:
