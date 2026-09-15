@@ -196,8 +196,11 @@ finding carries `meta.pack` (`<id>@<sha12>`) and `meta.slots` (which vocabulary 
 so a report can be traced to the exact pack. Validate or re-freeze the digests with
 `python -m app.services.joern.vocab.validate [--freeze]`.
 
-The rules are measured, not trusted: `bench/` holds a line-anchored answer key for
-`testbeds/shopfast` (26 planted bugs, 2 baits) and a per-fix probe suite; run
+The rules are measured, not trusted: `bench/` holds line-anchored answer keys for
+`testbeds/shopfast` (Flask; 26 planted bugs, 2 baits), the per-fix `testbeds/probe` suite, and the
+Django pair `testbeds/djshop-dev` / `testbeds/djshop-heldout` (each SAST-blind bug next to the
+fix the Django docs prescribe; the held-out half is frozen - `FREEZE.json`, `bench/freeze.py` -
+and evaluated once, after `django.json` was authored from documentation alone). Run
 `backend\.venv\Scripts\python.exe -m bench.run --backend joern --benchmark shopfast [--pack _base]`
 and see `bench/README.md` and `bench/runs/*.md` for the numbers behind every rule change.
 `--pack _base` vs `--pack <framework>` on one benchmark is the vocabulary ablation with the

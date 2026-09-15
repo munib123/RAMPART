@@ -84,7 +84,14 @@ val (pack, packSource) =
   try (readPack(packFile), "pack")
   catch { case NonFatal(e) => (readPack(basePackFile), "base_fallback:" + e.getClass.getSimpleName) }
 val packId = pack("pack_id").str
-def slot(name: String): List[String] = pack("slots")(name)("values").arr.map(_.str).toList
+// Representation fix (P6, found on the DEV split): pysrc2cpg renders keyword arguments and
+// assignments with spaces around the equals sign - `get_object_or_404(Order, pk = order_id,
+// user = request.user)` - while every pack author writes tokens the way source and docs spell
+// them: `user=request.user`, `min_value=1`, `fields=[`. Both the method text and every pack
+// value are normalised to the compact form, so the two spellings are one token. `==`, `!=`,
+// `>=`, `<=` contain no " = " and are untouched.
+def norm(s: String): String = s.replace(" = ", "=")
+def slot(name: String): List[String] = pack("slots")(name)("values").arr.map(v => norm(v.str)).toList.distinct
 
 // Tokens whose PRESENCE in a method suppresses a candidate (a guard is there).
 //
@@ -130,7 +137,7 @@ val ID_SUFFIX   = slot("id_param_suffix")
 // on a 50k-LOC repo. Keyed by filename; values lowercased once.
 val moduleCallsByFile: Map[String, List[String]] =
   cpg.method.nameExact("<module>").l
-    .map(mm => mm.filename -> mm.call.code.l.map(_.toLowerCase))
+    .map(mm => mm.filename -> mm.call.code.l.map(c => norm(c.toLowerCase)))
     .groupBy(_._1).map { case (f, xs) => f -> xs.flatMap(_._2) }
 
 // Everything a rule needs about one method, computed in ONE traversal. Rules iterate `ctxs`,
@@ -169,8 +176,8 @@ def ctx(m: io.shiftleft.codepropertygraph.generated.nodes.Method): Ctx = {
   val SEP = "   "
   val calls  = m.ast.isCall.code.l
   val idents = m.ast.isIdentifier.name.l
-  val signalText = (calls ++ m.ast.isLiteral.code.l ++ idents).mkString(SEP).toLowerCase
-  val guardText  = (calls ++ idents).mkString(SEP).toLowerCase
+  val signalText = norm((calls ++ m.ast.isLiteral.code.l ++ idents).mkString(SEP).toLowerCase)
+  val guardText  = norm((calls ++ idents).mkString(SEP).toLowerCase)
   // Fix 7 (part 2): match the decorator lowering EXACTLY as "(def <name>(", not contains(name).
   // pysrc2cpg lowers @deco def view(...) to `view = deco(def view(...))` at module scope. With
   // contains(), `get_note_extra = check_owner(def get_note_extra(...))` credited the shorter,

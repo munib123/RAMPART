@@ -8,8 +8,14 @@ to the exact rules, model, answer key and commit that produced it. Until this ex
 bench/
   keys/
     shopfast.key.jsonl     the answer key: 26 bugs over 29 locations + 2 safe (bait) rows
+    probe.key.jsonl        one row per P2 rule fix (5 vuln + 2 safe counterparts)
+    djshop-dev.key.jsonl   Django, DEV split: 12 vuln + 11 safe "fixed twin" rows
+    djshop-heldout.key.jsonl  Django, HELD-OUT split: 15 vuln + 14 safe; evaluated once
     cwe_families.json      CWE id -> family; scoring matches on family, not exact id
   validate_key.py          resolve every verbatim anchor to a line by unique string search
+                           (and check the row's enclosing function actually contains it)
+  freeze.py                FREEZE.json per testbed: tree hash; run.py refuses a drifted tree
+                           and logs every held-out run to runs/heldout.log
   match.py                 scoring policy (enclosing function recomputed by ast; per-bug TP/FN)
   backends/                LocatorBackend ABC + null | bandit | semgrep | joern | full
   run.py                   one arm x one benchmark -> runs/<stamp>-<benchmark>-<arm>.json
