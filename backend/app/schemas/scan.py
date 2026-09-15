@@ -32,3 +32,17 @@ class ApplyFixReq(BaseModel):
 class RevertReq(BaseModel):
     scan_id: str
     target: str               # the scanned root (folder or file)
+
+
+class VerifyFixReq(BaseModel):
+    """POST /api/fix/verify (P8, O3). With fixed_code: preview - the fix is applied to a scratch
+    copy of the target and the CPG is rebuilt there; the user's tree is untouched. Without it:
+    post-apply - the live tree is re-verified against the snapshot taken at first Apply."""
+    scan_id: str
+    path: str                 # absolute path of the file the finding is in
+    function: str             # slice.name (bare method name, or Class.method)
+    rule_id: str              # the joern-* rule that fired
+    fixed_code: str | None = None
+    start_line: int | None = None
+    end_line: int | None = None
+    original_code: str | None = None

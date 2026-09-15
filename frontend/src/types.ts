@@ -220,6 +220,8 @@ export interface FixState {
   applied?: boolean;            // apply succeeded (file written)
   revertable?: boolean;         // a snapshot exists for this scan
   applyErr?: string;
+  verifying?: boolean;          // P8: CPG re-verification in flight
+  verify?: VerifyResult | null; // P8: last re-verification verdict
 }
 
 export interface ApplyResult {
@@ -238,6 +240,25 @@ export interface RevertResult {
   restored_from?: string;
   target?: string;
   code?: string;                // 'no_snapshot'
+  error?: string;
+}
+
+/** POST /api/fix/verify (P8, O3): did the fix remove the exploitable path, per the CPG? */
+export interface VerifyResult {
+  ok: boolean;
+  mode?: 'preview' | 'post_apply';
+  reverify_method?: 'cpg' | 'pattern';
+  converged?: boolean;
+  locator_refires?: boolean | null;
+  fired_before?: boolean | null;
+  guard_present?: boolean;
+  guard_evidence?: string[];    // "method:permissiondenied", "class:isowner", "instantiated_class:min_value=1"
+  sink_present?: boolean | null;
+  method_found?: boolean;
+  regressions?: { path: string; line: number; method: string; rule_id: string }[];
+  reason?: string;
+  elapsed_ms?: number;
+  code?: string;                // 'not_cpg' | 'file_changed' | 'not_found'
   error?: string;
 }
 

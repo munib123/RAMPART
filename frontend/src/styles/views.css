@@ -226,6 +226,17 @@
 .cpg-callout.quiet .pill { background: var(--bg-muted); color: var(--neutral-600); border-color: var(--border-subtle); }
 .finding.is-cpg { border-left: 3px solid var(--cpg); }
 
+/* P8: CPG re-verification verdict inside the fix panel */
+.verify-note {
+  margin-top: 8px; display: flex; align-items: flex-start; gap: 10px;
+  padding: 9px 12px; border-radius: 10px; font-size: 13px; color: var(--text-body);
+  background: var(--cpg-subtle); border: 1px solid var(--cpg-border);
+}
+.verify-note .pill { margin-top: 1px; }
+.verify-note.ok { background: var(--success-subtle); border-color: #cdeede; color: var(--green-600); }
+.verify-note.warn { background: var(--warning-subtle); border-color: #eeddb0; color: var(--amber-600); }
+.verify-note.err { background: var(--danger-subtle); border-color: #f3d2cb; color: var(--red-600); }
+
 .empty-card { padding: 48px 20px; text-align: center; }
 .empty-card .big { font-size: 18px; font-weight: 600; color: var(--neutral-700); }
 .empty-card .sub { margin-top: 4px; font-size: 13.5px; color: var(--text-muted); }

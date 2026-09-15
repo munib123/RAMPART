@@ -138,7 +138,7 @@ def _parse_tsv(text: str, input_dir: str) -> list[Finding]:
             continue
         cwe, sev, rel_file, line, method, rule, message, evidence = parts[:8]
         # columns 9-10 (P5): pack tag and slot trace - provenance, optional
-        meta = {}
+        meta = {"method": method} if method else {}
         if len(parts) > 8 and parts[8]:
             meta["pack"] = parts[8]
         if len(parts) > 9 and parts[9]:
@@ -182,9 +182,11 @@ def _sections(rendered: str) -> list[tuple[str, str, str]]:
 
 
 def _render(input_dir: str, out_file: Path, diag_file: Path, proj: str,
-            pack_file: Path | None = None, pack_tag: str = "") -> str:
+            pack_file: Path | None = None, pack_tag: str = "",
+            reverify: tuple[str, str] | None = None, reverify_out: Path | None = None) -> str:
     fwd = lambda p: str(p).replace("\\", "/")
     base = vocab.pack_path(vocab.BASE_ID)
+    rv_file, rv_method = reverify if reverify else ("", "")
     return (RULES.read_text(encoding="utf-8")
             .replace("__INPUT_DIR__", fwd(input_dir))
             .replace("__OUT_FILE__", fwd(out_file))
@@ -192,7 +194,10 @@ def _render(input_dir: str, out_file: Path, diag_file: Path, proj: str,
             .replace("__PROJECT__", proj)
             .replace("__PACK_FILE__", fwd(pack_file if pack_file is not None else base))
             .replace("__BASE_PACK_FILE__", fwd(base))
-            .replace("__PACK_TAG__", pack_tag))
+            .replace("__PACK_TAG__", pack_tag)
+            .replace("__REVERIFY_FILE__", fwd(rv_file))
+            .replace("__REVERIFY_METHOD__", rv_method)
+            .replace("__REVERIFY_OUT__", fwd(reverify_out) if reverify_out is not None else ""))
 
 
 def prepare_pack(target: str, requested: str | None = None, tmp: Path | None = None) -> tuple[Path | None, dict]:
@@ -224,9 +229,14 @@ def prepare_pack(target: str, requested: str | None = None, tmp: Path | None = N
 
 
 def _collect(out_file: Path, diag_file: Path, input_dir: str, diag: dict,
-             compile_errors: dict) -> list[Finding]:
-    """Read findings.tsv + diag.json written by the rules (either mode)."""
+             compile_errors: dict, reverify_out: Path | None = None) -> list[Finding]:
+    """Read findings.tsv + diag.json (+ reverify.json, P8) written by the rules (either mode)."""
     out = _parse_tsv(out_file.read_text(encoding="utf-8", errors="replace"), input_dir)
+    if reverify_out is not None and reverify_out.exists():
+        try:
+            diag["reverify"] = json.loads(reverify_out.read_text(encoding="utf-8"))
+        except Exception as e:
+            diag["reverify_error"] = f"{type(e).__name__}: {e}"
     rule_state: dict = {}
     if diag_file.exists():
         try:
@@ -285,6 +295,9 @@ def _run_server(srv, rendered: str, proj: str, out_file: Path,
                 compile_errors[name] = tail
                 print(f"[joern]     section 'rule {name}' failed; continuing: {tail[:120]}")
                 continue
+            if kind == "reverify":                       # P8: informational; the findings stand
+                print(f"[joern]     section 'reverify' failed; continuing: {tail[:120]}")
+                continue
             return f"server section '{kind}' failed: {tail}"
         if not out_file.exists():
             return "server run finished but findings.tsv is missing"
@@ -294,10 +307,13 @@ def _run_server(srv, rendered: str, proj: str, out_file: Path,
         srv.query('delete("' + proj + '")', timeout=60)
 
 
-def scan(path: str, pack: str | None = None) -> tuple[list[Finding], dict]:
+def scan(path: str, pack: str | None = None,
+         reverify: tuple[str, str] | None = None) -> tuple[list[Finding], dict]:
     """Build a CPG for `path` and return (candidates, diag). Never raises.
     Uses the server sidecar when it is up (P3), else one `joern --script` per scan.
-    `pack` overrides JOERN_PACK for this scan (bench --pack); None means the config value."""
+    `pack` overrides JOERN_PACK for this scan (bench --pack); None means the config value.
+    `reverify=(relative_file, method)` (P8) additionally asks the rules to describe that one
+    method's guards and sinks; the answer lands in diag["reverify"]."""
     t0 = time.time()
     diag: dict = {"used": False, "reason": "", "elapsed_ms": 0, "candidates": 0,
                   "rules_file": RULES.name, "mode": "script"}
@@ -312,6 +328,7 @@ def scan(path: str, pack: str | None = None) -> tuple[list[Finding], dict]:
     tmp = _scratch_root() / proj
     tmp.mkdir(parents=True, exist_ok=True)
     out_file, diag_file, script = tmp / "findings.tsv", tmp / "diag.json", tmp / "run.sc"
+    reverify_out = tmp / "reverify.json" if reverify else None
     compile_errors: dict = {}
 
     try:
@@ -323,7 +340,8 @@ def scan(path: str, pack: str | None = None) -> tuple[list[Finding], dict]:
             return [], diag
         if pack_info.get("fallback"):
             print(f"[joern]     pack '{pack_info['resolved']}' rejected -> _base: {pack_info['fallback'][:120]}")
-        rendered = _render(input_dir, out_file, diag_file, proj, pack_file, pack_info["tag"])
+        rendered = _render(input_dir, out_file, diag_file, proj, pack_file, pack_info["tag"],
+                           reverify, reverify_out)
         err: Optional[str] = None
         srv = server.ready(wait=float(getattr(config, "JOERN_SERVER_WAIT", 0)))
         if srv is not None:
@@ -341,7 +359,7 @@ def scan(path: str, pack: str | None = None) -> tuple[list[Finding], dict]:
         if err:
             diag["reason"] = err
             return [], diag
-        out = _collect(out_file, diag_file, input_dir, diag, compile_errors)
+        out = _collect(out_file, diag_file, input_dir, diag, compile_errors, reverify_out)
         print(f"[joern] ok - {len(out)} candidate(s) from {input_dir} "
               f"in {time.time() - t0:.1f}s [{diag['mode']}, pack {pack_info['tag']}]")
         diag.update(used=True, candidates=len(out))

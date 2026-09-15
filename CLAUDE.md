@@ -118,7 +118,15 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   defining `has_object_permission`; an instantiated form's `min_value` bounds the quantity rule);
   `meta.route` = yes|no|unknown from route markers + 2 hops of `callIn`, reported never gated.
   Schema v2 (+4 slots), pack cap 16 KB. DEV/django 5 TP / 0 FP / 0 bait; regressions unchanged.
-  Held-out deliberately not re-run. Log: `bench/runs/2026-09-15-p7-graph.md`. Next: P8 O3 re-verify.
+  Held-out deliberately not re-run. Log: `bench/runs/2026-09-15-p7-graph.md`.
+  **P8 done:** O3 re-verification. `joern/reverify.py` - preview (scratch copy + `apply_fix` there,
+  live tree untouched) or post-apply (snapshot = before); `decide()` = fired before ∧ silent after ∧
+  no new candidate anywhere; reason names the guard and where it lives (`method:` / `class:` /
+  `instantiated_class:`) or "sink gone" or "review by hand". `// @@ reverify` section in locators.sc;
+  `POST /api/fix/verify`; FixPanel "Verify with CPG". Pattern fallback labelled when Joern is absent.
+  Gate met: get_order ownership fix converges (`method:permissiondenied`), cosmetic rename and a
+  docstring-only "fix" do not; 13-17 s via the sidecar. Log: `bench/runs/2026-09-15-p8-reverify.md`.
+  Next: P9 docs + thesis text.
   Gemini key is in `.env` (pasted in chat 2026-09-15 - rotate it).
   Open: the `full` arm Confirmed the find_product bait; extract.py gives module-level findings
   a slice that reaches into the next function. A second process on the same machine cannot bind

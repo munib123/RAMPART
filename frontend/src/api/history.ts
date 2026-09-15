@@ -1,5 +1,5 @@
 import { API, authHeaders } from '@/api/client';
-import type { ApplyResult, CodeStatsRow, Exemplar, FixResponse, HistoryRow, RevertResult } from '@/types';
+import type { ApplyResult, CodeStatsRow, Exemplar, FixResponse, HistoryRow, RevertResult, VerifyResult } from '@/types';
 
 export async function loadHistory(): Promise<HistoryRow[]> {
   const r = await fetch(API + '/api/scans', { headers: authHeaders() });
@@ -52,4 +52,24 @@ export async function revertFix(p: { scan_id: string; target: string }): Promise
     body: JSON.stringify(p),
   });
   return (await res.json()) as RevertResult;
+}
+
+/** P8: re-verify a fix with the CPG. With fixed_code it previews on a scratch copy; without, it
+ *  checks the live (already applied) tree against the snapshot. */
+export async function verifyFix(p: {
+  scan_id: string;
+  path: string;
+  function: string;
+  rule_id: string;
+  fixed_code?: string;
+  start_line?: number;
+  end_line?: number;
+  original_code?: string;
+}): Promise<VerifyResult> {
+  const res = await fetch(API + '/api/fix/verify', {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(p),
+  });
+  return (await res.json()) as VerifyResult;
 }

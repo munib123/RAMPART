@@ -196,6 +196,14 @@ finding carries `meta.pack` (`<id>@<sha12>`) and `meta.slots` (which vocabulary 
 so a report can be traced to the exact pack. Validate or re-freeze the digests with
 `python -m app.services.joern.vocab.validate [--freeze]`.
 
+**The rules use the graph, not just tokens.** A TOCTOU fires only when a write is
+control-dependent on a comparison over the same object (`product.stock >= q … product.save()`);
+an IDOR read inside a DRF ViewSet honours `get_queryset()` scoping and any project permission
+class defining `has_object_permission`; a form's `min_value` in `forms.py` bounds the quantity the
+view multiplies; every finding carries a route-reachability flag. And after a fix, **Verify with
+CPG** rebuilds the graph on the patched code and says whether the locator still fires - a
+comment that claims "atomic" does not pass, a real `select_for_update()` does.
+
 The rules are measured, not trusted: `bench/` holds line-anchored answer keys for
 `testbeds/shopfast` (Flask; 26 planted bugs, 2 baits), the per-fix `testbeds/probe` suite, and the
 Django pair `testbeds/djshop-dev` / `testbeds/djshop-heldout` (each SAST-blind bug next to the
@@ -268,6 +276,7 @@ sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
 | POST | `/api/fix` | generate a fix for one finding |
 | POST | `/api/fix/apply` | apply the generated fix to the codebase (snapshots the target first) |
 | POST | `/api/fix/revert` | restore the pre-fix snapshot |
+| POST | `/api/fix/verify` | O3: rebuild the CPG on the patched code (scratch copy before Apply, live tree after) and report whether the locator still fires, which guard appeared, and any new candidate elsewhere |
 | GET | `/api/browse` | native folder picker |
 | POST | `/api/auth/signup`, `/api/auth/login` | register / log in |
 | GET | `/api/auth/me` | who am I (Bearer) |

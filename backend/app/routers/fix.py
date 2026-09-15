@@ -14,9 +14,10 @@ from fastapi import APIRouter, Depends, HTTPException
 import app.db as db
 from app import config
 from app.core.deps import current_user, optional_user
-from app.schemas.scan import ApplyFixReq, FixReq, RevertReq
+from app.schemas.scan import ApplyFixReq, FixReq, RevertReq, VerifyFixReq
 from app.services import apply as apply_svc
 from app.services import gemini
+from app.services.joern import reverify as reverify_svc
 
 router = APIRouter(tags=["fix"])
 
@@ -111,3 +112,26 @@ async def revert_fix(req: RevertReq, user=Depends(current_user)):
     if err:
         return err
     return await asyncio.to_thread(apply_svc.revert_snapshot, req.scan_id, req.target or target)
+
+
+@router.post("/api/fix/verify")
+async def verify_fix(req: VerifyFixReq, user=Depends(current_user)):
+    """O3 re-verification (P8): rebuild the CPG on the patched code and ask whether the locator
+    still fires on this method - and if not, whether a guard appeared or the sink vanished.
+    Only meaningful for joern-* findings; the pattern scanners have no such check."""
+    target, err = await _owns_scan(req.scan_id, user["id"])
+    if err:
+        return err
+    if not str(req.rule_id or "").startswith("joern-"):
+        return {"ok": False, "code": "not_cpg",
+                "error": "re-verification runs the CPG locator; this finding came from a pattern scanner"}
+    before_dir = None
+    if req.fixed_code is None:                          # post-apply: the snapshot is the before state
+        snap = apply_svc._snapshot_dir(req.scan_id)
+        tree = snap / "tree"
+        before_dir = str(tree) if tree.is_dir() else None
+    return await asyncio.to_thread(
+        reverify_svc.verify, target, req.path, req.function, req.rule_id,
+        fixed_code=req.fixed_code, start_line=req.start_line, end_line=req.end_line,
+        original_code=req.original_code, before_dir=before_dir,
+    )

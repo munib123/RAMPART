@@ -244,6 +244,6 @@ def test_tsv_provenance_columns_reach_meta(tmp_path):
                      "msg", "ev", "flask-sqlite3@4a85ea8346ac", "id_param_suffix=_id;orm_read_calls=fetchone", "yes"])
     old = "\t".join(["CWE-639", "high", "orders.py", "5", "get_order", "joern-idor-missing-ownership", "msg", "ev"])
     fs = joern_scan._parse_tsv(row + "\n" + old + "\n", str(tmp_path))
-    assert fs[0].meta == {"pack": "flask-sqlite3@4a85ea8346ac", "slots": "id_param_suffix=_id;orm_read_calls=fetchone", "route": "yes"}
-    assert fs[1].meta == {}                                  # 8-column rows still parse
+    assert fs[0].meta == {"method": "get_order", "pack": "flask-sqlite3@4a85ea8346ac", "slots": "id_param_suffix=_id;orm_read_calls=fetchone", "route": "yes"}
+    assert fs[1].meta == {"method": "get_order"}               # 8-column rows still parse
     assert "meta" in fs[0].to_dict()

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { generateFix, applyFix, revertFix } from '@/api/history';
+import { generateFix, applyFix, revertFix, verifyFix } from '@/api/history';
 import { announce } from '@/api/client';
 import { esc, langOf } from '@/utils/format';
 import { diffLines, diffReact } from '@/utils/diff';
@@ -100,6 +100,32 @@ export default function FixPanel({ finding, scanId, target, onApplied, onReverte
   }
 
   const canApply = !!(scanId && target && finding.path && finding.slice && finding.slice.start_line && fx.fixed_code);
+  // P8: only a CPG finding can be re-verified by the CPG. Preview before apply (scratch copy),
+  // post-apply check against the snapshot afterwards.
+  const canVerify = canApply && finding.tool === 'joern' && !!finding.slice?.name && !!finding.rule_id;
+
+  const onVerify = async () => {
+    if (!canVerify) return;
+    setFx((p) => ({ ...p, verifying: true, verify: null }));
+    try {
+      const r = await verifyFix({
+        scan_id: scanId as string,
+        path: finding.path as string,
+        function: finding.slice?.name as string,
+        rule_id: finding.rule_id as string,
+        ...(fx.applied ? {} : {
+          fixed_code: fx.fixed_code || '',
+          start_line: finding.slice?.start_line,
+          end_line: finding.slice?.end_line,
+          original_code: finding.slice?.code,
+        }),
+      });
+      setFx((p) => ({ ...p, verifying: false, verify: r }));
+      announce(r.ok ? (r.converged ? 'Re-verified: the exploitable path is gone' : 'Re-verified: the locator still fires') : (r.error || 'Verification failed'));
+    } catch (e) {
+      setFx((p) => ({ ...p, verifying: false, verify: { ok: false, error: (e as Error).message || 'Verification failed' } }));
+    }
+  };
 
   const onApply = async () => {
     if (!canApply) return;
@@ -197,6 +223,11 @@ export default function FixPanel({ finding, scanId, target, onApplied, onReverte
           )}
           <button className="btn btn-xs" onClick={run}>Regenerate</button>
           <button className={'btn btn-xs copybtn' + (copied ? ' copied' : '')} ref={btnRef} aria-label="Copy corrected code" onClick={onCopy}>Copy fix</button>
+          {canVerify && (
+            <button className="btn btn-xs verifybtn" onClick={onVerify} disabled={applying || !!fx.verifying} title="Rebuild the code property graph on the patched code and check whether the locator still fires">
+              {fx.verifying ? 'Verifying with CPG…' : (fx.applied ? 'Re-verify with CPG' : 'Verify with CPG')}
+            </button>
+          )}
           {canApply && !fx.applied && (
             <button className="btn btn-xs btn-primary applybtn" onClick={onApply} disabled={applying}>
               {applying ? 'Applying…' : 'Apply fix'}
@@ -210,6 +241,20 @@ export default function FixPanel({ finding, scanId, target, onApplied, onReverte
         </span>
       </div>
       {fx.applied && <div className="applied-note">Applied ✓ — this fix is now in the codebase. Revert any time.</div>}
+      {fx.verify && (
+        <div className={'verify-note ' + (!fx.verify.ok ? 'err' : fx.verify.converged ? 'ok' : 'warn')} data-testid="verify-note">
+          <span className="pill mono cpg sm">{fx.verify.reverify_method === 'pattern' ? 'PATTERN' : 'CPG'}</span>
+          <span>
+            {!fx.verify.ok
+              ? (fx.verify.error || 'Verification failed.')
+              : (fx.verify.converged
+                  ? `Verified${fx.verify.mode === 'preview' ? ' on a scratch copy' : ''}: the locator no longer fires. ${fx.verify.reason || ''}`
+                  : `Not verified: ${fx.verify.reason || 'the locator still fires.'}`)}
+            {fx.verify.ok && fx.verify.reverify_method === 'pattern' ? ' (weaker text check — Joern is not available)' : ''}
+            {fx.verify.ok && typeof fx.verify.elapsed_ms === 'number' ? ` · ${(fx.verify.elapsed_ms / 1000).toFixed(1)}s` : ''}
+          </span>
+        </div>
+      )}
       {fx.applyErr && <div className="applyerr">{fx.applyErr}</div>}
       <div className="caveat">{tier === 'Low' ? 'Low confidence: verify manually. ' : ''}AI-suggested fix. Review and test before using.</div>
       {fx.summary && <div className="whatchanged"><b>What changed.</b> {fx.summary}</div>}
