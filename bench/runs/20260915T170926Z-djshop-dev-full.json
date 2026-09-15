@@ -1,0 +1,396 @@
+{
+ "run_id": "20260915T170926Z-djshop-dev-full",
+ "benchmark": "djshop-dev",
+ "backend": "full",
+ "pack_arg": null,
+ "split": "dev",
+ "tree_sha256": "e824a99673d94b4217037692416d59a250acddf1a80ef09349a9b274bb48fe2c",
+ "frozen_at": "2026-09-15T12:22:03Z",
+ "verdict_gated": true,
+ "elapsed_s": 69.4,
+ "fingerprint": {
+  "backend": "full",
+  "rampart_git_sha": "ffe4d404",
+  "rampart_git_dirty": false,
+  "scanner": "semgrep",
+  "scope": {
+   "platform": "ecommerce",
+   "stack": [
+    "python"
+   ],
+   "priorities": [
+    "access-control",
+    "injection"
+   ]
+  },
+  "gemini_model": "gemini-2.5-flash",
+  "llm_enabled": true,
+  "rules_sha256": "11befcda9b9cf6bd",
+  "collections": [
+   "rampart_hackerone_minilm",
+   "rampart_nuclei_minilm",
+   "rampart_crossvul_minilm"
+  ],
+  "rag_k": 4,
+  "llm_batch": 12,
+  "max_llm_findings": 60,
+  "joern_llm_quota": 20,
+  "joern_pack_setting": "auto",
+  "joern": {
+   "used": true,
+   "reason": "",
+   "elapsed_ms": 23682,
+   "candidates": 5,
+   "rules_file": "locators.sc",
+   "mode": "script",
+   "target": "D:\\d\\RAMPART\\testbeds\\djshop-dev",
+   "pack": {
+    "requested": "auto",
+    "resolved": "django",
+    "reason": "django in project metadata",
+    "listed": true,
+    "id": "django",
+    "sha256": "b5df755be58004606d25995f345945dad727bf5e6e7d81edc459a2b8b075bdea",
+    "chain": [
+     "_base",
+     "django"
+    ],
+    "authored_from": "framework_docs",
+    "unlisted": false,
+    "values": 202,
+    "tag": "django@b5df755be580",
+    "loaded": "django",
+    "source": "pack"
+   },
+   "methods_seen": 26,
+   "methods_threw": 0,
+   "rule_state": {
+    "joern-idor-missing-ownership": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-mass-assignment": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-unchecked-quantity": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-toctou-check-then-write": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    }
+   }
+  },
+  "llm": {
+   "enabled": true,
+   "model": "gemini-2.5-flash"
+  },
+  "counts": {
+   "total": 12,
+   "high": 5,
+   "medium": 7
+  },
+  "elapsed_s": 69.2,
+  "pack": {
+   "requested": "auto",
+   "resolved": "django",
+   "reason": "django in project metadata",
+   "listed": true,
+   "id": "django",
+   "sha256": "b5df755be58004606d25995f345945dad727bf5e6e7d81edc459a2b8b075bdea",
+   "chain": [
+    "_base",
+    "django"
+   ],
+   "authored_from": "framework_docs",
+   "unlisted": false,
+   "values": 202,
+   "tag": "django@b5df755be580",
+   "loaded": "django",
+   "source": "pack"
+  }
+ },
+ "key": {
+  "version": "djshop-dev-key-v1",
+  "rows": 23,
+  "usable": 23,
+  "accepted": 0,
+  "proposed": 23
+ },
+ "score": {
+  "tp": 0,
+  "fn": 12,
+  "fp": 0,
+  "bait_fp": 0,
+  "tn": 11,
+  "cleared": 0,
+  "unresolvable_keys": 0,
+  "reachable_tp": 0,
+  "reachable_fn": 10,
+  "vuln_rows": 12,
+  "safe_rows": 11,
+  "candidates": 12,
+  "reported": 0,
+  "matched_keys": [],
+  "missed_keys": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "recall": 0.0,
+  "reachable_recall": 0.0,
+  "precision": null,
+  "f1": 0.0
+ },
+ "route_agreement": {
+  "compared": 0,
+  "agree": 0,
+  "unknown": 0
+ },
+ "candidates": [
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 27,
+   "end_line": 27,
+   "cwe_id": "CWE-639",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {
+    "method": "order_detail",
+    "pack": "django@b5df755be580",
+    "slots": "id_param_suffix=_id;orm_read_calls=get_object_or_404",
+    "route": "yes"
+   },
+   "rel_path": "shop/views.py",
+   "function": "order_detail",
+   "family": "authz",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 69,
+   "end_line": 69,
+   "cwe_id": "CWE-915",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {
+    "method": "profile_update",
+    "pack": "django@b5df755be580",
+    "slots": "mapping_iter_calls;dyn_write_calls=setattr",
+    "route": "yes"
+   },
+   "rel_path": "shop/views.py",
+   "function": "profile_update",
+   "family": "mass-assign",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 92,
+   "end_line": 92,
+   "cwe_id": "CWE-915",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {
+    "method": "address_update",
+    "pack": "django@b5df755be580",
+    "slots": "mass_assign_signal=**request;dyn_write_calls=update",
+    "route": "yes"
+   },
+   "rel_path": "shop/views.py",
+   "function": "address_update",
+   "family": "mass-assign",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-toctou-check-then-write",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 162,
+   "end_line": 162,
+   "cwe_id": "CWE-362",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {
+    "method": "checkout",
+    "pack": "django@b5df755be580",
+    "slots": "qty_terms=quantity;commit_calls=save;controlled_by",
+    "route": "yes"
+   },
+   "rel_path": "shop/views.py",
+   "function": "checkout",
+   "family": "race",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "semgrep",
+   "rule_id": "tainted-sql-string",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 224,
+   "end_line": 224,
+   "cwe_id": "CWE-915",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {},
+   "rel_path": "shop/views.py",
+   "function": "search",
+   "family": "mass-assign",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 116,
+   "end_line": 116,
+   "cwe_id": "CWE-840",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {
+    "method": "add_to_cart",
+    "pack": "django@b5df755be580",
+    "slots": "qty_terms=qty;price_terms=price",
+    "route": "yes"
+   },
+   "rel_path": "shop/views.py",
+   "function": "add_to_cart",
+   "family": "logic-bound",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "semgrep",
+   "rule_id": "missing-throttle-config",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\djshop\\settings.py",
+   "line": 49,
+   "end_line": 49,
+   "cwe_id": "CWE-770",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {},
+   "rel_path": "djshop/settings.py",
+   "function": "<module>",
+   "family": "unknown",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "semgrep",
+   "rule_id": "direct-use-of-httpresponse",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 135,
+   "end_line": 135,
+   "cwe_id": "CWE-79",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {},
+   "rel_path": "shop/views.py",
+   "function": "add_to_cart_form",
+   "family": "xss",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "semgrep",
+   "rule_id": "sql-injection-using-raw",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 223,
+   "end_line": 224,
+   "cwe_id": "CWE-89",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {},
+   "rel_path": "shop/views.py",
+   "function": "search",
+   "family": "injection",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "semgrep",
+   "rule_id": "avoid-raw-sql",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 224,
+   "end_line": 224,
+   "cwe_id": "CWE-89",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {},
+   "rel_path": "shop/views.py",
+   "function": "search",
+   "family": "injection",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "semgrep",
+   "rule_id": "avoid-mark-safe",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 237,
+   "end_line": 237,
+   "cwe_id": "CWE-79",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {},
+   "rel_path": "shop/views.py",
+   "function": "flash_message",
+   "family": "xss",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  },
+  {
+   "tool": "semgrep",
+   "rule_id": "direct-use-of-httpresponse",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 238,
+   "end_line": 238,
+   "cwe_id": "CWE-79",
+   "verdict": "Error",
+   "confidence": 0,
+   "meta": {},
+   "rel_path": "shop/views.py",
+   "function": "flash_message",
+   "family": "xss",
+   "reported": false,
+   "outcome": "ignored",
+   "matched_key": null
+  }
+ ]
+}

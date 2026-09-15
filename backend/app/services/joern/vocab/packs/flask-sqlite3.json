@@ -3,13 +3,13 @@
   "schema_version": 2,
   "authored_from": "framework_docs",
   "extends": "_base",
-  "description": "The hand-written reference pack: Flask + Flask-Login + Flask-SQLAlchemy + WTForms + sqlite3 vocabulary, from their documentation. Adds to _base; never removes. Selected automatically when the target imports flask or lists it in requirements.txt.",
+  "description": "The hand-written reference pack: Flask + Flask-Login + Flask-SQLAlchemy + WTForms + sqlite3 vocabulary, from their documentation. Adds to _base; never removes. Selected automatically when the target imports flask or lists it in requirements.txt. 2026-09-15: scoped-query tokens added after the O3 rehearsal (the LLM's canonical Flask fix binds g.user.id into the WHERE clause).",
   "sources": ["https://flask.palletsprojects.com/en/stable/api/  (request.args / values / get_json / form.to_dict, abort)", "https://flask-login.readthedocs.io/en/latest/  (current_user, login_required, fresh_login_required, get_id)", "https://flask-sqlalchemy.readthedocs.io/en/stable/queries/  (get_or_404, first_or_404, one_or_none, session.commit/flush, query.update)", "https://wtforms.readthedocs.io/en/stable/  (populate_obj, validate_on_submit, NumberRange)", "https://docs.python.org/3/library/sqlite3.html  (executemany, executescript, isolation_level, BEGIN IMMEDIATE/EXCLUSIVE, REPLACE)", "https://flask-principal.readthedocs.io/  (permission.require, permission.can)", "https://flask-security-too.readthedocs.io/  (roles_required, roles_accepted)"],
   "slots": {
     "authz_guard": {
       "sink": "guard_text",
-      "values": ["current_user.id ==", "== current_user.id", "current_user.id !=", "!= current_user.id", "current_user.get_id() ==", "== current_user.get_id()", "roles_required", "roles_accepted", "permission.require", "permission.can", "current_user.is_admin", "current_user.has_role"],
-      "note": "The Flask-Login ownership idiom is `if order.user_id != current_user.id: abort(403)`. The comparison operands are what proves the check exists; `current_user` alone proves only login and stays in authn_only. Operands are matched in both orders."
+      "values": ["current_user.id ==", "== current_user.id", "current_user.id !=", "!= current_user.id", "current_user.get_id() ==", "== current_user.get_id()", "roles_required", "roles_accepted", "permission.require", "permission.can", "current_user.is_admin", "current_user.has_role", ", g.user.id)", ", g.user.id,", "(g.user.id,", ", current_user.id)", ", current_user.id,", "(current_user.id,", ", g.user[\"id\"])", ", session[\"user_id\"])"],
+      "note": "The Flask-Login ownership idiom is `if order.user_id != current_user.id: abort(403)`. The comparison operands are what proves the check exists; `current_user` alone proves only login and stays in authn_only. Operands are matched in both orders. Scoped raw SQL: the current user's id passed INTO the query's parameter tuple (`(order_id, g.user.id)`, `(order_id, current_user.id)`) is the sqlite3 form of `owner=request.user`; the tokens require the comma/paren context so a bare g.user (authn) never matches."
     },
     "authn_only": {
       "sink": "guard_text",

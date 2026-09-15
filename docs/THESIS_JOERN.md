@@ -260,6 +260,9 @@ testbed and 14.7 s on the Django split in server mode, against 19–34 s per sca
   locator numbers do not depend on the LLM; the pipeline numbers do, and were not repeated.
 - **Name-based call graph.** Route reachability and regressions rely on pysrc2cpg's
   name-based resolution; a dynamically dispatched call is invisible to both.
-- **The bait the LLM confirmed.** `db.find_product` — the deliberate public-object IDOR bait —
-  was Confirmed by the verdict step in the one `full` run, against the design intent. The
-  locator behaved as designed; the prover did not, and the prompt is the open item.
+- **The verdict tier is model-sensitive.** `db.find_product` — the deliberate public-object IDOR
+  bait — was Confirmed by `gemini-2.5-flash-lite` [`084600`] and correctly cleared by
+  `gemini-2.5-flash` [`171358`], where the full arm reaches 17 TP / 0 FP / F1 0.79 on shopfast
+  and 7 TP / 2 FP / F1 0.67 on the Django development split [`171532`]. The locator behaved
+  identically in both; which model proves matters, and the thesis must name it (D8's frozen,
+  dated model id).

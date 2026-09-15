@@ -1,5 +1,5 @@
 {
   "_base": "ef5ac270285a897fca3f0c7fa0ed9c0c92ca82cba47cd068453e8a811a164212",
   "django": "b5df755be58004606d25995f345945dad727bf5e6e7d81edc459a2b8b075bdea",
-  "flask-sqlite3": "edd46a9ed63de403c0c22e4601573d7c46a2f460ce94c2fde4cfd739f5954b4b"
+  "flask-sqlite3": "2b4dde8c2e83145294d2f08ed29f4d38ebf2a1806447568216cff8ebdcd4f69a"
 }

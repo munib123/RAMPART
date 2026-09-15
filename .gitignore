@@ -73,6 +73,7 @@ docs/**
 !docs/JOERN.md
 !docs/JOERN_PLAN.md
 !docs/THESIS_JOERN.md
+!docs/DEMO.md
 
 # ---- opencode (local-only: project guide + skills) ----
 AGENTS.md

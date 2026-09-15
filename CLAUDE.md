@@ -24,6 +24,10 @@ cd frontend && npm run dev:web                              # UI   http://localh
   (`docker start rampart-pg`, `postgresql://rampart:rampart@127.0.0.1:55432/rampart`) stays as a
   commented fallback line in `.env`. The DB password was pasted in chat - rotate it in Supabase
   (Project Settings → Database → Reset password) and update `.env`. Never commit `.env`.
+- **Demo account** on Supabase: `demo@rampart.dev` / `RampartDemo!2026` (plan `pro`). `GEMINI_MODEL`
+  is `gemini-2.5-flash` for the demo (flash-lite exhausted its daily free quota on 09-15; quotas
+  are per model). With flash the full arm clears the `find_product` bait: shopfast 17 TP / 0 FP /
+  F1 0.79 (`171358`), djshop-dev 7 TP / 2 FP / F1 0.67 (`171532`). Runbook: `docs/DEMO.md`.
 - The **frontend is hard-gated on the DB**: `/setup`, `/scan`, `/history`, `/profile` need a JWT.
   Test account: `uiverify001@example.com` / `Passw0rd!2345`.
 
@@ -162,7 +166,7 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   macos-x86_64,macos-arm64}.zip`) + matching Adoptium JRE, `.sha512` verified, one-line failure
   reason + manual fallback (drop zip + `.sha512` into `tools/`); only Windows x64 exercised end to
   end, Linux/macOS unit-tested only.
-  Open: the `full` arm Confirmed the find_product bait; extract.py gives module-level findings
+  Open: extract.py gives module-level findings
   a slice that reaches into the next function. A second process on the same machine cannot bind
   8091 and silently runs script mode - check `joern.mode` before quoting timings.
   Install on a fresh clone: `python -m app.services.joern.runtime --install`.

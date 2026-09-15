@@ -42,9 +42,11 @@ dead JVM means fewer findings and a `joern.reason` in the response, never a fail
   class, or its decorator"             ───▶  "products are public → not a bug"
 ```
 
-The second line is the `db.find_product` bait in shopfast. In P1's `full` run the LLM
-**Confirmed** it instead of clearing it [`084600`] — an open item for the prompt, recorded
-rather than hidden.
+The second line is the `db.find_product` bait in shopfast. In P1's `full` run with
+`gemini-2.5-flash-lite` the LLM **Confirmed** it instead of clearing it [`084600`]; with
+`gemini-2.5-flash` (the model the demo uses, after the lite tier's daily quota ran out) the same
+pipeline **clears it** as a False positive, and shopfast's full arm reaches 17 TP / 0 FP /
+F1 0.79 [`171358`]. The verdict tier is model-sensitive; both runs are kept.
 
 ## 3. How it runs
 
@@ -91,7 +93,7 @@ id **looks like** in a framework is a JSON pack the Scala reads with `ujson` aft
 | pack | values | authored from | digest |
 |---|---|---|---|
 | `_base` | 83 | the July/August Scala vals, verbatim | `ef5ac270285a` |
-| `flask-sqlite3` | 159 | Flask / Flask-Login / Flask-SQLAlchemy / WTForms / sqlite3 docs, hand-written | `edd46a9ed63d` |
+| `flask-sqlite3` | 167 | Flask / Flask-Login / Flask-SQLAlchemy / WTForms / sqlite3 docs, hand-written | `2b4dde8c2e83` |
 | `django` | 202 | Django 5.1 + DRF docs, drafted by a walled-off agent under the held-out protocol (§7), reviewed, not tuned | `b5df755be580` (today's, with the four P7 slots); the held-out run scored `b38082f8d2b6`, the pack as it was before P7 |
 
 `JOERN_PACK=auto` picks the pack from `requirements.txt` / imports. `--pack _base` on any
@@ -159,7 +161,8 @@ two safe counterparts stay quiet. shopfast is the regression guard (must stay 4 
 | bandit | 12 | 14 | 2 | 0 | 2 | 0.46 | 0.86 | 0.60 | 0.8 | `083330` |
 | semgrep | 13 | 13 | 0 | 0 | 2 | 0.50 | 1.00 | 0.67 | 28.6 | `083415` |
 | joern (`_base`) | 4 | 22 | 0 | 1 | 1 | 0.15 | 0.80 | 0.26 | 37.0 | `131241` |
-| **full** (bandit + joern + RAG + Gemini) | **15** | 11 | 1 | 1 | 1 | 0.58 | 0.88 | **0.70** | 37.9 | `084600` |
+| full (bandit + joern + RAG + Gemini, `gemini-2.5-flash-lite`) | 15 | 11 | 1 | 1 (bait Confirmed) | 1 | 0.58 | 0.88 | 0.70 | 37.9 | `084600` |
+| **full** (semgrep + joern + RAG + Gemini, `gemini-2.5-flash`) | **17** | 9 | 0 | 0 (bait **cleared**) | 2 | 0.65 | 1.00 | **0.79** | 109.5 | `171358` |
 
 Joern's four are exactly bugs #22–#25 — the four the testbed documents as SAST-blind — plus
 the `find_product` bait, by design. bandit's two FPs are import noise; semgrep's apparent FP was a
@@ -192,6 +195,11 @@ P7 slots afterwards and has never been scored on the held-out split
 [`2026-09-15-p6-django-heldout.md`].
 
 ### Django, DEV split (the iteration split)
+
+Full pipeline (semgrep + joern + RAG + `gemini-2.5-flash`): 7 TP / 5 FN / 2 FP / 0 bait / 11 TN,
+F1 0.67 [`171532`]; both FPs are semgrep labelling (`tainted-sql-string` tagged CWE-915 on the
+real SQL injection; `missing-throttle-config`), every Joern candidate Confirmed and every fixed
+twin left alone.
 
 | pack | before P7 | after P7 | run |
 |---|---|---|---|
