@@ -14,22 +14,28 @@ extract -> RAG-ground -> Gemini-verify pipeline, where the LLM confirms or rejec
 Contract with the pipeline: this phase is ADDITIVE and NEVER RAISES. On any failure it returns
 no findings plus a diag dict that says why, so a dead CPG phase is visible rather than silent.
 
-Ported from the July prototype (D:/d/FYP/rampart_poc/backend/joern_scan.py) into the app
-package. Day-1 scope: the rules are the prototype's, unchanged; the eight correctness fixes
-land in P2 behind the evaluation harness, one commit each with a before/after number.
+Two execution modes (P3):
+  server   the sidecar in server.py is up: the rules file is split on its `// @@` markers and
+           each section is one /query-sync request. The JVM start is paid once per backend
+           process; a compile error in one rule costs that rule only.
+  script   one `joern --script` per scan. The fallback whenever the server is not ready.
+Both produce the same findings.tsv + diag.json and go through the same _collect().
 """
 from __future__ import annotations
 
+import json
 import os
+import re
 import shutil
 import subprocess
 import time
 import uuid
 from pathlib import Path
+from typing import Optional
 
 from app import config
 from app.services.scanner import Finding
-from app.services.joern import runtime
+from app.services.joern import runtime, server
 
 HERE = Path(__file__).resolve().parent
 RULES = HERE / "rules" / "locators.sc"
@@ -46,6 +52,9 @@ _TITLES = {
 
 # markers for the lines that actually explain a failure, inside Joern's very long JVM output
 _ERR_MARKERS = ("Exception", "Error", "error:", "Caused by:", "Failed", "failed")
+
+# `// @@ <kind> [<name>]` section markers in the rules file
+_SECTION = re.compile(r"^// @@ (\S+)(?: (\S+))?[ \t]*$", re.M)
 
 
 def _error_summary(stdout: str, stderr: str, limit: int = 8) -> list[str]:
@@ -106,8 +115,8 @@ def _scratch_root() -> Path:
 
 
 def _workspace_dir() -> Path:
-    # Joern creates its workspace relative to the process CWD; scan() sets cwd to the scratch
-    # dir, so the project lands under <scratch>/workspace/<proj> and is removed with it.
+    # Joern creates its workspace relative to the process CWD; script mode sets cwd to the
+    # scratch dir, so the project lands under <scratch>/workspace/<proj> and is removed with it.
     return _scratch_root() / "workspace"
 
 
@@ -141,68 +150,139 @@ def _parse_tsv(text: str, input_dir: str) -> list[Finding]:
     return out
 
 
+# --------------------------------------------------------------------------- #
+# the two execution modes
+# --------------------------------------------------------------------------- #
+
+def _sections(rendered: str) -> list[tuple[str, str, str]]:
+    """Split the rendered rules file on `// @@ <kind> [<name>]` -> [(kind, name, code)]."""
+    marks = list(_SECTION.finditer(rendered))
+    out = []
+    for i, m in enumerate(marks):
+        body_end = marks[i + 1].start() if i + 1 < len(marks) else len(rendered)
+        out.append((m.group(1), m.group(2) or "", rendered[m.end():body_end]))
+    return out
+
+
+def _render(input_dir: str, out_file: Path, diag_file: Path, proj: str) -> str:
+    fwd = lambda p: str(p).replace("\\", "/")
+    return (RULES.read_text(encoding="utf-8")
+            .replace("__INPUT_DIR__", fwd(input_dir))
+            .replace("__OUT_FILE__", fwd(out_file))
+            .replace("__DIAG_FILE__", fwd(diag_file))
+            .replace("__PROJECT__", proj))
+
+
+def _collect(out_file: Path, diag_file: Path, input_dir: str, diag: dict,
+             compile_errors: dict) -> list[Finding]:
+    """Read findings.tsv + diag.json written by the rules (either mode)."""
+    out = _parse_tsv(out_file.read_text(encoding="utf-8", errors="replace"), input_dir)
+    rule_state: dict = {}
+    if diag_file.exists():
+        try:
+            d = json.loads(diag_file.read_text(encoding="utf-8"))
+            rule_state = d.get("rule_state", {})
+            diag.update(methods_seen=d.get("methods_seen"), methods_threw=d.get("methods_threw"))
+        except Exception as e:                        # a bad diag must not hide good findings
+            diag["diag_error"] = f"{type(e).__name__}: {e}"
+    # server mode: a rule whose section failed to COMPILE never ran; say so precisely
+    for rule, err in compile_errors.items():
+        rule_state[rule] = {"state": "compile_error", "errors": 1, "first_error": err[:300]}
+    diag["rule_state"] = rule_state
+    for r, s in rule_state.items():
+        if s.get("state") in ("threw", "compile_error"):
+            print(f"[joern]     RULE {s['state'].upper()} {r}: {s.get('first_error')}")
+    return out
+
+
+def _run_script(info, script: Path, tmp: Path, out_file: Path, diag: dict) -> Optional[str]:
+    """Script mode: one `joern --script` per scan. Returns an error string, or None."""
+    proc = subprocess.run(
+        [str(info.launcher), "--script", str(script)],
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        env=runtime.subprocess_env(info), cwd=str(tmp), timeout=config.JOERN_TIMEOUT,
+    )
+    # A crashed script and a genuine "nothing found" must not look alike. locators.sc ALWAYS
+    # writes findings.tsv (empty when clean) and exits 0, so a missing file or a non-zero exit
+    # means the locators never ran: the target is UNSCANNED, not clean.
+    if proc.returncode != 0 or not out_file.exists():
+        summary = _error_summary(proc.stdout or "", proc.stderr or "")
+        print("[joern] *** CPG PHASE FAILED - no logic-bug locator ran, target is UNSCANNED ***")
+        print(f"[joern]     target={diag.get('target')}  exit={proc.returncode}  "
+              f"findings.tsv={'present' if out_file.exists() else 'MISSING'}")
+        for ln in summary:
+            print(f"[joern]     {ln}")
+        return f"cpg phase failed (exit {proc.returncode}): " + " | ".join(summary[-3:])
+    return None
+
+
+def _run_server(srv, rendered: str, proj: str, out_file: Path,
+                compile_errors: dict) -> Optional[str]:
+    """Server mode: one /query-sync per section. A failing RULE section is recorded and skipped;
+    a failing prelude/import/context/finish section aborts (the caller falls back to script
+    mode). Returns an error string, or None on success."""
+    t_import = config.JOERN_TIMEOUT
+    t_rule = max(60, config.JOERN_TIMEOUT // 3)
+    try:
+        for kind, name, code in _sections(rendered):
+            ok, out, err = srv.query(code, timeout=t_import if kind == "import" else t_rule)
+            if ok:
+                continue
+            tail = " | ".join((err or out or "").strip().splitlines()[-3:])[:300]
+            if kind == "rule":
+                compile_errors[name] = tail
+                print(f"[joern]     section 'rule {name}' failed; continuing: {tail[:120]}")
+                continue
+            return f"server section '{kind}' failed: {tail}"
+        if not out_file.exists():
+            return "server run finished but findings.tsv is missing"
+        return None
+    finally:
+        # free the CPG project in the long-lived JVM; a failure here must not mask the result
+        srv.query('delete("' + proj + '")', timeout=60)
+
+
 def scan(path: str) -> tuple[list[Finding], dict]:
-    """Build a CPG for `path` and return (candidates, diag). Never raises."""
+    """Build a CPG for `path` and return (candidates, diag). Never raises.
+    Uses the server sidecar when it is up (P3), else one `joern --script` per scan."""
     t0 = time.time()
     diag: dict = {"used": False, "reason": "", "elapsed_ms": 0, "candidates": 0,
-                  "rules_file": RULES.name}
+                  "rules_file": RULES.name, "mode": "script"}
     ok, why, info = runtime.probe()
     if not ok:
         diag["reason"] = why
         return [], diag
 
     input_dir = os.path.abspath(path)
+    diag["target"] = input_dir
     proj = "rampart_" + uuid.uuid4().hex[:12]
     tmp = _scratch_root() / proj
     tmp.mkdir(parents=True, exist_ok=True)
-    out_file = tmp / "findings.tsv"
-    diag_file = tmp / "diag.json"
-    script = tmp / "run.sc"
+    out_file, diag_file, script = tmp / "findings.tsv", tmp / "diag.json", tmp / "run.sc"
+    compile_errors: dict = {}
 
     try:
-        template = RULES.read_text(encoding="utf-8")
-        rendered = (template
-                    .replace("__INPUT_DIR__", input_dir.replace("\\", "/"))
-                    .replace("__OUT_FILE__", str(out_file).replace("\\", "/"))
-                    .replace("__DIAG_FILE__", str(diag_file).replace("\\", "/"))
-                    .replace("__PROJECT__", proj))
-        script.write_text(rendered, encoding="utf-8")
-
-        proc = subprocess.run(
-            [str(info.launcher), "--script", str(script)],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            env=runtime.subprocess_env(info), cwd=str(tmp), timeout=config.JOERN_TIMEOUT,
-        )
-        # A crashed script and a genuine "nothing found" must not look alike. locators.sc ALWAYS
-        # writes findings.tsv (empty when clean) and exits 0, so a missing file or a non-zero
-        # exit means the locators never ran: the target is UNSCANNED, not clean.
-        if proc.returncode != 0 or not out_file.exists():
-            summary = _error_summary(proc.stdout or "", proc.stderr or "")
-            print("[joern] *** CPG PHASE FAILED - no logic-bug locator ran, target is UNSCANNED ***")
-            print(f"[joern]     target={input_dir}  exit={proc.returncode}  "
-                  f"findings.tsv={'present' if out_file.exists() else 'MISSING'}")
-            for ln in summary:
-                print(f"[joern]     {ln}")
-            diag["reason"] = f"cpg phase failed (exit {proc.returncode}): " + " | ".join(summary[-3:])
+        rendered = _render(input_dir, out_file, diag_file, proj)
+        err: Optional[str] = None
+        srv = server.ready(wait=float(getattr(config, "JOERN_SERVER_WAIT", 0)))
+        if srv is not None:
+            diag["mode"] = "server"
+            err = _run_server(srv, rendered, proj, out_file, compile_errors)
+            if err and not compile_errors:
+                # a transport/prelude failure, not a rule: fall back so the scan keeps the phase
+                print(f"[joern]     server mode failed ({err[:100]}); falling back to script mode")
+                diag["server_fallback"] = err
+                diag["mode"] = "script"
+                err, srv = None, None
+        if srv is None:
+            script.write_text(rendered, encoding="utf-8")
+            err = _run_script(info, script, tmp, out_file, diag)
+        if err:
+            diag["reason"] = err
             return [], diag
-        out = _parse_tsv(out_file.read_text(encoding="utf-8", errors="replace"), input_dir)
-        # Fix 1: read the per-rule status the script wrote. A rule that threw must be visible.
-        rule_state: dict = {}
-        if diag_file.exists():
-            try:
-                import json
-                d = json.loads(diag_file.read_text(encoding="utf-8"))
-                rule_state = d.get("rule_state", {})
-                diag.update(methods_seen=d.get("methods_seen"), methods_threw=d.get("methods_threw"))
-            except Exception as e:                       # a bad diag must not hide good findings
-                diag["diag_error"] = f"{type(e).__name__}: {e}"
-        diag["rule_state"] = rule_state
-        threw = [r for r, s in rule_state.items() if s.get("state") == "threw"]
+        out = _collect(out_file, diag_file, input_dir, diag, compile_errors)
         print(f"[joern] ok - {len(out)} candidate(s) from {input_dir} "
-              f"in {time.time() - t0:.1f}s")
-        for r in threw:
-            print(f"[joern]     RULE THREW {r}: {rule_state[r].get('errors')} method(s), "
-                  f"first: {rule_state[r].get('first_error')}")
+              f"in {time.time() - t0:.1f}s [{diag['mode']}]")
         diag.update(used=True, candidates=len(out))
         return out, diag
     except subprocess.TimeoutExpired:
@@ -220,7 +300,10 @@ def scan(path: str) -> tuple[list[Finding], dict]:
 
 
 def warm() -> None:
-    """Fire-and-forget JVM warm-up so the first real scan pays less cold start. Best-effort."""
+    """Start the server sidecar (P3) if allowed; else a fire-and-forget JVM warm-up so the first
+    script-mode scan pays less cold start. Best-effort, never raises."""
+    if server.ensure_started() is not None:
+        return
     ok, _, info = runtime.probe()
     if not ok:
         return

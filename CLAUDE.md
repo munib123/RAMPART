@@ -81,9 +81,18 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   **P1 done:** `bench/` harness, `bench/keys/shopfast.key.jsonl` (26 bugs / 29 locations + 2 baits,
   all anchors resolve, **0 adjudicated**). Baseline: bandit 12 TP, semgrep 13, joern 4 (+1 bait),
   full (with Gemini) 15 TP / F1 0.70. Engines are disjoint. **P2 done:** `testbeds/probe` 5/5 TP, 0 FP.
-  Gemini key is in `.env` (pasted in chat 2026-09-15 - rotate it). Next: P3 server sidecar.
+  **P3 done:** `server.py` = `joern --server` sidecar on 127.0.0.1:8091 (random per-process
+  password; lifespan starts it, `stop()` tree-kills it), one `/query-sync` per `// @@` section of
+  `locators.sc`, so a broken rule costs that rule (`rule_state=compile_error`), not the phase.
+  CPG phase 8 s via API vs 19–34 s script; same candidates. Script mode is the automatic fallback
+  (`JOERN_SERVER=off|auto`, `JOERN_SERVER_WAIT`). `/query-sync` says `success` even on compile
+  errors - `evaluation_failed()` parses stdout. `SHIFTLEFT_OCULAR_INSTALL_DIR` must be set or
+  `importCode` NPEs in server mode. Log: `bench/runs/2026-09-15-p3-server.md`; tests
+  `backend/tests/test_joern.py` (no JVM). Next: P4 persistence + UI provenance.
+  Gemini key is in `.env` (pasted in chat 2026-09-15 - rotate it).
   Open: the `full` arm Confirmed the find_product bait; extract.py gives module-level findings
-  a slice that reaches into the next function.
+  a slice that reaches into the next function. A second process on the same machine cannot bind
+  8091 and silently runs script mode - check `joern.mode` before quoting timings.
   Install on a fresh clone: `python -m app.services.joern.runtime --install`.
 
 ## Data residency

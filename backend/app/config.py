@@ -46,6 +46,13 @@ JOERN_TIMEOUT     = int(os.environ.get("JOERN_TIMEOUT", "360").strip() or 360)  
 # MAX_LLM_FINDINGS into "Unverified" - the phase that exists to find what semgrep cannot would
 # be the first thing starved.
 JOERN_LLM_QUOTA   = int(os.environ.get("JOERN_LLM_QUOTA", "20").strip() or 20)
+# P3: the CPGQL server sidecar. auto|on = start `joern --server` once per backend process and
+# send each scan's rule sections as separate /query-sync requests (JVM start paid once; a
+# compile error in one rule costs that rule only). off = one `joern --script` per scan.
+# Script mode is always the fallback when the server is not ready.
+JOERN_SERVER      = os.environ.get("JOERN_SERVER", "auto").strip()          # auto | on | off
+JOERN_SERVER_PORT = int(os.environ.get("JOERN_SERVER_PORT", "8091").strip() or 8091)
+JOERN_SERVER_WAIT = float(os.environ.get("JOERN_SERVER_WAIT", "0").strip() or 0)   # s a scan waits for a starting server
 
 # --- Supabase / Postgres ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()

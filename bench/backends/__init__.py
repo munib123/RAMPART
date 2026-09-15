@@ -113,10 +113,16 @@ class JoernBackend(LocatorBackend):
     name = "joern"
 
     def locate(self, target_dir: str) -> list[Candidate]:
-        from app.services.joern import scan as joern_scan
+        from app.services.joern import scan as joern_scan, server as joern_server
         ok, why = joern_scan.enabled(target_dir)
         if not ok:
             raise SystemExit(f"joern unavailable: {why}")
+        # P3: use the sidecar when the config allows, so bench timings match the app. The
+        # harness has no lifespan hook, so start it here and give it time to come up; scan()
+        # falls back to script mode on its own if it does not. atexit stops it.
+        srv = joern_server.ensure_started()
+        if srv is not None:
+            srv.wait_ready(120)
         findings, diag = joern_scan.scan(target_dir)
         self._diag = diag
         return _from_findings(findings)
@@ -126,6 +132,7 @@ class JoernBackend(LocatorBackend):
         info = runtime.locate()
         return {**super().fingerprint(),
                 "joern_version": info.joern_version,
+                "mode": getattr(self, "_diag", {}).get("mode"),
                 "java_major": info.java_major,
                 "rules_file": joern_scan.RULES.name,
                 "rules_sha256": _sha256_file(joern_scan.RULES),

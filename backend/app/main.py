@@ -23,7 +23,20 @@ from app.routers import billing as billing_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # P3: start the Joern CPGQL server sidecar once per backend process (if the runtime is
+    # installed and JOERN_ENABLED/JOERN_SERVER allow). Non-blocking - the first scan uses
+    # script mode if the JVM is not up yet, later scans use the server. Never raises.
+    try:
+        from app.services.joern import scan as joern_scan
+        joern_scan.warm()
+    except Exception as e:
+        print(f"[joern] warm-up skipped: {type(e).__name__}: {e}")
     yield
+    try:
+        from app.services.joern import server as joern_server
+        joern_server.stop()
+    except Exception:
+        pass
     try:
         await db.close()
     except Exception:

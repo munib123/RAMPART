@@ -186,6 +186,11 @@ def subprocess_env(info: RuntimeInfo) -> dict:
     env = dict(os.environ)
     if info.java_home:
         env["JAVA_HOME"] = str(info.java_home)
+    if info.joern_home:
+        # InstallConfig.rootPath resolves the install dir from the CodeSource of its own class,
+        # which is null for REPL-compiled code - so importCode() NPEs in `--server` mode. The
+        # env var is checked first and sidesteps it. Harmless in script mode.
+        env["SHIFTLEFT_OCULAR_INSTALL_DIR"] = str(info.joern_home)
     return env
 
 

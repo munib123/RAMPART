@@ -151,6 +151,38 @@ backend\.venv\Scripts\python -m pip install semgrep
 
 ---
 
+## Joern CPG phase - the logic-bug locator (Python targets)
+
+Bandit and Semgrep are pattern matchers; they cannot see "this route reads an order by id and
+never checks who owns it". The Joern phase builds a Code Property Graph of the target and runs
+four hand-written CPGQL rules (`backend/app/services/joern/rules/locators.sc`) for the bug
+classes SAST is blind to: **IDOR** (CWE-639), **mass assignment** (CWE-915), **unchecked
+quantity** (CWE-840) and **TOCTOU** (CWE-362). Joern *locates*; the Gemini verdict *proves*.
+Its candidates are additive - the scanner findings are untouched - and get a reserved share of
+the LLM budget (`JOERN_LLM_QUOTA`).
+
+The runtime is portable and self-installing (Temurin JRE 21 + joern-cli 4.0.589 under
+`tools/`, no admin rights, nothing on PATH). On a fresh clone:
+
+```bash
+cd backend && .venv\Scripts\python.exe -m app.services.joern.runtime --install
+```
+
+Without it the phase is skipped and `/api/health` says why (`scanners.joern.note`). By default
+the backend keeps one `joern --server` sidecar alive (127.0.0.1:8091, random per-process
+password) so a scan costs the CPG build only - about 8 s for a small Flask app instead of
+20-35 s for a fresh JVM per scan. `JOERN_SERVER=off` (or a sidecar that fails to start)
+falls back to one `joern --script` per scan with identical results. Each scan's report carries
+a `joern` block: `mode`, `candidates`, `elapsed_ms` and a per-rule `rule_state`, so a rule that
+breaks costs that rule, not the phase.
+
+The rules are measured, not trusted: `bench/` holds a line-anchored answer key for
+`testbeds/shopfast` (26 planted bugs, 2 baits) and a per-fix probe suite; run
+`backend\.venv\Scripts\python.exe -m bench.run --backend joern --benchmark shopfast` and see
+`bench/README.md` and `bench/runs/*.md` for the numbers behind every rule change.
+
+---
+
 ## Knowledge-base corpora (`data/`)
 
 Every source is stored the same way - one markdown report per record, filed under a
@@ -190,6 +222,7 @@ sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
 | Part | File | Notes |
 |---|---|---|
 | Scanner (pluggable) | `backend/app/services/scanner.py` | `auto` = semgrep (multi-language, native venv) when runnable, else bandit (python). Same normalized `Finding` shape either way. |
+| CPG logic-bug locator | `backend/app/services/joern/` | `runtime.py` self-installs JRE 21 + joern-cli under `tools/`; `server.py` keeps one `joern --server` sidecar; `scan.py` runs `rules/locators.sc` (IDOR, mass assignment, unchecked quantity, TOCTOU) and returns candidates + per-rule diag |
 | Code-slice extract | `backend/app/services/extract.py` | containing function (Python AST) or a line window |
 | RAG | `backend/app/services/rag.py` | queries `rampart_hackerone_minilm` + `rampart_nuclei_minilm` Chroma collections, CWE-filtered |
 | LLM verify | `backend/app/services/gemini.py` | Gemini, grounded in exemplars; key from `.env` only. Batch API for ~1 request per scan |

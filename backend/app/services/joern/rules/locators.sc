@@ -8,6 +8,15 @@
 //
 // __INPUT_DIR__, __OUT_FILE__, __DIAG_FILE__ and __PROJECT__ are substituted by scan.py
 // (forward-slash paths). Output is TSV: cwe \t severity \t file \t line \t method \t rule \t message \t evidence
+//
+// TWO EXECUTION MODES, ONE FILE. Script mode (`joern --script`) runs this whole file. Server
+// mode (P3) splits it on the `// @@ <section>` markers below and submits each section as its
+// own /query-sync request against a long-lived REPL, so a compile error in one rule costs that
+// rule and nothing else, and the JVM start is paid once per backend process. The REPL keeps
+// vals across requests, which is what lets the sections share state. Keep every section
+// self-contained in the sense that it only depends on sections ABOVE it.
+
+// @@ prelude
 import scala.collection.mutable.ListBuffer
 import scala.util.control.NonFatal
 
@@ -16,21 +25,20 @@ val outFile  = "__OUT_FILE__"
 val diagFile = "__DIAG_FILE__"
 val projName = "__PROJECT__"
 
-importCode.python(inputDir, projName)
-
 val findings = ListBuffer[String]()
 def san(s: String): String = s.replace("\t", " ").replace("\r", " ").replace("\n", " ").trim
 def add(cwe: String, sev: String, file: String, line: Int, meth: String, rule: String, msg: String, ev: String): Unit =
   findings += List(cwe, sev, file, line.toString, meth, rule, san(msg), san(ev)).mkString("\t")
 
-// Fix 1: a rule that THROWS must never look like a rule that found nothing. Every rule body and
-// every method body is wrapped; a throw is recorded and the run continues. scan.py reads
-// diag.json after the run, so "ok" and "threw" are distinguishable per rule. Before this, one
-// throw anywhere skipped the os.write below and the whole target reported UNSCANNED.
+// Fix 1: a rule that THROWS must never look like a rule that found nothing. Every rule body is
+// wrapped; a throw is recorded per rule and the run continues. scan.py reads diag.json after
+// the run, so "ok" and "threw" are distinguishable. Before this, one throw anywhere skipped
+// the os.write at the end and the whole target reported UNSCANNED.
 val RULES = List("joern-idor-missing-ownership", "joern-mass-assignment",
                  "joern-unchecked-quantity", "joern-toctou-check-then-write")
 val ruleErrors = scala.collection.mutable.Map[String, Int]().withDefaultValue(0)
 val ruleFirst  = scala.collection.mutable.Map[String, String]()
+val ruleRan    = scala.collection.mutable.Set[String]()
 var methodsSeen  = 0
 var methodsThrew = 0
 def guarded(rule: String)(body: => Unit): Unit =
@@ -68,6 +76,10 @@ val ALLOWLIST = List("allow", "whitelist", "permitted", "allowed_fields", "safe_
   "editable_fields", "writable_fields", "fields = (", "fields = [", "only(")
 val QTY = List("qty", "quantity", "amount", "count", "total", "price", "subtotal", "balance", "stock")
 
+// @@ import
+importCode.python(inputDir, projName)
+
+// @@ context
 // Fix 7 (part 1): the module-scope call table is computed ONCE. The July code ran
 // cpg.method.name("<module>").filter(...).call.code.l inside the per-method loop - a full
 // graph traversal plus materialisation per method, quadratic, and the first thing that dies
@@ -77,21 +89,29 @@ val moduleCallsByFile: Map[String, List[String]] =
     .map(mm => mm.filename -> mm.call.code.l.map(_.toLowerCase))
     .groupBy(_._1).map { case (f, xs) => f -> xs.flatMap(_._2) }
 
+// Everything a rule needs about one method, computed in ONE traversal. Rules iterate `ctxs`,
+// so in server mode a rule that fails to compile leaves the contexts intact for the others.
+case class Ctx(name: String, file: String, line: Int, params: List[String],
+               signalText: String, guardText: String, execCode: List[String],
+               hasAuthz: Boolean, authnNote: String,
+               readCalls: List[String], setattrCalls: List[String],
+               iterCalls: Int, multCode: List[String], cmpCode: List[String], commitCalls: Int) {
+  def blobHas(toks: List[String])  = toks.exists(signalText.contains)
+  def guardHas(toks: List[String]) = toks.exists(guardText.contains)
+  def execHas(kw: String) = execCode.exists(_.toUpperCase.contains(kw))
+}
+
 // Fix 8: every .name(s) / .code(s) / .filename(s) accessor treats s as a REGEX. The July
-// prototype lost an entire run to '.filename(\"views\orders.py\")' (\o is an illegal escape) and
-// then routed around it with .filter(_.filename == f). The hazard is deletable, not just
-// avoidable: nameExact / filenameExact / codeExact exist. Every literal match below uses
-// nameExact; the one deliberate regex is the nameNot() that excludes synthetic scopes.
-//
+// prototype lost an entire run to a Windows path in .filename() and then routed around it
+// with .filter(_.filename == f). The hazard is deletable: nameExact / filenameExact /
+// codeExact exist. Every literal match below uses nameExact; the one deliberate regex is the
+// nameNot() that excludes synthetic scopes.
 // Fix 4: name matchers are full-match regexes. pysrc2cpg names synthetic scopes "<lambda>0",
 // "<comprehension>1", "<module>" - the trailing index digit meant "<.*>" did NOT match
-// "<lambda>0", so lambdas and comprehension bodies were scanned as user methods and could
-// fire a rule on their own (a lambda multiplying qty has no guard in its own body).
-cpg.method.isExternal(false).nameNot("<.*>\\d*", "__.*__").foreach { m => methodsSeen += 1; try {
+// "<lambda>0", so lambdas were scanned as user methods and could fire a rule on their own.
+def ctx(m: io.shiftleft.codepropertygraph.generated.nodes.Method): Ctx = {
   val name = m.name
   val file = m.filename
-  val line = m.lineNumber.getOrElse(-1)
-  val params = m.parameter.name.l.map(_.toLowerCase)
   // Fix 3: two channels, and the split is load-bearing.
   //   signalText  calls + literals + identifiers - what the method DOES and mentions
   //   guardText   calls + identifiers only       - what the method does; NO literals
@@ -101,87 +121,101 @@ cpg.method.isExternal(false).nameNot("<.*>\\d*", "__.*__").foreach { m => method
   // rule, and a docstring saying "not authorized" suppressed IDOR via the substring "authorize".
   // Nodes are joined with a 3-space separator so a token cannot match ACROSS two adjacent nodes.
   val SEP = "   "
-  val signalText = (m.ast.isCall.code.l ++ m.ast.isLiteral.code.l ++ m.ast.isIdentifier.name.l)
-    .mkString(SEP).toLowerCase
-  val guardText  = (m.ast.isCall.code.l ++ m.ast.isIdentifier.name.l).mkString(SEP).toLowerCase
-  val blob = signalText                                   // signal channel (legacy name)
-  def blobHas(toks: List[String])  = toks.exists(blob.contains)
-  def guardHas(toks: List[String]) = toks.exists(guardText.contains)
-
-  val execCode = m.call.nameExact("execute").code.l
-  def execHas(kw: String) = execCode.exists(_.toUpperCase.contains(kw))
-  // decorator-based auth: pysrc2cpg lowers @login_required(view) to a module-scope wrapping
-  // call `view = login_required(def view(...))`, invisible to an in-method scan, so look the
-  // method up in the module table built above.
-  // Fix 7 (part 2): match the lowering EXACTLY as "(def <name>(", not contains(name). With
+  val calls  = m.ast.isCall.code.l
+  val idents = m.ast.isIdentifier.name.l
+  val signalText = (calls ++ m.ast.isLiteral.code.l ++ idents).mkString(SEP).toLowerCase
+  val guardText  = (calls ++ idents).mkString(SEP).toLowerCase
+  // Fix 7 (part 2): match the decorator lowering EXACTLY as "(def <name>(", not contains(name).
+  // pysrc2cpg lowers @deco def view(...) to `view = deco(def view(...))` at module scope. With
   // contains(), `get_note_extra = check_owner(def get_note_extra(...))` credited the shorter,
-  // undecorated sibling get_note with a guard it does not have - a false suppression that
-  // grows with every prefix-sharing view name in a real codebase.
+  // undecorated sibling get_note with a guard it does not have.
   val decoAnchor  = "(def " + name.toLowerCase + "("
   val moduleCalls = moduleCallsByFile.getOrElse(file, Nil).filter(_.contains(decoAnchor))
-  val hasAuthz  = guardHas(AUTHZ)     || moduleCalls.exists(c => AUTHZ.exists(c.contains))
-  val authnTok  = (AUTHN_ONLY.filter(guardText.contains) ++ AUTHN_ONLY.filter(a => moduleCalls.exists(_.contains(a)))).distinct
-  val protectedM = hasAuthz
-  // evidence for the verifier: the method is authenticated but nothing in it authorizes the record
+  val hasAuthz = AUTHZ.exists(guardText.contains) || moduleCalls.exists(c => AUTHZ.exists(c.contains))
+  val authnTok = (AUTHN_ONLY.filter(guardText.contains) ++
+                  AUTHN_ONLY.filter(a => moduleCalls.exists(_.contains(a)))).distinct
   val authnNote = if (authnTok.nonEmpty && !hasAuthz) s" AUTHENTICATED_NOT_AUTHORIZED(${authnTok.mkString(",")})" else ""
+  Ctx(
+    name = name, file = file, line = m.lineNumber.getOrElse(-1),
+    params = m.parameter.name.l.map(_.toLowerCase),
+    signalText = signalText, guardText = guardText,
+    execCode = m.call.nameExact("execute").code.l,
+    hasAuthz = hasAuthz, authnNote = authnNote,
+    readCalls = m.call.nameExact("fetchone", "first", "one", "scalar").code.l,
+    setattrCalls = m.call.nameExact("setattr").code.l,
+    iterCalls = m.call.nameExact("items", "to_dict", "keys", "values").size,
+    multCode = m.call.nameExact("<operator>.multiplication").code.l,
+    cmpCode = m.call.nameExact("<operator>.greaterThan", "<operator>.greaterEqualsThan",
+                               "<operator>.lessThan", "<operator>.lessEqualsThan").code.l,
+    commitCalls = m.call.nameExact("commit").size,
+  )
+}
 
-  // ---- IDOR / missing authorization (CWE-639) ----
-  guarded("joern-idor-missing-ownership") {
-    val singleRead = m.call.nameExact("fetchone", "first", "one", "scalar").nonEmpty || execHas("SELECT")
-    val idParam = params.exists(p => p == "id" || p.endsWith("_id"))
-    if (singleRead && idParam && !protectedM) {
-      val idName = params.find(p => p == "id" || p.endsWith("_id")).getOrElse("id")
-      val ev = (m.call.nameExact("fetchone").code.l ++ m.call.nameExact("execute").code.l).headOption.getOrElse("")
-      add("CWE-639", "high", file, line, name, "joern-idor-missing-ownership",
-        s"Reads a record by the caller-supplied id '${idName}' with no ownership or authorization check in the method. If this record is user-owned, any authenticated user can read another user's data (IDOR).$authnNote", ev)
-    }
+val ctxs: List[Ctx] = cpg.method.isExternal(false).nameNot("<.*>\\d*", "__.*__").l.flatMap { m =>
+  methodsSeen += 1
+  try Some(ctx(m)) catch { case NonFatal(e) => methodsThrew += 1; None }
+}
+
+// @@ rule joern-idor-missing-ownership
+ruleRan += "joern-idor-missing-ownership"
+ctxs.foreach { c => guarded("joern-idor-missing-ownership") {
+  val singleRead = c.readCalls.nonEmpty || c.execHas("SELECT")
+  val idParam = c.params.exists(p => p == "id" || p.endsWith("_id"))
+  if (singleRead && idParam && !c.hasAuthz) {
+    val idName = c.params.find(p => p == "id" || p.endsWith("_id")).getOrElse("id")
+    val ev = (c.readCalls ++ c.execCode).headOption.getOrElse("")
+    add("CWE-639", "high", c.file, c.line, c.name, "joern-idor-missing-ownership",
+      s"Reads a record by the caller-supplied id '${idName}' with no ownership or authorization check in the method. If this record is user-owned, any authenticated user can read another user's data (IDOR).${c.authnNote}", ev)
   }
+}}
 
-  // ---- Mass assignment (CWE-915) ----
-  guarded("joern-mass-assignment") {
-    val iteratesData = m.call.nameExact("items", "to_dict", "keys", "values").nonEmpty ||
-      blobHas(List("request.form", "request.json", "**data", "**request", "**kwargs"))
-    val updateWrite = execHas("UPDATE") || execHas("INSERT") || m.call.nameExact("setattr").nonEmpty
-    if (iteratesData && updateWrite && !guardHas(ALLOWLIST)) {
-      val ev = (m.call.nameExact("execute").code.l ++ m.call.nameExact("setattr").code.l).headOption.getOrElse("")
-      add("CWE-915", "high", file, line, name, "joern-mass-assignment",
-        "Writes every field of a caller-supplied data mapping into a record with no allow-list, so a client can set fields that were never meant to be user-writable (e.g. is_admin, role, balance).", ev)
-    }
+// @@ rule joern-mass-assignment
+ruleRan += "joern-mass-assignment"
+ctxs.foreach { c => guarded("joern-mass-assignment") {
+  val iteratesData = c.iterCalls > 0 ||
+    c.blobHas(List("request.form", "request.json", "**data", "**request", "**kwargs"))
+  val updateWrite = c.execHas("UPDATE") || c.execHas("INSERT") || c.setattrCalls.nonEmpty
+  if (iteratesData && updateWrite && !c.guardHas(ALLOWLIST)) {
+    val ev = (c.execCode ++ c.setattrCalls).headOption.getOrElse("")
+    add("CWE-915", "high", c.file, c.line, c.name, "joern-mass-assignment",
+      "Writes every field of a caller-supplied data mapping into a record with no allow-list, so a client can set fields that were never meant to be user-writable (e.g. is_admin, role, balance).", ev)
   }
+}}
 
-  // ---- Unchecked quantity / business logic (CWE-840) ----
-  guarded("joern-unchecked-quantity") {
-    val qtyMult = m.call.nameExact("<operator>.multiplication").code.exists(c => QTY.exists(c.toLowerCase.contains))
-    val posGuard = m.call.nameExact("<operator>.greaterThan", "<operator>.greaterEqualsThan",
-      "<operator>.lessThan", "<operator>.lessEqualsThan").code.exists(c => QTY.exists(c.toLowerCase.contains)) ||
-      guardHas(List("max(0", "abs(", "> 0", ">= 0", "> 1"))
-    if (qtyMult && !posGuard) {
-      val ev = m.call.nameExact("<operator>.multiplication").code.l.headOption.getOrElse("")
-      add("CWE-840", "medium", file, line, name, "joern-unchecked-quantity",
-        "Computes a monetary amount from a caller-supplied quantity/price with no lower-bound (>0) guard. A negative or zero quantity can yield a negative total (store credit / free goods).", ev)
-    }
+// @@ rule joern-unchecked-quantity
+ruleRan += "joern-unchecked-quantity"
+ctxs.foreach { c => guarded("joern-unchecked-quantity") {
+  val qtyMult = c.multCode.exists(x => QTY.exists(x.toLowerCase.contains))
+  val posGuard = c.cmpCode.exists(x => QTY.exists(x.toLowerCase.contains)) ||
+    c.guardHas(List("max(0", "abs(", "> 0", ">= 0", "> 1"))
+  if (qtyMult && !posGuard) {
+    val ev = c.multCode.headOption.getOrElse("")
+    add("CWE-840", "medium", c.file, c.line, c.name, "joern-unchecked-quantity",
+      "Computes a monetary amount from a caller-supplied quantity/price with no lower-bound (>0) guard. A negative or zero quantity can yield a negative total (store credit / free goods).", ev)
   }
+}}
 
-  // ---- Race condition / TOCTOU (CWE-362) ----
-  guarded("joern-toctou-check-then-write") {
-    val cmpCalls = m.call.nameExact("<operator>.greaterThan", "<operator>.greaterEqualsThan",
-      "<operator>.lessThan", "<operator>.lessEqualsThan")
-    val hasCheck = cmpCalls.nonEmpty
-    val hasWrite = execHas("UPDATE") || execHas("INSERT") || execHas("DELETE") || m.call.nameExact("commit").nonEmpty
-    val checkOnResource = cmpCalls.code.exists(c => QTY.exists(c.toLowerCase.contains))
-    if (hasCheck && hasWrite && checkOnResource && !guardHas(LOCK)) {
-      val ev = m.call.nameExact("execute").code.l.headOption.getOrElse("")
-      add("CWE-362", "high", file, line, name, "joern-toctou-check-then-write",
-        "Checks a resource value (e.g. stock/balance) and then mutates it in the same method with no lock or atomic transaction. Concurrent requests can both pass the check before either writes (TOCTOU race), oversubscribing the resource.", ev)
-    }
+// @@ rule joern-toctou-check-then-write
+ruleRan += "joern-toctou-check-then-write"
+ctxs.foreach { c => guarded("joern-toctou-check-then-write") {
+  val hasCheck = c.cmpCode.nonEmpty
+  val hasWrite = c.execHas("UPDATE") || c.execHas("INSERT") || c.execHas("DELETE") || c.commitCalls > 0
+  val checkOnResource = c.cmpCode.exists(x => QTY.exists(x.toLowerCase.contains))
+  if (hasCheck && hasWrite && checkOnResource && !c.guardHas(LOCK)) {
+    val ev = c.execCode.headOption.getOrElse("")
+    add("CWE-362", "high", c.file, c.line, c.name, "joern-toctou-check-then-write",
+      "Checks a resource value (e.g. stock/balance) and then mutates it in the same method with no lock or atomic transaction. Concurrent requests can both pass the check before either writes (TOCTOU race), oversubscribing the resource.", ev)
   }
-} catch { case NonFatal(e) => methodsThrew += 1 } }
+}}
 
+// @@ finish
 // The always-write contract: findings.tsv exists even when clean, so scan.py can tell "clean"
-// from "the locators never ran". diag.json says which rules ran and which threw.
+// from "the locators never ran". diag.json says which rules ran and which threw; in server
+// mode a rule whose section failed to COMPILE never adds itself to ruleRan, so it reports
+// "not_run" here and scan.py upgrades that to "compile_error" from the /query-sync flag.
 os.write.over(os.Path(outFile), findings.mkString("\n"))
 val ruleState = RULES.map { r =>
-  val st = if (ruleErrors(r) == 0) "ok" else "threw"
+  val st = if (!ruleRan.contains(r)) "not_run" else if (ruleErrors(r) == 0) "ok" else "threw"
   s"${jstr(r)}: {\"state\": ${jstr(st)}, \"errors\": ${ruleErrors(r)}, \"first_error\": ${jstr(ruleFirst.getOrElse(r, ""))}}"
 }.mkString(", ")
 os.write.over(os.Path(diagFile),
