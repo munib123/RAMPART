@@ -72,11 +72,18 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
 - **Joern/CPG is BACK (2026-09-15, Day 1 of `docs/JOERN_PLAN.md`).** `backend/app/services/joern/`
   — `runtime.py` (self-installing portable JRE 21 + joern-cli under `tools/`, no admin, no PATH),
   `scan.py` (additive, never raises, returns `(findings, diag)`), `rules/locators.sc` (the four
-  July rules, byte-identical — the eight August fixes are P2). Wired in `pipeline.py` with a
+  July rules **with all eight August fixes applied**, P2 done 2026-09-15: try/catch + rule_state diag,
+  AUTHZ/AUTHN_ONLY split, literals out of the guard channel, `<lambda>N` excluded, `abort(401|403`,
+  allow-list by name not syntax, hoisted decorator table matched as `(def <name>(`, `nameExact`). Wired in `pipeline.py` with a
   reserved `JOERN_LLM_QUOTA`; `/api/health` reports `scanners.joern`. **First real execution ever:**
   5 candidates on `testbeds/shopfast` = 4 TP + the known `find_product` bait FP, 34.7 s cold /
   14.7 s warm, bandit/joern overlap 0. Log: `bench/runs/2026-09-15-first-run.md`.
-  Next: P1 (`bench/` harness + line-anchored key), then P2 (the eight fixes, each behind a number).
+  **P1 done:** `bench/` harness, `bench/keys/shopfast.key.jsonl` (26 bugs / 29 locations + 2 baits,
+  all anchors resolve, **0 adjudicated**). Baseline: bandit 12 TP, semgrep 13, joern 4 (+1 bait),
+  full (with Gemini) 15 TP / F1 0.70. Engines are disjoint. **P2 done:** `testbeds/probe` 5/5 TP, 0 FP.
+  Gemini key is in `.env` (pasted in chat 2026-09-15 - rotate it). Next: P3 server sidecar.
+  Open: the `full` arm Confirmed the find_product bait; extract.py gives module-level findings
+  a slice that reaches into the next function.
   Install on a fresh clone: `python -m app.services.joern.runtime --install`.
 
 ## Data residency
