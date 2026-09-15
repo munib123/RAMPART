@@ -1,0 +1,57 @@
+{
+ "run_id": "20260915T085248Z-probe-joern",
+ "benchmark": "probe",
+ "backend": "joern",
+ "verdict_gated": false,
+ "elapsed_s": 21.1,
+ "fingerprint": {
+  "backend": "joern",
+  "rampart_git_sha": "c1a12db3",
+  "joern_version": "4.0.589",
+  "java_major": 21,
+  "rules_file": "locators.sc",
+  "rules_sha256": "90e6f08766d7b483",
+  "diag": {
+   "used": true,
+   "reason": "",
+   "elapsed_ms": 20331,
+   "candidates": 0,
+   "rules_file": "locators.sc"
+  }
+ },
+ "key": {
+  "version": "probe-key-v1",
+  "rows": 7,
+  "usable": 7,
+  "accepted": 0,
+  "proposed": 7
+ },
+ "score": {
+  "tp": 0,
+  "fn": 5,
+  "fp": 0,
+  "bait_fp": 0,
+  "tn": 2,
+  "cleared": 0,
+  "unresolvable_keys": 0,
+  "reachable_tp": 0,
+  "reachable_fn": 5,
+  "vuln_rows": 5,
+  "safe_rows": 2,
+  "candidates": 0,
+  "reported": 0,
+  "matched_keys": [],
+  "missed_keys": [
+   2,
+   3,
+   5,
+   6,
+   7
+  ],
+  "recall": 0.0,
+  "reachable_recall": 0.0,
+  "precision": null,
+  "f1": 0.0
+ },
+ "candidates": []
+}
