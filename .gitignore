@@ -55,8 +55,13 @@ desktop.ini
 *.swo
 *~
 
-# ---- Knowledge base (embeddings are large) ----
-knowledge_base/**
+# ---- Knowledge base ----
+# Pipeline CODE is tracked. Only the build artifacts are ignored: out/ holds the Chroma
+# index plus the intermediate jsonl (~578 MB) and is rebuildable from data/ via run_pipeline.py.
+knowledge_base/out/
+knowledge_base/**/__pycache__/
+knowledge_base/**/*.pyc
+knowledge_base/adapters/*.bak
 
 # ---- Local fix snapshots (apply/revert safety net) ----
 backend/.fix_snapshots/

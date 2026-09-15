@@ -1,0 +1,1520 @@
+{
+ "7PK": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-254",
+  "cwe_name": "7PK"
+ },
+ "ASI05- Unexpected Code Execution (RCE)": {
+  "category": "owasp-asi",
+  "confidence": "high",
+  "cwe_id": "CWE-94",
+  "cwe_name": "Improper Control of Generation of Code ('Code Injection')"
+ },
+ "Acceptance of Extraneous Untrusted Data With Trusted Data": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-349",
+  "cwe_name": "Acceptance of Extraneous Untrusted Data With Trusted Data"
+ },
+ "Access of Resource Using Incompatible Type ('Type Confusion')": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-843",
+  "cwe_name": "Access of Resource Using Incompatible Type ('Type Confusion')"
+ },
+ "Allocation of File Descriptors or Handles Without Limits or Throttling": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-774",
+  "cwe_name": "Allocation of File Descriptors or Handles Without Limits or Throttling"
+ },
+ "Allocation of Resources Without Limits or Throttling": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-770",
+  "cwe_name": "Allocation of Resources Without Limits or Throttling"
+ },
+ "Always-Incorrect Control Flow Implementation": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-670",
+  "cwe_name": "Always-Incorrect Control Flow Implementation"
+ },
+ "Array Index Underflow": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-129",
+  "cwe_name": "Improper Validation of Array Index"
+ },
+ "Authentication Bypass": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-287",
+  "cwe_name": "Improper Authentication"
+ },
+ "Authentication Bypass Using an Alternate Path or Channel": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-288",
+  "cwe_name": "Authentication Bypass Using an Alternate Path or Channel"
+ },
+ "Authentication Bypass by Capture-replay": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-294",
+  "cwe_name": "Authentication Bypass by Capture-replay"
+ },
+ "Authentication Bypass by Primary Weakness": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-305",
+  "cwe_name": "Authentication Bypass by Primary Weakness"
+ },
+ "Blind SQL Injection": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-89",
+  "cwe_name": "Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')"
+ },
+ "Brute Force": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-307",
+  "cwe_name": "Improper Restriction of Excessive Authentication Attempts"
+ },
+ "Buffer Over-read": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-126",
+  "cwe_name": "Buffer Over-read"
+ },
+ "Buffer Under-read": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-127",
+  "cwe_name": "Buffer Under-read"
+ },
+ "Buffer Underflow": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-124",
+  "cwe_name": "Buffer Underwrite ('Buffer Underflow')"
+ },
+ "Business Logic Errors": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-840",
+  "cwe_name": "Business Logic Errors"
+ },
+ "CRLF Injection": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-93",
+  "cwe_name": "Improper Neutralization of CRLF Sequences ('CRLF Injection')"
+ },
+ "Cache Poisoning": {
+  "category": "cwe",
+  "confidence": "low",
+  "cwe_id": "CWE-349",
+  "cwe_name": "Acceptance of Extraneous Untrusted Data With Trusted Data"
+ },
+ "Classic Buffer Overflow": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-120",
+  "cwe_name": "Buffer Copy without Checking Size of Input ('Classic Buffer Overflow')"
+ },
+ "Cleartext Storage in a File or on Disk": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-313",
+  "cwe_name": "Cleartext Storage in a File or on Disk"
+ },
+ "Cleartext Storage of Sensitive Information": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-312",
+  "cwe_name": "Cleartext Storage of Sensitive Information"
+ },
+ "Cleartext Transmission of Sensitive Information": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-319",
+  "cwe_name": "Cleartext Transmission of Sensitive Information"
+ },
+ "Client-Side Enforcement of Server-Side Security": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-602",
+  "cwe_name": "Client-Side Enforcement of Server-Side Security"
+ },
+ "Code Injection": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-94",
+  "cwe_name": "Improper Control of Generation of Code ('Code Injection')"
+ },
+ "Command Injection - Generic": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-77",
+  "cwe_name": "Improper Neutralization of Special Elements used in a Command ('Command Injection')"
+ },
+ "Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-362",
+  "cwe_name": "Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')"
+ },
+ "Content Spoofing": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-451",
+  "cwe_name": "User Interface (UI) Misrepresentation of Critical Information"
+ },
+ "Covert Timing Channel": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-385",
+  "cwe_name": "Covert Timing Channel"
+ },
+ "Creation of Temporary File in Directory with Insecure Permissions": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-379",
+  "cwe_name": "Creation of Temporary File in Directory with Insecure Permissions"
+ },
+ "Cross-Site Request Forgery (CSRF)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-352",
+  "cwe_name": "Cross-Site Request Forgery (CSRF)"
+ },
+ "Cross-Site Scripting (XSS)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-79",
+  "cwe_name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+ },
+ "Cross-site Scripting (XSS) - DOM": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-79",
+  "cwe_name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+ },
+ "Cross-site Scripting (XSS) - Generic": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-79",
+  "cwe_name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+ },
+ "Cross-site Scripting (XSS) - Reflected": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-79",
+  "cwe_name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+ },
+ "Cross-site Scripting (XSS) - Stored": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-79",
+  "cwe_name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+ },
+ "Cryptographic Issues - Generic": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-310",
+  "cwe_name": "Cryptographic Issues"
+ },
+ "DEPRECATED- Code": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-17",
+  "cwe_name": "DEPRECATED- Code"
+ },
+ "DEPRECATED- Containment Errors (Container Errors)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-216",
+  "cwe_name": "DEPRECATED- Containment Errors (Container Errors)"
+ },
+ "DEPRECATED- Source Code": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-18",
+  "cwe_name": "DEPRECATED- Source Code"
+ },
+ "DEPRECATED- Use of Uninitialized Resource": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-1187",
+  "cwe_name": "DEPRECATED- Use of Uninitialized Resource"
+ },
+ "Data Processing Errors": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-19",
+  "cwe_name": "Data Processing Errors"
+ },
+ "Deserialization of Untrusted Data": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-502",
+  "cwe_name": "Deserialization of Untrusted Data"
+ },
+ "Divide By Zero": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-369",
+  "cwe_name": "Divide By Zero"
+ },
+ "Double Free": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-415",
+  "cwe_name": "Double Free"
+ },
+ "Download of Code Without Integrity Check": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-494",
+  "cwe_name": "Download of Code Without Integrity Check"
+ },
+ "Embedded Malicious Code": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-506",
+  "cwe_name": "Embedded Malicious Code"
+ },
+ "Encoding Error": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-172",
+  "cwe_name": "Encoding Error"
+ },
+ "Excessive Iteration": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-834",
+  "cwe_name": "Excessive Iteration"
+ },
+ "Execution with Unnecessary Privileges": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-250",
+  "cwe_name": "Execution with Unnecessary Privileges"
+ },
+ "Expected Behavior Violation": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-440",
+  "cwe_name": "Expected Behavior Violation"
+ },
+ "Exposed Dangerous Method or Function": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-749",
+  "cwe_name": "Exposed Dangerous Method or Function"
+ },
+ "Exposure of Data Element to Wrong Session": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-488",
+  "cwe_name": "Exposure of Data Element to Wrong Session"
+ },
+ "Exposure of Sensitive Information Due to Incompatible Policies": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-213",
+  "cwe_name": "Exposure of Sensitive Information Due to Incompatible Policies"
+ },
+ "External Control of Critical State Data": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-642",
+  "cwe_name": "External Control of Critical State Data"
+ },
+ "External Control of File Name or Path": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-73",
+  "cwe_name": "External Control of File Name or Path"
+ },
+ "Externally Controlled Reference to a Resource in Another Sphere": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-610",
+  "cwe_name": "Externally Controlled Reference to a Resource in Another Sphere"
+ },
+ "Failure to Sanitize Special Elements into a Different Plane (Special Element Injection)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-75",
+  "cwe_name": "Failure to Sanitize Special Elements into a Different Plane (Special Element Injection)"
+ },
+ "File Content Injection": {
+  "category": "cwe",
+  "confidence": "low",
+  "cwe_id": "CWE-74",
+  "cwe_name": "Improper Neutralization of Special Elements in Output Used by a Downstream Component ('Injection')"
+ },
+ "File Manipulation": {
+  "category": "cwe",
+  "confidence": "low",
+  "cwe_id": "CWE-73",
+  "cwe_name": "External Control of File Name or Path"
+ },
+ "File and Directory Information Exposure": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-538",
+  "cwe_name": "Insertion of Sensitive Information into Externally-Accessible File or Directory"
+ },
+ "Forced Browsing": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-425",
+  "cwe_name": "Direct Request ('Forced Browsing')"
+ },
+ "Free of Memory not on the Heap": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-590",
+  "cwe_name": "Free of Memory not on the Heap"
+ },
+ "HTTP Request Smuggling": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-444",
+  "cwe_name": "Inconsistent Interpretation of HTTP Requests ('HTTP Request/Response Smuggling')"
+ },
+ "HTTP Response Splitting": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-113",
+  "cwe_name": "Improper Neutralization of CRLF Sequences in HTTP Headers ('HTTP Response Splitting')"
+ },
+ "Heap Overflow": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-122",
+  "cwe_name": "Heap-based Buffer Overflow"
+ },
+ "Heap-based Buffer Overflow": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-122",
+  "cwe_name": "Heap-based Buffer Overflow"
+ },
+ "Improper Access Control - Generic": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-284",
+  "cwe_name": "Improper Access Control"
+ },
+ "Improper Authentication - Generic": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-287",
+  "cwe_name": "Improper Authentication"
+ },
+ "Improper Authorization": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-285",
+  "cwe_name": "Improper Authorization"
+ },
+ "Improper Certificate Validation": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-295",
+  "cwe_name": "Improper Certificate Validation"
+ },
+ "Improper Check for Certificate Revocation": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-299",
+  "cwe_name": "Improper Check for Certificate Revocation"
+ },
+ "Improper Check for Dropped Privileges": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-273",
+  "cwe_name": "Improper Check for Dropped Privileges"
+ },
+ "Improper Check for Unusual or Exceptional Conditions": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-754",
+  "cwe_name": "Improper Check for Unusual or Exceptional Conditions"
+ },
+ "Improper Check or Handling of Exceptional Conditions": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-703",
+  "cwe_name": "Improper Check or Handling of Exceptional Conditions"
+ },
+ "Improper Control of Dynamically-Managed Code Resources": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-913",
+  "cwe_name": "Improper Control of Dynamically-Managed Code Resources"
+ },
+ "Improper Export of Android Application Components": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-926",
+  "cwe_name": "Improper Export of Android Application Components"
+ },
+ "Improper Following of a Certificate's Chain of Trust": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-296",
+  "cwe_name": "Improper Following of a Certificate's Chain of Trust"
+ },
+ "Improper Handling of Case Sensitivity": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-178",
+  "cwe_name": "Improper Handling of Case Sensitivity"
+ },
+ "Improper Handling of Exceptional Conditions": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-755",
+  "cwe_name": "Improper Handling of Exceptional Conditions"
+ },
+ "Improper Handling of Highly Compressed Data (Data Amplification)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-409",
+  "cwe_name": "Improper Handling of Highly Compressed Data (Data Amplification)"
+ },
+ "Improper Handling of Insufficient Permissions or Privileges": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-280",
+  "cwe_name": "Improper Handling of Insufficient Permissions or Privileges"
+ },
+ "Improper Handling of URL Encoding (Hex Encoding)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-177",
+  "cwe_name": "Improper Handling of URL Encoding (Hex Encoding)"
+ },
+ "Improper Handling of Unexpected Data Type": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-241",
+  "cwe_name": "Improper Handling of Unexpected Data Type"
+ },
+ "Improper Initialization": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-665",
+  "cwe_name": "Improper Initialization"
+ },
+ "Improper Input Validation": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-20",
+  "cwe_name": "Improper Input Validation"
+ },
+ "Improper Link Resolution Before File Access ('Link Following')": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-59",
+  "cwe_name": "Improper Link Resolution Before File Access ('Link Following')"
+ },
+ "Improper Locking": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-667",
+  "cwe_name": "Improper Locking"
+ },
+ "Improper Neutralization of Escape, Meta, or Control Sequences": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-150",
+  "cwe_name": "Improper Neutralization of Escape, Meta, or Control Sequences"
+ },
+ "Improper Neutralization of Formula Elements in a CSV File": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-1236",
+  "cwe_name": "Improper Neutralization of Formula Elements in a CSV File"
+ },
+ "Improper Neutralization of HTTP Headers for Scripting Syntax": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-644",
+  "cwe_name": "Improper Neutralization of HTTP Headers for Scripting Syntax"
+ },
+ "Improper Neutralization of Script-Related HTML Tags in a Web Page (Basic XSS)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-80",
+  "cwe_name": "Improper Neutralization of Script-Related HTML Tags in a Web Page (Basic XSS)"
+ },
+ "Improper Neutralization of Special Elements in Data Query Logic": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-943",
+  "cwe_name": "Improper Neutralization of Special Elements in Data Query Logic"
+ },
+ "Improper Neutralization of Value Delimiters": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-142",
+  "cwe_name": "Improper Neutralization of Value Delimiters"
+ },
+ "Improper Neutralization of Whitespace": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-156",
+  "cwe_name": "Improper Neutralization of Whitespace"
+ },
+ "Improper Null Termination": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-170",
+  "cwe_name": "Improper Null Termination"
+ },
+ "Improper Preservation of Permissions": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-281",
+  "cwe_name": "Improper Preservation of Permissions"
+ },
+ "Improper Privilege Management": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-269",
+  "cwe_name": "Improper Privilege Management"
+ },
+ "Improper Removal of Sensitive Information Before Storage or Transfer": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-212",
+  "cwe_name": "Improper Removal of Sensitive Information Before Storage or Transfer"
+ },
+ "Improper Resource Shutdown or Release": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-404",
+  "cwe_name": "Improper Resource Shutdown or Release"
+ },
+ "Improper Restriction of Authentication Attempts": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-307",
+  "cwe_name": "Improper Restriction of Excessive Authentication Attempts"
+ },
+ "Improper Restriction of Recursive Entity References in DTDs ('XML Entity Expansion')": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-776",
+  "cwe_name": "Improper Restriction of Recursive Entity References in DTDs ('XML Entity Expansion')"
+ },
+ "Improper Synchronization": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-662",
+  "cwe_name": "Improper Synchronization"
+ },
+ "Improper Validation of Array Index": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-129",
+  "cwe_name": "Improper Validation of Array Index"
+ },
+ "Improper Validation of Certificate Expiration": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-298",
+  "cwe_name": "Improper Validation of Certificate Expiration"
+ },
+ "Improper Validation of Certificate with Host Mismatch": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-297",
+  "cwe_name": "Improper Validation of Certificate with Host Mismatch"
+ },
+ "Improper Validation of Syntactic Correctness of Input": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-1286",
+  "cwe_name": "Improper Validation of Syntactic Correctness of Input"
+ },
+ "Improper Verification of Cryptographic Signature": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-347",
+  "cwe_name": "Improper Verification of Cryptographic Signature"
+ },
+ "Improperly Implemented Security Check for Standard": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-358",
+  "cwe_name": "Improperly Implemented Security Check for Standard"
+ },
+ "Inadequate Encryption Strength": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-326",
+  "cwe_name": "Inadequate Encryption Strength"
+ },
+ "Inappropriate Encoding for Output Context": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-838",
+  "cwe_name": "Inappropriate Encoding for Output Context"
+ },
+ "Inclusion of Functionality from Untrusted Control Sphere": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-829",
+  "cwe_name": "Inclusion of Functionality from Untrusted Control Sphere"
+ },
+ "Inclusion of Sensitive Information in an Include File": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-541",
+  "cwe_name": "Inclusion of Sensitive Information in an Include File"
+ },
+ "Incomplete List of Disallowed Inputs": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-184",
+  "cwe_name": "Incomplete List of Disallowed Inputs"
+ },
+ "Inconsistency Between Implementation and Documented Design": {
+  "category": "cwe",
+  "confidence": "low",
+  "cwe_id": "CWE-440",
+  "cwe_name": "Expected Behavior Violation"
+ },
+ "Incorrect Authorization": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-863",
+  "cwe_name": "Incorrect Authorization"
+ },
+ "Incorrect Calculation": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-682",
+  "cwe_name": "Incorrect Calculation"
+ },
+ "Incorrect Calculation of Buffer Size": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-131",
+  "cwe_name": "Incorrect Calculation of Buffer Size"
+ },
+ "Incorrect Comparison": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-697",
+  "cwe_name": "Incorrect Comparison"
+ },
+ "Incorrect Conversion between Numeric Types": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-681",
+  "cwe_name": "Incorrect Conversion between Numeric Types"
+ },
+ "Incorrect Permission Assignment for Critical Resource": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-732",
+  "cwe_name": "Incorrect Permission Assignment for Critical Resource"
+ },
+ "Incorrect Privilege Assignment": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-266",
+  "cwe_name": "Incorrect Privilege Assignment"
+ },
+ "Incorrect Provision of Specified Functionality": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-684",
+  "cwe_name": "Incorrect Provision of Specified Functionality"
+ },
+ "Incorrect Regular Expression": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-185",
+  "cwe_name": "Incorrect Regular Expression"
+ },
+ "Incorrect Resource Transfer Between Spheres": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-669",
+  "cwe_name": "Incorrect Resource Transfer Between Spheres"
+ },
+ "Incorrect Usage of Seeds in Pseudo-Random Number Generator (PRNG)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-335",
+  "cwe_name": "Incorrect Usage of Seeds in Pseudo-Random Number Generator (PRNG)"
+ },
+ "Information Disclosure": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-200",
+  "cwe_name": "Exposure of Sensitive Information to an Unauthorized Actor"
+ },
+ "Information Exposure Through Debug Information": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-215",
+  "cwe_name": "Insertion of Sensitive Information Into Debugging Code"
+ },
+ "Information Exposure Through Directory Listing": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-548",
+  "cwe_name": "Exposure of Information Through Directory Listing"
+ },
+ "Information Exposure Through Sent Data": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-201",
+  "cwe_name": "Insertion of Sensitive Information Into Sent Data"
+ },
+ "Information Exposure Through Timing Discrepancy": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-208",
+  "cwe_name": "Observable Timing Discrepancy"
+ },
+ "Information Exposure Through an Error Message": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-209",
+  "cwe_name": "Generation of Error Message Containing Sensitive Information"
+ },
+ "Insecure Direct Object Reference (IDOR)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-639",
+  "cwe_name": "Authorization Bypass Through User-Controlled Key"
+ },
+ "Insecure Storage of Sensitive Information": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-922",
+  "cwe_name": "Insecure Storage of Sensitive Information"
+ },
+ "Insecure Temporary File": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-377",
+  "cwe_name": "Insecure Temporary File"
+ },
+ "Insertion of Sensitive Information into Log File": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-532",
+  "cwe_name": "Insertion of Sensitive Information into Log File"
+ },
+ "Insufficient Entropy": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-331",
+  "cwe_name": "Insufficient Entropy"
+ },
+ "Insufficient Logging": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-778",
+  "cwe_name": "Insufficient Logging"
+ },
+ "Insufficient Session Expiration": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-613",
+  "cwe_name": "Insufficient Session Expiration"
+ },
+ "Insufficient Verification of Data Authenticity": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-345",
+  "cwe_name": "Insufficient Verification of Data Authenticity"
+ },
+ "Insufficiently Protected Credentials": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-522",
+  "cwe_name": "Insufficiently Protected Credentials"
+ },
+ "Integer Overflow": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-190",
+  "cwe_name": "Integer Overflow or Wraparound"
+ },
+ "Integer Overflow to Buffer Overflow": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-680",
+  "cwe_name": "Integer Overflow to Buffer Overflow"
+ },
+ "Integer Underflow": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-191",
+  "cwe_name": "Integer Underflow (Wrap or Wraparound)"
+ },
+ "Integer Underflow (Wrap or Wraparound)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-191",
+  "cwe_name": "Integer Underflow (Wrap or Wraparound)"
+ },
+ "Interpretation Conflict": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-436",
+  "cwe_name": "Interpretation Conflict"
+ },
+ "Key Exchange without Entity Authentication": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-322",
+  "cwe_name": "Key Exchange without Entity Authentication"
+ },
+ "Key Management Errors": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-320",
+  "cwe_name": "Key Management Errors"
+ },
+ "LDAP Injection": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-90",
+  "cwe_name": "Improper Neutralization of Special Elements used in an LDAP Query ('LDAP Injection')"
+ },
+ "LLM01- Prompt Injection": {
+  "category": "owasp-llm",
+  "confidence": "high",
+  "cwe_id": "CWE-77",
+  "cwe_name": "LLM01: Prompt Injection"
+ },
+ "LLM04- Model Denial of Service": {
+  "category": "owasp-llm",
+  "confidence": "high",
+  "cwe_id": "CWE-400",
+  "cwe_name": "LLM04: Model Denial of Service"
+ },
+ "LLM05- Supply Chain Vulnerabilities": {
+  "category": "owasp-llm",
+  "confidence": "medium",
+  "cwe_id": "CWE-1357",
+  "cwe_name": "LLM05: Supply Chain Vulnerabilities"
+ },
+ "LLM06- Sensitive Information Disclosure": {
+  "category": "owasp-llm",
+  "confidence": "high",
+  "cwe_id": "CWE-200",
+  "cwe_name": "LLM06: Sensitive Information Disclosure"
+ },
+ "LLM09-2025 Misinformation": {
+  "category": "owasp-llm",
+  "confidence": "high",
+  "cwe_id": "",
+  "cwe_name": "LLM09: Misinformation"
+ },
+ "Leftover Debug Code (Backdoor)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-489",
+  "cwe_name": "Active Debug Code"
+ },
+ "Leveraging Race Conditions": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-362",
+  "cwe_name": "Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition')"
+ },
+ "Loop with Unreachable Exit Condition ('Infinite Loop')": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-835",
+  "cwe_name": "Loop with Unreachable Exit Condition ('Infinite Loop')"
+ },
+ "Malware": {
+  "category": "uncategorized",
+  "confidence": "low",
+  "cwe_id": "",
+  "cwe_name": "Uncategorized"
+ },
+ "Man-in-the-Middle": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-300",
+  "cwe_name": "Channel Accessible by Non-Endpoint"
+ },
+ "Memory Corruption - Generic": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-119",
+  "cwe_name": "Improper Restriction of Operations within the Bounds of a Memory Buffer"
+ },
+ "Misconfiguration": {
+  "category": "cwe",
+  "confidence": "low",
+  "cwe_id": "CWE-16",
+  "cwe_name": "Configuration"
+ },
+ "Misinterpretation of Input": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-115",
+  "cwe_name": "Misinterpretation of Input"
+ },
+ "Missing Authentication for Critical Function": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-306",
+  "cwe_name": "Missing Authentication for Critical Function"
+ },
+ "Missing Authorization": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-862",
+  "cwe_name": "Missing Authorization"
+ },
+ "Missing Critical Step in Authentication": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-304",
+  "cwe_name": "Missing Critical Step in Authentication"
+ },
+ "Missing Encryption of Sensitive Data": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-311",
+  "cwe_name": "Missing Encryption of Sensitive Data"
+ },
+ "Missing Release of Memory after Effective Lifetime": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-401",
+  "cwe_name": "Missing Release of Memory after Effective Lifetime"
+ },
+ "Missing Release of Resource after Effective Lifetime": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-772",
+  "cwe_name": "Missing Release of Resource after Effective Lifetime"
+ },
+ "Missing Required Cryptographic Step": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-325",
+  "cwe_name": "Missing Cryptographic Step"
+ },
+ "Modification of Assumed-Immutable Data (MAID)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-471",
+  "cwe_name": "Modification of Assumed-Immutable Data (MAID)"
+ },
+ "NULL Pointer Dereference": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-476",
+  "cwe_name": "NULL Pointer Dereference"
+ },
+ "Numeric Errors": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-189",
+  "cwe_name": "Numeric Errors"
+ },
+ "Numeric Truncation Error": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-197",
+  "cwe_name": "Numeric Truncation Error"
+ },
+ "OS Command Injection": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-78",
+  "cwe_name": "Improper Neutralization of Special Elements used in an OS Command ('OS Command Injection')"
+ },
+ "Observable Timing Discrepancy": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-208",
+  "cwe_name": "Observable Timing Discrepancy"
+ },
+ "Off-by-one Error": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-193",
+  "cwe_name": "Off-by-one Error"
+ },
+ "Open Redirect": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-601",
+  "cwe_name": "URL Redirection to Untrusted Site ('Open Redirect')"
+ },
+ "Operation on a Resource after Expiration or Release": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-672",
+  "cwe_name": "Operation on a Resource after Expiration or Release"
+ },
+ "Origin Validation Error": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-346",
+  "cwe_name": "Origin Validation Error"
+ },
+ "Out-of-bounds Read": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-125",
+  "cwe_name": "Out-of-bounds Read"
+ },
+ "PHP Local File Inclusion": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-98",
+  "cwe_name": "Improper Control of Filename for Include/Require Statement in PHP Program ('PHP Remote File Inclusion')"
+ },
+ "Password in Configuration File": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-260",
+  "cwe_name": "Password in Configuration File"
+ },
+ "Path Traversal": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-22",
+  "cwe_name": "Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')"
+ },
+ "Path Traversal- '...-...--'": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-35",
+  "cwe_name": "Path Traversal: '.../...//'"
+ },
+ "Path Traversal- 'dir-..-..-filename'": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-27",
+  "cwe_name": "Path Traversal: 'dir/../../filename'"
+ },
+ "Permission Issues": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-275",
+  "cwe_name": "Permission Issues"
+ },
+ "Phishing": {
+  "category": "uncategorized",
+  "confidence": "low",
+  "cwe_id": "",
+  "cwe_name": "Uncategorized"
+ },
+ "Plaintext Storage of a Password": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-256",
+  "cwe_name": "Plaintext Storage of a Password"
+ },
+ "Privacy Violation": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-359",
+  "cwe_name": "Exposure of Private Personal Information to an Unauthorized Actor ('Privacy Violation')"
+ },
+ "Privilege Escalation": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-269",
+  "cwe_name": "Improper Privilege Management"
+ },
+ "Protection Mechanism Failure": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-693",
+  "cwe_name": "Protection Mechanism Failure"
+ },
+ "Reachable Assertion": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-617",
+  "cwe_name": "Reachable Assertion"
+ },
+ "Reflected XSS": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-79",
+  "cwe_name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')"
+ },
+ "Relative Path Traversal": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-23",
+  "cwe_name": "Relative Path Traversal"
+ },
+ "Release of Invalid Pointer or Reference": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-763",
+  "cwe_name": "Release of Invalid Pointer or Reference"
+ },
+ "Reliance on Cookies without Validation and Integrity Checking in a Security Decision": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-565",
+  "cwe_name": "Reliance on Cookies without Validation and Integrity Checking in a Security Decision"
+ },
+ "Reliance on Reverse DNS Resolution for a Security-Critical Action": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-350",
+  "cwe_name": "Reliance on Reverse DNS Resolution for a Security-Critical Action"
+ },
+ "Reliance on Untrusted Inputs in a Security Decision": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-807",
+  "cwe_name": "Reliance on Untrusted Inputs in a Security Decision"
+ },
+ "Remote File Inclusion": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-98",
+  "cwe_name": "Improper Control of Filename for Include/Require Statement in PHP Program ('PHP Remote File Inclusion')"
+ },
+ "Resource Injection": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-99",
+  "cwe_name": "Improper Control of Resource Identifiers ('Resource Injection')"
+ },
+ "Resource Management Errors": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-399",
+  "cwe_name": "Resource Management Errors"
+ },
+ "Reusing Session IDs (aka Session Replay)": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-294",
+  "cwe_name": "Authentication Bypass by Capture-replay"
+ },
+ "Reusing a Nonce, Key Pair in Encryption": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-323",
+  "cwe_name": "Reusing a Nonce, Key Pair in Encryption"
+ },
+ "Reversible One-Way Hash": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-328",
+  "cwe_name": "Use of Weak Hash"
+ },
+ "SQL Injection": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-89",
+  "cwe_name": "Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')"
+ },
+ "Security Through Obscurity": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-656",
+  "cwe_name": "Reliance on Security Through Obscurity"
+ },
+ "Server Side Request Forgery": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-918",
+  "cwe_name": "Server-Side Request Forgery (SSRF)"
+ },
+ "Server-Side Request Forgery (SSRF)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-918",
+  "cwe_name": "Server-Side Request Forgery (SSRF)"
+ },
+ "Session Fixation": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-384",
+  "cwe_name": "Session Fixation"
+ },
+ "Stack Overflow": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-121",
+  "cwe_name": "Stack-based Buffer Overflow"
+ },
+ "Storing Passwords in a Recoverable Format": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-257",
+  "cwe_name": "Storing Passwords in a Recoverable Format"
+ },
+ "Time-of-check Time-of-use (TOCTOU) Race Condition": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-367",
+  "cwe_name": "Time-of-check Time-of-use (TOCTOU) Race Condition"
+ },
+ "Type Confusion": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-843",
+  "cwe_name": "Access of Resource Using Incompatible Type ('Type Confusion')"
+ },
+ "UI Redressing (Clickjacking)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-1021",
+  "cwe_name": "Improper Restriction of Rendered UI Layers or Frames"
+ },
+ "Uncategorized": {
+  "category": "uncategorized",
+  "confidence": "high",
+  "cwe_id": "",
+  "cwe_name": "Uncategorized"
+ },
+ "Unchecked Error Condition": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-391",
+  "cwe_name": "Unchecked Error Condition"
+ },
+ "Unchecked Return Value": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-252",
+  "cwe_name": "Unchecked Return Value"
+ },
+ "Uncontrolled Recursion": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-674",
+  "cwe_name": "Uncontrolled Recursion"
+ },
+ "Uncontrolled Resource Consumption": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-400",
+  "cwe_name": "Uncontrolled Resource Consumption"
+ },
+ "Uncontrolled Search Path Element": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-427",
+  "cwe_name": "Uncontrolled Search Path Element"
+ },
+ "Unprotected Transport of Credentials": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-523",
+  "cwe_name": "Unprotected Transport of Credentials"
+ },
+ "Unquoted Search Path or Element": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-428",
+  "cwe_name": "Unquoted Search Path or Element"
+ },
+ "Unrestricted Upload of File with Dangerous Type": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-434",
+  "cwe_name": "Unrestricted Upload of File with Dangerous Type"
+ },
+ "Untrusted Search Path": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-426",
+  "cwe_name": "Untrusted Search Path"
+ },
+ "Unverified Password Change": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-620",
+  "cwe_name": "Unverified Password Change"
+ },
+ "Use After Free": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-416",
+  "cwe_name": "Use After Free"
+ },
+ "Use of Cache Containing Sensitive Information": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-524",
+  "cwe_name": "Use of Cache Containing Sensitive Information"
+ },
+ "Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-338",
+  "cwe_name": "Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG)"
+ },
+ "Use of Default Credentials": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-1392",
+  "cwe_name": "Use of Default Credentials"
+ },
+ "Use of Externally-Controlled Format String": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-134",
+  "cwe_name": "Use of Externally-Controlled Format String"
+ },
+ "Use of Hard-coded Credentials": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-798",
+  "cwe_name": "Use of Hard-coded Credentials"
+ },
+ "Use of Hard-coded Cryptographic Key": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-321",
+  "cwe_name": "Use of Hard-coded Cryptographic Key"
+ },
+ "Use of Hard-coded Password": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-259",
+  "cwe_name": "Use of Hard-coded Password"
+ },
+ "Use of Incorrectly-Resolved Name or Reference": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-706",
+  "cwe_name": "Use of Incorrectly-Resolved Name or Reference"
+ },
+ "Use of Inherently Dangerous Function": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-242",
+  "cwe_name": "Use of Inherently Dangerous Function"
+ },
+ "Use of Insufficiently Random Values": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-330",
+  "cwe_name": "Use of Insufficiently Random Values"
+ },
+ "Use of Multiple Resources with Duplicate Identifier": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-694",
+  "cwe_name": "Use of Multiple Resources with Duplicate Identifier"
+ },
+ "Use of Uninitialized Resource": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-908",
+  "cwe_name": "Use of Uninitialized Resource"
+ },
+ "Use of a Broken or Risky Cryptographic Algorithm": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-327",
+  "cwe_name": "Use of a Broken or Risky Cryptographic Algorithm"
+ },
+ "Use of a Key Past its Expiration Date": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-324",
+  "cwe_name": "Use of a Key Past its Expiration Date"
+ },
+ "Use of a One-Way Hash without a Salt": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-759",
+  "cwe_name": "Use of a One-Way Hash without a Salt"
+ },
+ "User Interface (UI) Misrepresentation of Critical Information": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-451",
+  "cwe_name": "User Interface (UI) Misrepresentation of Critical Information"
+ },
+ "Using Components with Known Vulnerabilities": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-1395",
+  "cwe_name": "Dependency on Vulnerable Third-Party Component"
+ },
+ "Violation of Secure Design Principles": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-657",
+  "cwe_name": "Violation of Secure Design Principles"
+ },
+ "Weak Cryptography for Passwords": {
+  "category": "cwe",
+  "confidence": "medium",
+  "cwe_id": "CWE-261",
+  "cwe_name": "Weak Encoding for Password"
+ },
+ "Weak Password Recovery Mechanism for Forgotten Password": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-640",
+  "cwe_name": "Weak Password Recovery Mechanism for Forgotten Password"
+ },
+ "Weak Password Requirements": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-521",
+  "cwe_name": "Weak Password Requirements"
+ },
+ "Wrap-around Error": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-128",
+  "cwe_name": "Wrap-around Error"
+ },
+ "Write-what-where Condition": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-123",
+  "cwe_name": "Write-what-where Condition"
+ },
+ "XML Entity Expansion": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-776",
+  "cwe_name": "Improper Restriction of Recursive Entity References in DTDs ('XML Entity Expansion')"
+ },
+ "XML External Entities (XXE)": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-611",
+  "cwe_name": "Improper Restriction of XML External Entity Reference"
+ },
+ "XML Injection": {
+  "category": "cwe",
+  "confidence": "high",
+  "cwe_id": "CWE-91",
+  "cwe_name": "XML Injection (aka Blind XPath Injection)"
+ }
+}
