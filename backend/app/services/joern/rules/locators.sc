@@ -61,7 +61,11 @@ val AUTHN_ONLY = List("current_user", "login_required", "requires_auth", "requir
   "authenticated", "g.user", "current_identity", "session[", "session.get(")
 val LOCK = List("lock", "acquire", "atomic", "select_for_update", "with_for_update", "for update",
   "begin(", "savepoint", "transaction", "serializable", "mutex", "semaphore")
-val ALLOWLIST = List("allow", "whitelist", "permitted", "allowed_fields", " in [", " in (", " in {")
+// Fix 6: ' in [' / ' in (' / ' in {' matched ANY Python membership test anywhere in the method
+// (an unrelated `if section in ["profile", "prefs"]`), silently suppressing CWE-915. An
+// allow-list is named for what it is; the tokens below are names, not syntax.
+val ALLOWLIST = List("allow", "whitelist", "permitted", "allowed_fields", "safe_fields",
+  "editable_fields", "writable_fields", "fields = (", "fields = [", "only(")
 val QTY = List("qty", "quantity", "amount", "count", "total", "price", "subtotal", "balance", "stock")
 
 // Fix 4: name matchers are full-match regexes. pysrc2cpg names synthetic scopes "<lambda>0",
