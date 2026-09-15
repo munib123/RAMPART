@@ -22,7 +22,8 @@ rampart/
 │   │   ├── routers/         auth, scans, scan, fix, browse, health, profile, billing
 │   │   ├── schemas/         Pydantic request models
 │   │   └── services/        scanner, extract, rag, gemini, pipeline, apply
-│   ├── db/schema.sql        Supabase/Postgres schema (users, scans, findings, cwe_stats, code_stats)
+│   ├── db/schema.sql        Supabase/Postgres schema v1 (users, scans, findings, cwe_stats, code_stats)
+│   ├── db/migrations/       numbered forward migrations (0002_joern: findings.tool, scans.joern, tool_stats); applied at start-up
 │   ├── tests/               pytest smoke + apply/revert suites
 │   ├── requirements.txt     pinned Python deps
 │   ├── run_server.py        start API only
@@ -176,6 +177,13 @@ falls back to one `joern --script` per scan with identical results. Each scan's 
 a `joern` block: `mode`, `candidates`, `elapsed_ms` and a per-rule `rule_state`, so a rule that
 breaks costs that rule, not the phase.
 
+Provenance is kept end to end: every finding has `tool` (`semgrep` / `bandit` / `joern`), the UI
+marks CPG findings with a violet **CPG** badge and the summary says "N of these came from Joern
+CPG analysis, M confirmed", the Setup page shows the CPG phase's state (ready / starting / not
+installed) before you scan, and a signed-in scan stores `findings.tool` and `scans.joern` so
+history and the `tool_stats` research view can separate what Joern located from what the LLM
+proved.
+
 The rules are measured, not trusted: `bench/` holds a line-anchored answer key for
 `testbeds/shopfast` (26 planted bugs, 2 baits) and a per-fix probe suite; run
 `backend\.venv\Scripts\python.exe -m bench.run --backend joern --benchmark shopfast` and see
@@ -230,7 +238,7 @@ sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
 | Apply / revert a fix | `apply.py` + `POST /api/fix/apply`, `POST /api/fix/revert` | writes the fix into the user's codebase and can undo it; snapshots the target into `backend/.fix_snapshots/` (git-ignored) |
 | Orchestration | `backend/app/services/pipeline.py` | scan -> extract -> ground -> verify -> rank |
 | API | `backend/app/main.py` | FastAPI on localhost; CORS for the dev/Tauri webviews |
-| Database | `backend/db/schema.sql`, `app/db.py` | optional Supabase/Postgres via `DATABASE_URL`; degrades gracefully when unset |
+| Database | `backend/db/schema.sql`, `db/migrations/`, `app/db.py` | optional Supabase/Postgres via `DATABASE_URL`; degrades gracefully when unset. `schema.sql` creates a fresh DB; `migrations/NNNN_*.sql` bring an existing one forward and are applied automatically at start-up (or by `python -m app.db`), recorded in `schema_migrations`. Every finding row carries `tool` (`semgrep` / `bandit` / `joern`) and every scan its `joern` block |
 | Auth | `app/routers/auth.py`, `app/core/security.py` | bcrypt + JWT (email/password) |
 | UI | `frontend/src` + `src-tauri/` | React SPA; the Tauri shell (`src-tauri/`) spawns the backend sidecar and loads this UI in a native window |
 
@@ -251,6 +259,7 @@ sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
 | GET | `/api/scans/{id}` | one saved scan |
 | GET | `/api/research/overview` | CWE aggregate stats |
 | GET | `/api/research/codebase` | codebase stats (platform × scanner × cwe × severity × verdict) |
+| GET | `/api/research/tools` | findings per engine × verdict (`tool_stats`): what Joern located vs what the LLM proved |
 | GET / PUT | `/api/profile` | read / update the signed-in profile |
 | GET | `/api/billing` | current plan + usage |
 | GET | `/api/billing/plans` | available plans |

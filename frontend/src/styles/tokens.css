@@ -40,6 +40,11 @@
   --red-500:   #e0533d;
   --red-600:   #c13f2b;
 
+  /* provenance accent: findings located by the Joern CPG phase */
+  --cpg:        #6d4fc2;
+  --cpg-subtle: #f1edfb;
+  --cpg-border: #d7ccf3;
+
   /* aliases */
   --brand:            var(--blue-600);
   --brand-hover:      var(--blue-700);

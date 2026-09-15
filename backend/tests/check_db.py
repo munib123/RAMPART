@@ -47,6 +47,22 @@ async def main():
         await conn.close()
         return 1
 
+    # P4 provenance (backend/db/migrations/0002_joern.sql): applied automatically at backend
+    # start-up, or by `python -m app.db`. Report rather than fail if it has not run yet.
+    cols = {(r["table_name"], r["column_name"]) for r in await conn.fetch(
+        "select table_name, column_name from information_schema.columns "
+        "where table_schema='public' and table_name in ('findings','scans')")}
+    p4 = {("findings", "tool"), ("scans", "joern")}
+    have = p4 <= cols and any(v["viewname"] == "tool_stats" for v in views)
+    applied = [r["name"] for r in await conn.fetch(
+        "select name from schema_migrations order by name")] if "schema_migrations" in names else []
+    print("migrations:", ", ".join(applied) or "(schema_migrations table absent)")
+    print("0002_joern (findings.tool, scans.joern, tool_stats):",
+          "present" if have else "NOT APPLIED - start the backend once or run: python -m app.db")
+    if have:
+        by_tool = await conn.fetch("select tool, count(*) n from findings group by tool order by n desc")
+        print("  findings by tool:", ", ".join(f'{r["tool"]}={r["n"]}' for r in by_tool) or "(none)")
+
     await conn.close()
     print("ALL CHECKS PASSED")
     return 0

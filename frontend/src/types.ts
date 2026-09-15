@@ -3,6 +3,23 @@ export interface HealthScanner {
   note?: string;
 }
 
+/** The Joern CPGQL server sidecar (P3): one JVM per backend process. */
+export interface JoernServerStatus {
+  mode?: string;            // auto | on | off
+  running: boolean;
+  ready?: boolean;
+  port?: number;
+  pid?: number | null;
+  uptime_s?: number | null;
+  startup_s?: number | null;
+}
+
+/** scanners.joern - the additive CPG logic-bug locator, not an alternative scanner. */
+export interface HealthJoern extends HealthScanner {
+  enabled?: string;         // JOERN_ENABLED: auto | on | off
+  server?: JoernServerStatus;
+}
+
 export interface CollectionInfo {
   collection: string;
   vectors: number | null;
@@ -13,7 +30,7 @@ export interface Health {
   llm_enabled: boolean;
   model: string | null;
   scanner: string;
-  scanners: { semgrep: HealthScanner; bandit: HealthScanner };
+  scanners: { semgrep: HealthScanner; bandit: HealthScanner; joern?: HealthJoern };
   default_target: string;
   db_enabled: boolean;
   collections: CollectionInfo[];
@@ -84,6 +101,28 @@ export interface Finding {
   verdict?: Verdict;
 }
 
+/** Per-rule outcome of one Joern run (server mode compiles each rule separately). */
+export interface JoernRuleState {
+  state: 'ok' | 'threw' | 'not_run' | 'compile_error' | string;
+  errors?: number;
+  first_error?: string;
+}
+
+/** The pipeline's `joern` block: why the CPG phase did or did not run, and what it cost. */
+export interface JoernInfo {
+  used: boolean;
+  reason?: string;          // set when !used (e.g. "target has no Python files (pysrc2cpg only)")
+  elapsed_ms?: number;
+  candidates?: number;
+  mode?: 'server' | 'script' | string;
+  error?: string;
+  compile_error?: boolean;
+  server_fallback?: string;
+  methods_seen?: number;
+  methods_threw?: number;
+  rule_state?: Record<string, JoernRuleState>;
+}
+
 export interface ScanCounts {
   total?: number;
   critical?: number;
@@ -98,6 +137,7 @@ export interface ScanReport {
   scanner?: string;
   scope?: Scope;
   llm?: { enabled: boolean; model: string | null };
+  joern?: JoernInfo;
   counts?: ScanCounts;
   elapsed_s?: number;
   error?: string;
@@ -119,6 +159,7 @@ export interface HistoryRow {
   counts?: ScanCounts;
   verdict_summary?: Record<string, number>;
   scope?: Scope;
+  joern?: JoernInfo | Record<string, never>;
   created_at?: string;
 }
 

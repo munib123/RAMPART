@@ -69,7 +69,7 @@ export default function Landing() {
       </div>
 
       <div className="pipeline">
-        <PipelineNode n="1" icon="ic-scan" name="Scan" cap="Static analysis flags candidate weaknesses in your code." chip="semgrep · bandit" />
+        <PipelineNode n="1" icon="ic-scan" name="Scan" cap="Static analysis flags candidate weaknesses; a code property graph locates the logic bugs it cannot." chip={health?.scanners?.joern?.available ? 'semgrep · bandit · joern CPG' : 'semgrep · bandit'} />
         <Connector />
         <PipelineNode n="2" icon="ic-ground" name="Ground" cap="Each finding is matched to real disclosed vulnerabilities, filtered by CWE." chip={disclosures} />
         <Connector />

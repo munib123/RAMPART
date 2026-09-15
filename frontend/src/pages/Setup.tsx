@@ -5,6 +5,7 @@ import { useHealth } from '@/context/HealthContext';
 import { browse } from '@/api/scan';
 import { billingInfo } from '@/api/profile';
 import { PLATFORM_LABELS, STACK_LABELS, PRIORITY_LABELS, scopeLabels } from '@/utils/scope';
+import { joernStatus } from '@/utils/joern';
 import { Icon } from '@/components/Icons';
 import type { Scope } from '@/types';
 
@@ -90,6 +91,9 @@ export default function Setup() {
     : 'Semgrep unavailable, so Bandit (Python) is used for now.';
   if (!health?.llm_enabled) note += ' Set GEMINI_API_KEY in .env for verified verdicts.';
   const noteCls = 'avail-note' + (sgAvail && health?.llm_enabled ? '' : ' warn');
+  // CPG phase state BEFORE the scan, so "Joern not installed" is never a surprise afterwards.
+  const cpg = joernStatus(health);
+  const cpgCls = 'avail-note cpg-note' + (cpg.warn ? ' warn' : '');
 
   const quotaPill = quota ? (quota.used >= quota.limit ? 'out' : '') : 'hide';
   const quotaText = quota
@@ -179,6 +183,9 @@ export default function Setup() {
             </select>
           </div>
           <div className={noteCls} id="scanNote"><span className="dot"></span><span>{note}</span></div>
+          {cpg.state !== 'unknown' && (
+            <div className={cpgCls} id="cpgNote" data-state={cpg.state}><span className="dot"></span><span>{cpg.detail}</span></div>
+          )}
           <hr />
           <div>
             <div className="scope-label">Scope summary</div>

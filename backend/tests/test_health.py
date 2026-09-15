@@ -41,3 +41,13 @@ def test_health_keys(client):
 def test_nostore_header(client):
     r = client.get("/api/health")
     assert r.headers.get("Cache-Control") == "no-store"
+
+def test_health_joern_shape(client):
+    """P3/P4: the UI's Setup note reads scanners.joern before a scan; these keys are its contract."""
+    j = client.get("/api/health").json()["scanners"]["joern"]
+    for key in ("available", "enabled", "note", "server"):
+        assert key in j, f"missing scanners.joern.{key}"
+    assert "running" in j["server"]
+    if j["server"]["running"]:
+        for key in ("ready", "port", "pid", "uptime_s", "startup_s"):
+            assert key in j["server"], f"missing scanners.joern.server.{key}"

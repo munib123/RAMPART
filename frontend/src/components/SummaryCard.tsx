@@ -1,5 +1,6 @@
 import { esc, SEV_BAR_COLORS } from '@/utils/format';
 import { scopeLabels } from '@/utils/scope';
+import { cpgSummary } from '@/utils/joern';
 import type { ScanReport } from '@/types';
 
 export default function SummaryCard({ r }: { r: ScanReport }) {
@@ -37,7 +38,31 @@ export default function SummaryCard({ r }: { r: ScanReport }) {
   const modelPill = llmOn
     ? `<span class="pill mono sm">${esc(r.llm!.model || '')}</span>`
     : '<span class="pill mono warn sm">LLM off</span>';
-  const pills = `<span class="pill mono sm">${esc(r.scanner || '')}</span>${modelPill}<span class="pill mono sm">${esc(String(r.elapsed_s ?? ''))}s</span>`;
+  // Provenance: the CPG phase ran alongside the scanner (additive, never an alternative).
+  const cpg = cpgSummary(r.joern, findings);
+  const cpgPill = cpg.used
+    ? `<span class="pill mono cpg sm" title="Joern CPG phase ran in ${esc(cpg.mode || 'script')} mode${cpg.elapsedS ? ' · ' + esc(cpg.elapsedS) + 's' : ''}">+ CPG</span>`
+    : '';
+  const pills = `<span class="pill mono sm">${esc(r.scanner || '')}</span>${cpgPill}${modelPill}<span class="pill mono sm">${esc(String(r.elapsed_s ?? ''))}s</span>`;
+
+  // "N of these came from Joern CPG analysis, M confirmed" - or why the phase did not run.
+  let cpgNote: { cls: string; text: string } | null = null;
+  if (cpg.used) {
+    const n = cpg.candidates;
+    if (n) {
+      const judged = [
+        cpg.confirmed ? `${cpg.confirmed} confirmed` : '',
+        cpg.likely ? `${cpg.likely} likely` : '',
+        cpg.cleared ? `${cpg.cleared} cleared by the LLM` : '',
+      ].filter(Boolean).join(', ');
+      cpgNote = { cls: '', text: `${n} of these came from Joern CPG analysis (logic bugs the pattern scanner cannot see)${judged ? ': ' + judged : ''}.` };
+    } else {
+      cpgNote = { cls: 'quiet', text: 'Joern CPG analysis ran and located no logic-bug candidates (IDOR, mass assignment, unchecked quantity, TOCTOU).' };
+    }
+    if (cpg.broken.length) cpgNote.text += ` Rule${cpg.broken.length === 1 ? '' : 's'} ${cpg.broken.join(', ')} did not run.`;
+  } else if (cpg.reason) {
+    cpgNote = { cls: 'quiet', text: `CPG phase skipped: ${cpg.reason}.` };
+  }
 
   const segs = ['critical', 'high', 'medium', 'low'].filter((s) => c[s as keyof typeof c]);
   const bar = total
@@ -58,6 +83,12 @@ export default function SummaryCard({ r }: { r: ScanReport }) {
       <h2 className="sum-headline">{headline}</h2>
       <p className="sum-sub">{sub}</p>
       <div dangerouslySetInnerHTML={{ __html: bar + legend }} />
+      {cpgNote && (
+        <div className={'cpg-callout ' + cpgNote.cls} data-testid="cpg-callout">
+          <span className="pill mono cpg sm">CPG</span>
+          <span>{cpgNote.text}</span>
+        </div>
+      )}
     </div>
   );
 }

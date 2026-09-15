@@ -60,6 +60,10 @@
 .pill.v-Informational, .pill.v-Unverified, .pill.v-Error { background: var(--bg-muted); color: var(--neutral-600); border-color: var(--border-subtle); }
 .pill.v-Falsepositive { background: var(--success-subtle); color: var(--green-600); border-color: #cdeede; }
 
+/* provenance: a finding located by the Joern code property graph (not the pattern scanner).
+   Violet on purpose - it is a third engine, not a severity and not a verdict. */
+.pill.cpg { background: var(--cpg-subtle); color: var(--cpg); border-color: var(--cpg-border); letter-spacing: 0.02em; }
+
 /* exemplar sources */
 .pill.src-hackerone { background: var(--blue-50); color: var(--blue-700); border-color: var(--blue-200); }
 .pill.src-nuclei { background: var(--green-50); color: var(--green-600); border-color: #cdeede; }

@@ -44,6 +44,7 @@ export function buildStageRows(
   activeScanner: string | undefined,
   stageTimes: (number | null)[],
   completed: boolean,
+  cpg: boolean = false,
 ): StageRow[] {
   return STAGE_META.map((m, i) => {
     const done = stage > i || completed;
@@ -53,6 +54,8 @@ export function buildStageRows(
     else if (active) {
       const caps = m.caps.map((c) => (c === null ? `one batched call · ${model || 'LLM'}…` : c));
       if (i === 0 && activeScanner) caps[0] = `${activeScanner} · walking the target tree…`;
+      // The CPG phase runs after the pattern scanner and is the longer half of this stage.
+      if (i === 0 && cpg) caps.push('joern · building the code property graph…', 'joern · IDOR · mass assignment · quantity · TOCTOU rules…');
       note = caps[capIdx % caps.length];
     }
     const dur = stageTimes[i] != null ? stageTimes[i]! - (i ? stageTimes[i - 1] || 0 : 0) : null;

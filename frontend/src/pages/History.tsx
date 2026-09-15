@@ -45,10 +45,15 @@ export default function History() {
       const segs = segsOf(s);
       const date = s.created_at ? new Date(s.created_at).toLocaleString() : '';
       const scopeLabelsFor = scopeLabels(s.scope);
+      const j = (s.joern && 'used' in s.joern ? s.joern : null);
+      const cpgTitle = j
+        ? (j.used ? `Joern CPG phase ran (${j.mode || 'script'} mode) · ${j.candidates ?? 0} candidate${(j.candidates ?? 0) === 1 ? '' : 's'}` : `CPG phase skipped: ${j.reason || 'n/a'}`)
+        : '';
       return (
         <div className="hist-card" key={s.id}>
           <div className="hist-row">
             <span className="pill mono">{s.scanner || ''}</span>
+            {j && j.used && <span className="pill mono cpg sm" title={cpgTitle}>+ CPG {j.candidates ?? 0}</span>}
             <span className="hist-target">{s.target || '(unknown target)'}</span>
             <span className="hist-meta">{date}</span>
           </div>

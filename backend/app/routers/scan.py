@@ -83,19 +83,21 @@ async def _persist_scan(owner_id: str, report: dict) -> str:
         vsum[vname] = vsum.get(vname, 0) + 1
 
     scan_id = await db.fetch_val(
-        """insert into scans (owner_id, target, scanner, status, counts, verdict_summary, scope)
-           values ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb) returning id::text""",
+        """insert into scans (owner_id, target, scanner, status, counts, verdict_summary, scope, joern)
+           values ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,$8::jsonb) returning id::text""",
         owner_id, report.get("target", ""), report.get("scanner", ""),
         "done", json.dumps(counts), json.dumps(vsum), json.dumps(report.get("scope") or {}),
+        json.dumps(report.get("joern") or {}),
     )
     for f in findings:
         v = f.get("verdict", {})
         exemplar_urls = [e.get("url") for e in f.get("exemplars", []) if e.get("url")]
         await db.execute(
             """INSERT INTO findings
-               (scan_id, cwe_id, severity, verdict, confidence, rule_id, exemplar_urls)
-               values ($1,$2,$3,$4,$5,$6,$7::jsonb)""",
+               (scan_id, cwe_id, severity, verdict, confidence, rule_id, exemplar_urls, tool)
+               values ($1,$2,$3,$4,$5,$6,$7::jsonb,$8)""",
             scan_id, f.get("cwe_id"), f.get("severity"), v.get("verdict"),
             v.get("confidence"), f.get("rule_id"), json.dumps(exemplar_urls),
+            f.get("tool") or "unknown",
         )
     return scan_id

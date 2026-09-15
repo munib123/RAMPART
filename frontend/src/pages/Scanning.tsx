@@ -19,6 +19,7 @@ export default function Scanning() {
     scope,
     model: health?.model,
     activeScanner: health?.scanner,
+    cpg: !!health?.scanners?.joern?.available,
   });
 
   // Start once when mounted.

@@ -10,6 +10,7 @@ export interface UseScanOpts {
   scope: Record<string, unknown>;
   model?: string | null;
   activeScanner?: string;
+  cpg?: boolean;              // Joern CPG phase will run (health.scanners.joern.available)
 }
 
 export interface UseScanResult {
@@ -34,7 +35,7 @@ const FRAC_T2 = 0.70;
 const MIN_DISPLAY_MS = 5200;
 const DONE_ELAPSED = 400000; // sentinel: forces 100% + all stages done
 
-export function useScan({ path, scanner, scope, model, activeScanner }: UseScanOpts): UseScanResult {
+export function useScan({ path, scanner, scope, model, activeScanner, cpg }: UseScanOpts): UseScanResult {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [running, setRunning] = useState(false);
   const [longNote, setLongNote] = useState(false);
@@ -67,7 +68,7 @@ export function useScan({ path, scanner, scope, model, activeScanner }: UseScanO
     frac < FRAC_T2 ? 1 : 2;
   const percent = completed ? 100 : Math.min(96, frac * 100);
   const stageRows: StageRow[] = buildStageRows(
-    stage, Math.floor(elapsedMs / 900), model ?? null, activeScanner, stageTimesRef.current, completed,
+    stage, Math.floor(elapsedMs / 900), model ?? null, activeScanner, stageTimesRef.current, completed, !!cpg,
   );
 
   const pump = () => {

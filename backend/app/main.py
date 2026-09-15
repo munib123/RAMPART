@@ -31,6 +31,13 @@ async def lifespan(app: FastAPI):
         joern_scan.warm()
     except Exception as e:
         print(f"[joern] warm-up skipped: {type(e).__name__}: {e}")
+    # P4: bring the database forward (backend/db/migrations). Best-effort: a DB that is
+    # unreachable at boot just means persistence fails later with its own error, as before.
+    if db.enabled():
+        try:
+            await db.migrate()
+        except Exception as e:
+            print(f"[db] migration skipped: {type(e).__name__}: {e}")
     yield
     try:
         from app.services.joern import server as joern_server

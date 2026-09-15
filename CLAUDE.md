@@ -66,7 +66,8 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   arbitrary local path. Restrict to `localhost:5173`, `127.0.0.1:5173`, `tauri://localhost`.
 - `config.SEMGREP_CONFIG` is declared, never imported; semgrep runs `--config auto` (network fetch
   per scan, ~140 s, non-reproducible). Vendor and pin a rules dir.
-- `HealthContext` fetches once and never refetches; backend availability in the SPA goes stale.
+- `HealthContext` refetches on window focus and polls while the Joern sidecar is starting (P4);
+  there is still no periodic poll, so a backend that dies mid-session is noticed on the next focus.
 - `schema.sql` disables RLS by design — never expose these tables to Supabase anon/authenticated.
   (`findings.code_slice` is deliberately **not** written; code never reaches the DB.)
 - **Joern/CPG is BACK (2026-09-15, Day 1 of `docs/JOERN_PLAN.md`).** `backend/app/services/joern/`
@@ -88,7 +89,13 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   (`JOERN_SERVER=off|auto`, `JOERN_SERVER_WAIT`). `/query-sync` says `success` even on compile
   errors - `evaluation_failed()` parses stdout. `SHIFTLEFT_OCULAR_INSTALL_DIR` must be set or
   `importCode` NPEs in server mode. Log: `bench/runs/2026-09-15-p3-server.md`; tests
-  `backend/tests/test_joern.py` (no JVM). Next: P4 persistence + UI provenance.
+  `backend/tests/test_joern.py` (no JVM). **P4 done:** `backend/db/migrations/0002_joern.sql`
+  (`findings.tool`, `scans.joern`, `tool_stats` view) applied at start-up by `db.migrate()` (also
+  `python -m app.db`; `schema_migrations` table; fresh DB gets `schema.sql` as 0001). asyncpg pool
+  now has a jsonb codec (before it, `scans.counts` reached the UI as a string). UI: `+ CPG` pill and
+  callout in `SummaryCard`, `CPG` badge in `FindingCard`, CPG state note on Setup (`utils/joern.ts`),
+  `+ CPG n` in History, `HealthContext` polls while the sidecar is starting and refetches on focus.
+  `GET /api/research/tools`. Next: P5 vocabulary packs as data.
   Gemini key is in `.env` (pasted in chat 2026-09-15 - rotate it).
   Open: the `full` arm Confirmed the find_product bait; extract.py gives module-level findings
   a slice that reaches into the next function. A second process on the same machine cannot bind
