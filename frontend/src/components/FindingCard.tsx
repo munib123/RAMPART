@@ -4,7 +4,7 @@ import { Icon } from '@/components/Icons';
 import Collapsible from '@/components/Collapsible';
 import FixPanel from '@/components/FixPanel';
 import { ExemplarCard } from '@/components/ExemplarCard';
-import { cpgRuleName, isCpg } from '@/utils/joern';
+import { cpgProvenance, cpgRuleName, isCpg } from '@/utils/joern';
 import type { Finding } from '@/types';
 
 export default function FindingCard({ f, scanId, target, onApplied, onReverted }: { f: Finding; scanId?: string; target?: string; onApplied?: () => void; onReverted?: () => void }) {
@@ -36,7 +36,7 @@ export default function FindingCard({ f, scanId, target, onApplied, onReverted }
     <article className={'card finding' + (cpg ? ' is-cpg' : '')} data-tool={f.tool || ''}>
       <div className="fhead">
         <span className={'pill sev-' + esc(f.severity)}>{cap(f.severity || '')}</span>
-        {cpg && <span className="pill mono cpg" title={'Located by Joern CPG analysis · ' + cpgRuleName(f.rule_id)}>CPG</span>}
+        {cpg && <span className="pill mono cpg" title={['Located by Joern CPG analysis', cpgRuleName(f.rule_id), cpgProvenance(f)].filter(Boolean).join(' · ')}>CPG</span>}
         <span className="pill mono">{f.cwe_id || 'no CWE'}</span>
         <span className="pill mono" title={esc(f.rule_id)}>{ruleShort || ''}</span>
         <span className="floc">{loc}</span>

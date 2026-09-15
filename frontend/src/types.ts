@@ -99,6 +99,8 @@ export interface Finding {
   slice?: Slice;
   exemplars?: Exemplar[];
   verdict?: Verdict;
+  /** engine provenance; joern: { pack: "<id>@<sha12>", slots: "slot=value;..." } */
+  meta?: { pack?: string; slots?: string };
 }
 
 /** Per-rule outcome of one Joern run (server mode compiles each rule separately). */
@@ -121,6 +123,26 @@ export interface JoernInfo {
   methods_seen?: number;
   methods_threw?: number;
   rule_state?: Record<string, JoernRuleState>;
+  /** P5: which vocabulary pack the rules read for this scan */
+  pack?: JoernPackInfo;
+}
+
+export interface JoernPackInfo {
+  requested?: string;       // JOERN_PACK / --pack (auto | id | path)
+  resolved?: string;        // what auto-detection chose
+  reason?: string;          // "flask in project metadata" | "requested" | ...
+  id?: string | null;       // the pack actually used (after any fallback)
+  sha256?: string | null;
+  tag?: string;             // "<id>@<sha12>"
+  chain?: string[];         // composition chain, e.g. ["_base", "flask-sqlite3"]
+  authored_from?: string;   // hand_written | framework_docs | testbed_source
+  listed?: boolean;
+  unlisted?: boolean;
+  fallback?: string;        // why the requested pack was rejected (then id is _base)
+  loaded?: string;          // what the JVM reports it read
+  source?: string;          // "pack" | "base_fallback:<reason>"
+  values?: number;
+  error?: string;
 }
 
 export interface ScanCounts {

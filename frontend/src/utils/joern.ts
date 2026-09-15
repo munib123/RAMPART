@@ -44,6 +44,15 @@ export function joernStatus(health: Health | null | undefined): JoernStatus {
 
 export const isCpg = (f: Finding): boolean => f.tool === 'joern';
 
+/** "pack flask-sqlite3 · fired on id_param_suffix=_id, orm_read_calls=fetchone" - for the badge tooltip. */
+export function cpgProvenance(f: Finding): string {
+  const m = f.meta || {};
+  const parts: string[] = [];
+  if (m.pack) parts.push('vocabulary pack ' + m.pack.split('@')[0]);
+  if (m.slots) parts.push('fired on ' + m.slots.split(';').filter(Boolean).join(', '));
+  return parts.join(' · ');
+}
+
 /** Human-readable name of the locator rule, for the CPG badge tooltip. */
 export function cpgRuleName(ruleId?: string): string {
   const r = String(ruleId || '');
@@ -64,6 +73,8 @@ export interface CpgSummary {
   elapsedS: string;
   reason: string;           // why the phase did not run (when !used)
   broken: string[];         // rules whose state is not "ok"
+  pack: string;             // pack id the rules read ('' when unknown)
+  packNote: string;         // "" | "requested pack X rejected, used _base" | "unlisted pack"
 }
 
 /** The numbers the summary callout shows: "N of these came from Joern CPG analysis, M confirmed". */
@@ -81,5 +92,9 @@ export function cpgSummary(joern: JoernInfo | undefined, findings: Finding[]): C
     elapsedS: joern?.elapsed_ms != null ? (joern.elapsed_ms / 1000).toFixed(1) : '',
     reason: joern?.reason || joern?.error || '',
     broken: Object.keys(rs).filter((k) => rs[k] && rs[k].state !== 'ok').map((k) => k.replace(/^joern-/, '')),
+    pack: joern?.pack?.id || '',
+    packNote: joern?.pack?.fallback
+      ? `requested pack ${joern.pack.resolved || joern.pack.requested} was rejected, used _base`
+      : joern?.pack?.unlisted ? 'unlisted (authoring) pack' : '',
   };
 }

@@ -20,7 +20,7 @@ from app.services.joern import server as joern_server      # noqa: E402
 
 # ---- rules file sectioning ------------------------------------------------------------
 
-REQUIRED_KINDS = ["prelude", "import", "context", "rule", "rule", "rule", "rule", "finish"]
+REQUIRED_KINDS = ["prelude", "import", "vocab", "context", "rule", "rule", "rule", "rule", "finish"]
 
 
 def test_rules_file_sections_in_order():

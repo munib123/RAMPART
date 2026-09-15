@@ -41,7 +41,7 @@ export default function SummaryCard({ r }: { r: ScanReport }) {
   // Provenance: the CPG phase ran alongside the scanner (additive, never an alternative).
   const cpg = cpgSummary(r.joern, findings);
   const cpgPill = cpg.used
-    ? `<span class="pill mono cpg sm" title="Joern CPG phase ran in ${esc(cpg.mode || 'script')} mode${cpg.elapsedS ? ' · ' + esc(cpg.elapsedS) + 's' : ''}">+ CPG</span>`
+    ? `<span class="pill mono cpg sm" title="Joern CPG phase ran in ${esc(cpg.mode || 'script')} mode${cpg.elapsedS ? ' · ' + esc(cpg.elapsedS) + 's' : ''}${cpg.pack ? ' · vocabulary pack ' + esc(cpg.pack) : ''}">+ CPG</span>`
     : '';
   const pills = `<span class="pill mono sm">${esc(r.scanner || '')}</span>${cpgPill}${modelPill}<span class="pill mono sm">${esc(String(r.elapsed_s ?? ''))}s</span>`;
 
@@ -60,6 +60,7 @@ export default function SummaryCard({ r }: { r: ScanReport }) {
       cpgNote = { cls: 'quiet', text: 'Joern CPG analysis ran and located no logic-bug candidates (IDOR, mass assignment, unchecked quantity, TOCTOU).' };
     }
     if (cpg.broken.length) cpgNote.text += ` Rule${cpg.broken.length === 1 ? '' : 's'} ${cpg.broken.join(', ')} did not run.`;
+    if (cpg.pack) cpgNote.text += ` Vocabulary: ${cpg.pack}${cpg.packNote ? ' (' + cpg.packNote + ')' : ''}.`;
   } else if (cpg.reason) {
     cpgNote = { cls: 'quiet', text: `CPG phase skipped: ${cpg.reason}.` };
   }

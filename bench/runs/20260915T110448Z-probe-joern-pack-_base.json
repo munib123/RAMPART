@@ -1,0 +1,200 @@
+{
+ "run_id": "20260915T110448Z-probe-joern-pack-_base",
+ "benchmark": "probe",
+ "backend": "joern",
+ "pack_arg": "_base",
+ "verdict_gated": false,
+ "elapsed_s": 34.9,
+ "fingerprint": {
+  "backend": "joern",
+  "rampart_git_sha": "99d1f06b",
+  "joern_version": "4.0.589",
+  "mode": "script",
+  "java_major": 21,
+  "rules_file": "locators.sc",
+  "rules_sha256": "d57bc22371f7254f",
+  "pack": {
+   "requested": "_base",
+   "resolved": "_base",
+   "reason": "requested",
+   "listed": true,
+   "id": "_base",
+   "sha256": "88796c2a63cddc41b434f16519bd206c926d141c219a01a2734855103fba5a7e",
+   "chain": [
+    "_base"
+   ],
+   "authored_from": "hand_written",
+   "unlisted": false,
+   "values": 82,
+   "tag": "_base@88796c2a63cd",
+   "loaded": "_base",
+   "source": "pack"
+  },
+  "diag": {
+   "used": true,
+   "reason": "",
+   "elapsed_ms": 20261,
+   "candidates": 5,
+   "rules_file": "locators.sc",
+   "mode": "script",
+   "target": "D:\\d\\RAMPART\\testbeds\\probe",
+   "pack": {
+    "requested": "_base",
+    "resolved": "_base",
+    "reason": "requested",
+    "listed": true,
+    "id": "_base",
+    "sha256": "88796c2a63cddc41b434f16519bd206c926d141c219a01a2734855103fba5a7e",
+    "chain": [
+     "_base"
+    ],
+    "authored_from": "hand_written",
+    "unlisted": false,
+    "values": 82,
+    "tag": "_base@88796c2a63cd",
+    "loaded": "_base",
+    "source": "pack"
+   },
+   "methods_seen": 7,
+   "methods_threw": 0,
+   "rule_state": {
+    "joern-idor-missing-ownership": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-mass-assignment": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-unchecked-quantity": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-toctou-check-then-write": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    }
+   }
+  }
+ },
+ "key": {
+  "version": "probe-key-v1",
+  "rows": 7,
+  "usable": 7,
+  "accepted": 0,
+  "proposed": 7
+ },
+ "score": {
+  "tp": 5,
+  "fn": 0,
+  "fp": 0,
+  "bait_fp": 0,
+  "tn": 2,
+  "cleared": 0,
+  "unresolvable_keys": 0,
+  "reachable_tp": 5,
+  "reachable_fn": 0,
+  "vuln_rows": 5,
+  "safe_rows": 2,
+  "candidates": 5,
+  "reported": 5,
+  "matched_keys": [
+   2,
+   3,
+   5,
+   6,
+   7
+  ],
+  "missed_keys": [],
+  "recall": 1.0,
+  "reachable_recall": 1.0,
+  "precision": 1.0,
+  "f1": 1.0
+ },
+ "candidates": [
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\probe\\views_abort.py",
+   "line": 6,
+   "end_line": 6,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "rel_path": "views_abort.py",
+   "function": "invoice_detail",
+   "family": "authz",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 5
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\probe\\views_authn.py",
+   "line": 8,
+   "end_line": 8,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "rel_path": "views_authn.py",
+   "function": "order_detail",
+   "family": "authz",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 2
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\probe\\views_decorator.py",
+   "line": 10,
+   "end_line": 10,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "rel_path": "views_decorator.py",
+   "function": "get_note",
+   "family": "authz",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 7
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "D:\\d\\RAMPART\\testbeds\\probe\\views_allowlist.py",
+   "line": 7,
+   "end_line": 7,
+   "cwe_id": "CWE-915",
+   "verdict": null,
+   "confidence": null,
+   "rel_path": "views_allowlist.py",
+   "function": "update_settings",
+   "family": "mass-assign",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 6
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-toctou-check-then-write",
+   "path": "D:\\d\\RAMPART\\testbeds\\probe\\views_docstring.py",
+   "line": 5,
+   "end_line": 5,
+   "cwe_id": "CWE-362",
+   "verdict": null,
+   "confidence": null,
+   "rel_path": "views_docstring.py",
+   "function": "reserve_stock",
+   "family": "race",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 3
+  }
+ ]
+}

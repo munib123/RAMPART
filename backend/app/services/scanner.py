@@ -13,7 +13,7 @@ import json
 import shutil
 import subprocess
 import sys
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -30,6 +30,10 @@ class Finding:
     confidence: str        # low | medium | high
     cwe_id: str            # "CWE-89" or ""
     message: str
+    # engine-specific provenance that is not part of the finding's identity. Joern (P5) puts
+    # {"pack": "<id>@<sha12>", "slots": "slot=value;..."} here: which vocabulary pack, and which
+    # entry made the rule fire. Pattern scanners leave it empty.
+    meta: dict = field(default_factory=dict)
     def to_dict(self):
         return asdict(self)
 

@@ -95,7 +95,14 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   now has a jsonb codec (before it, `scans.counts` reached the UI as a string). UI: `+ CPG` pill and
   callout in `SummaryCard`, `CPG` badge in `FindingCard`, CPG state note on Setup (`utils/joern.ts`),
   `+ CPG n` in History, `HealthContext` polls while the sidecar is starting and refetches on focus.
-  `GET /api/research/tools`. Next: P5 vocabulary packs as data.
+  `GET /api/research/tools`. **P5 done (infra):** `joern/vocab/` - `schema.json` (18 slots x 7
+  sinks, per-sink character class, no regex sink), `validate.py` (caps 8 KB / 64 per slot, cross-slot
+  rules, union composition, canonical sha256, `packs/digests.json` allowlist, framework detection),
+  `packs/_base.json` (= pre-P5 Scala vals) + `packs/flask-sqlite3.json`. `locators.sc` reads the
+  pack via `ujson` in `// @@ vocab`; findings carry `meta.pack` + `meta.slots`; `diag.pack` persists in
+  `scans.joern`; `bench.run --pack`. `_base` == `flask-sqlite3` on shopfast/probe (4/1, 5/0/2).
+  **`django.json` is deliberately absent** until the Django testbed is frozen (P6 held-out protocol).
+  Edit a pack → `python -m app.services.joern.vocab.validate --freeze` or tests fail. Next: P6.
   Gemini key is in `.env` (pasted in chat 2026-09-15 - rotate it).
   Open: the `full` arm Confirmed the find_product bait; extract.py gives module-level findings
   a slice that reaches into the next function. A second process on the same machine cannot bind

@@ -22,6 +22,7 @@ Run from the repo root with the backend venv:
 ```bash
 backend\.venv\Scripts\python.exe -m bench.validate_key shopfast --check
 backend\.venv\Scripts\python.exe -m bench.run --backend joern  --benchmark shopfast
+backend\.venv\Scripts\python.exe -m bench.run --backend joern  --benchmark shopfast --pack _base   # vocabulary ablation
 backend\.venv\Scripts\python.exe -m bench.run --backend bandit --benchmark shopfast
 backend\.venv\Scripts\python.exe -m bench.run --backend full   --benchmark shopfast --scanner bandit
 backend\.venv\Scripts\python.exe -m bench.report --latest

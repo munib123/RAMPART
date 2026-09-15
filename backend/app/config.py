@@ -53,6 +53,12 @@ JOERN_LLM_QUOTA   = int(os.environ.get("JOERN_LLM_QUOTA", "20").strip() or 20)
 JOERN_SERVER      = os.environ.get("JOERN_SERVER", "auto").strip()          # auto | on | off
 JOERN_SERVER_PORT = int(os.environ.get("JOERN_SERVER_PORT", "8091").strip() or 8091)
 JOERN_SERVER_WAIT = float(os.environ.get("JOERN_SERVER_WAIT", "0").strip() or 0)   # s a scan waits for a starting server
+# P5: which vocabulary pack the locator rules read. auto = detect the framework from the target
+# (django -> django, flask -> flask-sqlite3, else _base); or a shipped pack id / path to a .json.
+JOERN_PACK        = os.environ.get("JOERN_PACK", "auto").strip() or "auto"
+# an unlisted pack (digest not in vocab/packs/digests.json) loads only when this is set - for
+# authoring; the scan diag marks it `unlisted`
+JOERN_PACK_ALLOW_UNLISTED = os.environ.get("JOERN_PACK_ALLOW_UNLISTED", "").strip().lower() in ("1", "true", "yes")
 
 # --- Supabase / Postgres ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()

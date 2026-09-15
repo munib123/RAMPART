@@ -1,0 +1,50 @@
+{
+  "$comment": "RAMPART vocabulary-pack grammar (P5, docs/JOERN_PLAN.md; TDD 8.8 / decision D7). A pack is DATA the hand-written Scala in rules/locators.sc reads with ujson after importCode. The LLM may author a pack offline from framework documentation; it never writes Scala and never runs on the detection path. Every slot declares the SINK its values flow into, and the validator enforces a different character class per sink, so a value meant for String.contains can never reach a name accessor (which treats its argument as a regex) and no value can reach Scala as code. There is no regex sink and no raw-Scala escape hatch. A pack that breaks any rule is discarded whole and the scan falls back to _base.",
+  "schema_version": 1,
+  "limits": {
+    "max_pack_bytes": 8192,
+    "max_values_per_slot": 64,
+    "max_extends_depth": 3,
+    "$comment": "8 KB and 64/slot per the plan (TDD 8.8 says 256 KiB / 256; the tighter bound wins). Caps exist so a pack cannot flood the guard lists (suppressing every real bug) or the token blob (denial of service)."
+  },
+  "sinks": {
+    "call_name":    {"matched_by": "cpg.call.nameExact(v) - exact, case-sensitive call name", "pattern": "^[A-Za-z_][A-Za-z0-9_]{1,63}$", "min_len": 2, "case": "any"},
+    "param_exact":  {"matched_by": "parameter name == v (names lowercased first)",           "pattern": "^[a-z_][a-z0-9_]{1,63}$",       "min_len": 2, "case": "lower"},
+    "param_suffix": {"matched_by": "parameter name endsWith v (names lowercased first)",     "pattern": "^_?[a-z0-9_]{1,31}$",            "min_len": 2, "case": "lower"},
+    "exec_sql_kw":  {"matched_by": "execute(...) call code, upper-cased, contains v",         "pattern": "^[A-Z]{3,16}$",                  "min_len": 3, "case": "upper"},
+    "token":        {"matched_by": "operator operand code, lower-cased, contains v",          "pattern": "^[a-z][a-z0-9_]{2,31}$",         "min_len": 3, "case": "lower"},
+    "signal_text":  {"matched_by": "calls + literals + identifiers of the method, lower-cased, joined by 3 spaces, contains v", "pattern": "^[ !-#%-\\[\\]-_a-~]{3,48}$", "min_len": 3, "case": "lower", "forbidden_chars": "\\`$"},
+    "guard_text":   {"matched_by": "calls + identifiers of the method (NO literals), lower-cased, joined by 3 spaces, contains v; also the module-scope decorator call that wraps the method", "pattern": "^[ !-#%-\\[\\]-_a-~]{3,48}$", "min_len": 3, "case": "lower", "forbidden_chars": "\\`$"}
+  },
+  "slots": {
+    "authz_guard":        {"sink": "guard_text",   "used_by": ["joern-idor-missing-ownership"], "meaning": "proves the caller may touch THIS record; its presence suppresses the IDOR candidate"},
+    "authn_only":         {"sink": "guard_text",   "used_by": ["joern-idor-missing-ownership"], "meaning": "proves only that the caller is logged in; never suppresses - becomes AUTHENTICATED_NOT_AUTHORIZED evidence for the LLM"},
+    "lock_guard":         {"sink": "guard_text",   "used_by": ["joern-toctou-check-then-write"], "meaning": "a lock / atomic transaction around the check-then-write"},
+    "allowlist_guard":    {"sink": "guard_text",   "used_by": ["joern-mass-assignment"], "meaning": "an allow-list of writable fields, named for what it is (never syntax like ' in [')"},
+    "positive_guard":     {"sink": "guard_text",   "used_by": ["joern-unchecked-quantity"], "meaning": "a lower-bound guard on a quantity"},
+    "mass_assign_signal": {"sink": "signal_text",  "used_by": ["joern-mass-assignment"], "meaning": "the caller-supplied mapping being written wholesale"},
+    "qty_terms":          {"sink": "token",        "used_by": ["joern-unchecked-quantity", "joern-toctou-check-then-write"], "meaning": "names of a count-like operand (qty, stock)"},
+    "price_terms":        {"sink": "token",        "used_by": ["joern-unchecked-quantity", "joern-toctou-check-then-write"], "meaning": "names of a money-like operand (price, balance); disjoint from qty_terms"},
+    "orm_read_calls":     {"sink": "call_name",    "used_by": ["joern-idor-missing-ownership"], "meaning": "a single-record read (the IDOR sink)"},
+    "dyn_write_calls":    {"sink": "call_name",    "used_by": ["joern-mass-assignment"], "meaning": "a dynamic attribute write (setattr)"},
+    "mapping_iter_calls": {"sink": "call_name",    "used_by": ["joern-mass-assignment"], "meaning": "iterating a mapping's entries"},
+    "commit_calls":       {"sink": "call_name",    "used_by": ["joern-toctou-check-then-write"], "meaning": "a transaction commit (a write)"},
+    "exec_calls":         {"sink": "call_name",    "used_by": ["joern-idor-missing-ownership", "joern-mass-assignment", "joern-toctou-check-then-write"], "meaning": "raw SQL execution; its code is searched for the exec_sql_kw slots"},
+    "sql_read_kw":        {"sink": "exec_sql_kw",  "used_by": ["joern-idor-missing-ownership"], "meaning": "SQL keyword of a read"},
+    "sql_write_kw":       {"sink": "exec_sql_kw",  "used_by": ["joern-mass-assignment", "joern-toctou-check-then-write"], "meaning": "SQL keyword of an insert/update"},
+    "sql_delete_kw":      {"sink": "exec_sql_kw",  "used_by": ["joern-toctou-check-then-write"], "meaning": "SQL keyword of a delete"},
+    "id_param_exact":     {"sink": "param_exact",  "used_by": ["joern-idor-missing-ownership"], "meaning": "a parameter that IS an object id"},
+    "id_param_suffix":    {"sink": "param_suffix", "used_by": ["joern-idor-missing-ownership"], "meaning": "a parameter whose name ends like an object id"}
+  },
+  "cross_slot_rules": [
+    "no authz_guard value may occur as a substring of any authn_only value (an authn construct would then satisfy the authz guard and silence IDOR)",
+    "qty_terms and price_terms are disjoint",
+    "text-sink values (token, signal_text, guard_text) must already be lower-case: matching is done on lower-cased text, so an upper-case value could never match and would be a silent no-op",
+    "exec_sql_kw values must be upper-case for the same reason (matched against upper-cased code)",
+    "values are de-duplicated and sorted before hashing, so pack composition is order-independent",
+    "every slot in this schema must be present in the effective (composed) pack; an unknown slot name or a sink that differs from the schema's is a validation error"
+  ],
+  "composition": "A pack may name one parent in `extends`; the effective pack is the union of parent and child values per slot (a child can only ADD). The parent chain resolves inside packs/ only, at most max_extends_depth deep. `_base` has no parent and holds exactly the token lists the rules were measured with before P5.",
+  "provenance": "`authored_from` is `hand_written` or `framework_docs`. A pack authored from testbed source is a held-out-protocol violation and must say `testbed_source` so the run log shows it. `transcript` names the committed authoring transcript for LLM-drafted packs.",
+  "allowlist": "packs/digests.json maps pack id -> sha256 of the canonical effective pack. A shipped pack whose digest is not listed is refused (T-10); an unlisted pack loads only under an explicit allow flag and is marked `unlisted` in the scan diag. Refresh with: python -m app.services.joern.vocab.validate --freeze"
+}

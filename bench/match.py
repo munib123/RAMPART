@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import ast
 import json
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
@@ -119,6 +119,7 @@ class Candidate:
     cwe_id: str
     verdict: Optional[str] = None      # None = backend produces no verdicts
     confidence: Optional[int] = None
+    meta: dict = field(default_factory=dict)   # engine provenance (joern: pack tag + slot trace)
     # filled by the matcher
     rel_path: str = ""
     function: str = ""

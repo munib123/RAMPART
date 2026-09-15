@@ -20,6 +20,13 @@ Two execution modes (P3):
            process; a compile error in one rule costs that rule only.
   script   one `joern --script` per scan. The fallback whenever the server is not ready.
 Both produce the same findings.tsv + diag.json and go through the same _collect().
+
+Vocabulary packs (P5): the rules file holds the four rule SHAPES; the token lists (what an
+ownership check, a lock, an allow-list or an object id looks like) come from a JSON pack under
+vocab/packs/, chosen per target (JOERN_PACK=auto detects flask / django from the target). The
+pack is validated against vocab/schema.json here, in Python, before anything reaches the JVM;
+an invalid or unlisted pack falls back to _base and the diag says so. The Scala is frozen and
+hashed, the pack is hashed separately, and both hashes travel with every finding.
 """
 from __future__ import annotations
 
@@ -36,6 +43,7 @@ from typing import Optional
 from app import config
 from app.services.scanner import Finding
 from app.services.joern import runtime, server
+from app.services.joern.vocab import validate as vocab
 
 HERE = Path(__file__).resolve().parent
 RULES = HERE / "rules" / "locators.sc"
@@ -129,6 +137,12 @@ def _parse_tsv(text: str, input_dir: str) -> list[Finding]:
         if len(parts) < 8:
             continue
         cwe, sev, rel_file, line, method, rule, message, evidence = parts[:8]
+        # columns 9-10 (P5): pack tag and slot trace - provenance, optional
+        meta = {}
+        if len(parts) > 8 and parts[8]:
+            meta["pack"] = parts[8]
+        if len(parts) > 9 and parts[9]:
+            meta["slots"] = parts[9]
         try:
             ln = int(line)
         except ValueError:
@@ -146,6 +160,7 @@ def _parse_tsv(text: str, input_dir: str) -> list[Finding]:
             confidence="medium",
             cwe_id=cwe,
             message=msg,
+            meta=meta,
         ))
     return out
 
@@ -164,13 +179,46 @@ def _sections(rendered: str) -> list[tuple[str, str, str]]:
     return out
 
 
-def _render(input_dir: str, out_file: Path, diag_file: Path, proj: str) -> str:
+def _render(input_dir: str, out_file: Path, diag_file: Path, proj: str,
+            pack_file: Path | None = None, pack_tag: str = "") -> str:
     fwd = lambda p: str(p).replace("\\", "/")
+    base = vocab.pack_path(vocab.BASE_ID)
     return (RULES.read_text(encoding="utf-8")
             .replace("__INPUT_DIR__", fwd(input_dir))
             .replace("__OUT_FILE__", fwd(out_file))
             .replace("__DIAG_FILE__", fwd(diag_file))
-            .replace("__PROJECT__", proj))
+            .replace("__PROJECT__", proj)
+            .replace("__PACK_FILE__", fwd(pack_file if pack_file is not None else base))
+            .replace("__BASE_PACK_FILE__", fwd(base))
+            .replace("__PACK_TAG__", pack_tag))
+
+
+def prepare_pack(target: str, requested: str | None = None, tmp: Path | None = None) -> tuple[Path | None, dict]:
+    """Choose, validate and materialise the vocabulary pack for one scan.
+    Returns (path to the composed pack json written under tmp, info for the diag). Never raises:
+    an invalid/unlisted/missing pack falls back to _base and the reason is in info['fallback'].
+    The Scala reads the COMPOSED form (parent values already merged), so what is hashed is what
+    runs."""
+    req = requested if requested is not None else getattr(config, "JOERN_PACK", "auto")
+    chosen, why = vocab.resolve(target, req)
+    allow = bool(getattr(config, "JOERN_PACK_ALLOW_UNLISTED", False))
+    eff, li = vocab.load(chosen, allow_unlisted=allow)
+    info = {"requested": req, "resolved": chosen, "reason": why, "listed": li.get("listed", False)}
+    if eff is None:
+        info["fallback"] = "; ".join(li.get("errors") or ["unknown error"])[:300]
+        eff, li = vocab.load(vocab.BASE_ID, allow_unlisted=True)
+        if eff is None:                                  # _base itself broken: installation error
+            info.update(id=None, sha256=None, error="; ".join(li.get("errors") or []))
+            return None, info
+    info.update(id=eff["pack_id"], sha256=li["sha256"], chain=eff.get("chain"),
+                authored_from=eff.get("authored_from"), unlisted=not li.get("listed", False),
+                values=sum(len(b["values"]) for b in eff["slots"].values()))
+    info["tag"] = f"{eff['pack_id']}@{li['sha256'][:12]}"
+    if tmp is None:
+        return None, info
+    pf = tmp / "pack.json"
+    pf.write_bytes(vocab.canonical(eff))
+    return pf, info
 
 
 def _collect(out_file: Path, diag_file: Path, input_dir: str, diag: dict,
@@ -183,6 +231,8 @@ def _collect(out_file: Path, diag_file: Path, input_dir: str, diag: dict,
             d = json.loads(diag_file.read_text(encoding="utf-8"))
             rule_state = d.get("rule_state", {})
             diag.update(methods_seen=d.get("methods_seen"), methods_threw=d.get("methods_threw"))
+            if "pack_loaded" in d:                       # what the JVM actually read (P5)
+                diag.setdefault("pack", {}).update(loaded=d.get("pack_loaded"), source=d.get("pack_source"))
         except Exception as e:                        # a bad diag must not hide good findings
             diag["diag_error"] = f"{type(e).__name__}: {e}"
     # server mode: a rule whose section failed to COMPILE never ran; say so precisely
@@ -242,9 +292,10 @@ def _run_server(srv, rendered: str, proj: str, out_file: Path,
         srv.query('delete("' + proj + '")', timeout=60)
 
 
-def scan(path: str) -> tuple[list[Finding], dict]:
+def scan(path: str, pack: str | None = None) -> tuple[list[Finding], dict]:
     """Build a CPG for `path` and return (candidates, diag). Never raises.
-    Uses the server sidecar when it is up (P3), else one `joern --script` per scan."""
+    Uses the server sidecar when it is up (P3), else one `joern --script` per scan.
+    `pack` overrides JOERN_PACK for this scan (bench --pack); None means the config value."""
     t0 = time.time()
     diag: dict = {"used": False, "reason": "", "elapsed_ms": 0, "candidates": 0,
                   "rules_file": RULES.name, "mode": "script"}
@@ -262,7 +313,15 @@ def scan(path: str) -> tuple[list[Finding], dict]:
     compile_errors: dict = {}
 
     try:
-        rendered = _render(input_dir, out_file, diag_file, proj)
+        pack_file, pack_info = prepare_pack(input_dir, pack, tmp)
+        diag["pack"] = pack_info
+        if pack_file is None:
+            diag["reason"] = "vocabulary pack unavailable: " + str(pack_info.get("error"))
+            print(f"[joern] {diag['reason']}")
+            return [], diag
+        if pack_info.get("fallback"):
+            print(f"[joern]     pack '{pack_info['resolved']}' rejected -> _base: {pack_info['fallback'][:120]}")
+        rendered = _render(input_dir, out_file, diag_file, proj, pack_file, pack_info["tag"])
         err: Optional[str] = None
         srv = server.ready(wait=float(getattr(config, "JOERN_SERVER_WAIT", 0)))
         if srv is not None:
@@ -282,7 +341,7 @@ def scan(path: str) -> tuple[list[Finding], dict]:
             return [], diag
         out = _collect(out_file, diag_file, input_dir, diag, compile_errors)
         print(f"[joern] ok - {len(out)} candidate(s) from {input_dir} "
-              f"in {time.time() - t0:.1f}s [{diag['mode']}]")
+              f"in {time.time() - t0:.1f}s [{diag['mode']}, pack {pack_info['tag']}]")
         diag.update(used=True, candidates=len(out))
         return out, diag
     except subprocess.TimeoutExpired:

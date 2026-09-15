@@ -13,6 +13,10 @@ Registry:
     semgrep   app.services.scanner.SemgrepScanner
     joern     app.services.joern.scan - the CPG locator alone, no LLM   (the joern_only arm)
     full      app.services.pipeline.run_scan - everything, verdict-gated
+
+Vocabulary packs (P5): `--pack <id>` pins the pack for the joern and full arms; the pack id and
+its sha256 go into the fingerprint next to rules_sha256, so `--pack _base` vs `--pack X` on one
+benchmark is the no_vocab_pack ablation with everything else frozen.
 """
 from __future__ import annotations
 
@@ -69,7 +73,7 @@ def _from_findings(findings) -> list[Candidate]:
         d = f.to_dict() if hasattr(f, "to_dict") else dict(f)
         out.append(Candidate(tool=d["tool"], rule_id=d["rule_id"], path=d["path"],
                              line=int(d["line"]), end_line=int(d.get("end_line") or d["line"]),
-                             cwe_id=d.get("cwe_id", "")))
+                             cwe_id=d.get("cwe_id", ""), meta=dict(d.get("meta") or {})))
     return out
 
 
@@ -112,6 +116,9 @@ class JoernBackend(LocatorBackend):
     intended (find_product) and the number the full arm is expected to drive to zero."""
     name = "joern"
 
+    def __init__(self, pack: str | None = None):
+        self.pack = pack
+
     def locate(self, target_dir: str) -> list[Candidate]:
         from app.services.joern import scan as joern_scan, server as joern_server
         ok, why = joern_scan.enabled(target_dir)
@@ -123,7 +130,7 @@ class JoernBackend(LocatorBackend):
         srv = joern_server.ensure_started()
         if srv is not None:
             srv.wait_ready(120)
-        findings, diag = joern_scan.scan(target_dir)
+        findings, diag = joern_scan.scan(target_dir, pack=self.pack)
         self._diag = diag
         return _from_findings(findings)
 
@@ -136,6 +143,7 @@ class JoernBackend(LocatorBackend):
                 "java_major": info.java_major,
                 "rules_file": joern_scan.RULES.name,
                 "rules_sha256": _sha256_file(joern_scan.RULES),
+                "pack": getattr(self, "_diag", {}).get("pack"),
                 "diag": getattr(self, "_diag", {})}
 
 
@@ -147,10 +155,13 @@ class FullBackend(LocatorBackend):
     name = "full"
     verdict_gated = True
 
-    def __init__(self, scanner: str = "auto", scope: dict | None = None):
+    def __init__(self, scanner: str = "auto", scope: dict | None = None, pack: str | None = None):
         self.scanner = scanner
         self.scope = scope or {"platform": "ecommerce", "stack": ["python"],
                                "priorities": ["access-control", "injection"]}
+        if pack:                                        # pipeline reads config; pin it for this run
+            from app import config
+            config.JOERN_PACK = pack
 
     def locate(self, target_dir: str) -> list[Candidate]:
         from app.services import pipeline
@@ -164,7 +175,7 @@ class FullBackend(LocatorBackend):
             out.append(Candidate(tool=f["tool"], rule_id=f["rule_id"], path=f["path"],
                                  line=int(f["line"]), end_line=int(f.get("end_line") or f["line"]),
                                  cwe_id=f.get("cwe_id", ""), verdict=v.get("verdict"),
-                                 confidence=v.get("confidence")))
+                                 confidence=v.get("confidence"), meta=dict(f.get("meta") or {})))
         return out
 
     def fingerprint(self) -> dict:
@@ -175,8 +186,11 @@ class FullBackend(LocatorBackend):
               "rules_sha256": _sha256_file(joern_scan.RULES),
               "collections": list(config.COLLECTIONS), "rag_k": config.RAG_K,
               "llm_batch": config.LLM_BATCH, "max_llm_findings": config.MAX_LLM_FINDINGS,
-              "joern_llm_quota": getattr(config, "JOERN_LLM_QUOTA", None)}
+              "joern_llm_quota": getattr(config, "JOERN_LLM_QUOTA", None),
+              "joern_pack_setting": getattr(config, "JOERN_PACK", "auto")}
         fp.update(getattr(self, "_result", {}))
+        if isinstance(fp.get("joern"), dict) and fp["joern"].get("pack"):
+            fp["pack"] = fp["joern"]["pack"]
         return fp
 
 

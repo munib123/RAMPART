@@ -184,10 +184,24 @@ installed) before you scan, and a signed-in scan stores `findings.tool` and `sca
 history and the `tool_stats` research view can separate what Joern located from what the LLM
 proved.
 
+**Vocabulary is data, not code.** The Scala holds the four rule *shapes*; what an ownership
+check, a lock, an allow-list or an object id *looks like* in a given framework comes from a JSON
+vocabulary pack under `backend/app/services/joern/vocab/packs/` (`_base.json` = the built-in
+lists, `flask-sqlite3.json` = the Flask reference pack; `django.json` follows the held-out Django
+testbed). `JOERN_PACK=auto` picks one from the target's `requirements.txt` / imports. Every slot
+declares the sink its values flow into and `vocab/validate.py` enforces a character class per
+sink (no regex sink, no Scala), size and count caps, cross-slot rules and a digest allowlist -
+a pack that breaks any rule is discarded whole and the scan runs on `_base`, saying so. Each
+finding carries `meta.pack` (`<id>@<sha12>`) and `meta.slots` (which vocabulary entries fired),
+so a report can be traced to the exact pack. Validate or re-freeze the digests with
+`python -m app.services.joern.vocab.validate [--freeze]`.
+
 The rules are measured, not trusted: `bench/` holds a line-anchored answer key for
 `testbeds/shopfast` (26 planted bugs, 2 baits) and a per-fix probe suite; run
-`backend\.venv\Scripts\python.exe -m bench.run --backend joern --benchmark shopfast` and see
-`bench/README.md` and `bench/runs/*.md` for the numbers behind every rule change.
+`backend\.venv\Scripts\python.exe -m bench.run --backend joern --benchmark shopfast [--pack _base]`
+and see `bench/README.md` and `bench/runs/*.md` for the numbers behind every rule change.
+`--pack _base` vs `--pack <framework>` on one benchmark is the vocabulary ablation with the
+Scala frozen.
 
 ---
 
@@ -230,7 +244,7 @@ sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
 | Part | File | Notes |
 |---|---|---|
 | Scanner (pluggable) | `backend/app/services/scanner.py` | `auto` = semgrep (multi-language, native venv) when runnable, else bandit (python). Same normalized `Finding` shape either way. |
-| CPG logic-bug locator | `backend/app/services/joern/` | `runtime.py` self-installs JRE 21 + joern-cli under `tools/`; `server.py` keeps one `joern --server` sidecar; `scan.py` runs `rules/locators.sc` (IDOR, mass assignment, unchecked quantity, TOCTOU) and returns candidates + per-rule diag |
+| CPG logic-bug locator | `backend/app/services/joern/` | `runtime.py` self-installs JRE 21 + joern-cli under `tools/`; `server.py` keeps one `joern --server` sidecar; `scan.py` runs `rules/locators.sc` (IDOR, mass assignment, unchecked quantity, TOCTOU) and returns candidates + per-rule diag; `vocab/` = schema-validated vocabulary packs the rules read as data |
 | Code-slice extract | `backend/app/services/extract.py` | containing function (Python AST) or a line window |
 | RAG | `backend/app/services/rag.py` | queries `rampart_hackerone_minilm` + `rampart_nuclei_minilm` Chroma collections, CWE-filtered |
 | LLM verify | `backend/app/services/gemini.py` | Gemini, grounded in exemplars; key from `.env` only. Batch API for ~1 request per scan |
