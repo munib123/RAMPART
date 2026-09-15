@@ -66,10 +66,21 @@ cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m => methodsSee
   val file = m.filename
   val line = m.lineNumber.getOrElse(-1)
   val params = m.parameter.name.l.map(_.toLowerCase)
-  // token blob: every call code + literal + identifier name in the method body, lowercased
-  val blob = (m.ast.isCall.code.l ++ m.ast.isLiteral.code.l ++ m.ast.isIdentifier.name.l)
-    .mkString(" ").toLowerCase
-  def blobHas(toks: List[String]) = toks.exists(blob.contains)
+  // Fix 3: two channels, and the split is load-bearing.
+  //   signalText  calls + literals + identifiers - what the method DOES and mentions
+  //   guardText   calls + identifiers only       - what the method does; NO literals
+  // Guards are tested against guardText, so a docstring or a string constant can never satisfy
+  // one. Shopfast plants business-justification docstrings on purpose ("runs inside a
+  // transaction with a row lock"); before this, "lock" in a docstring suppressed the TOCTOU
+  // rule, and a docstring saying "not authorized" suppressed IDOR via the substring "authorize".
+  // Nodes are joined with a 3-space separator so a token cannot match ACROSS two adjacent nodes.
+  val SEP = "   "
+  val signalText = (m.ast.isCall.code.l ++ m.ast.isLiteral.code.l ++ m.ast.isIdentifier.name.l)
+    .mkString(SEP).toLowerCase
+  val guardText  = (m.ast.isCall.code.l ++ m.ast.isIdentifier.name.l).mkString(SEP).toLowerCase
+  val blob = signalText                                   // signal channel (legacy name)
+  def blobHas(toks: List[String])  = toks.exists(blob.contains)
+  def guardHas(toks: List[String]) = toks.exists(guardText.contains)
 
   val execCode = m.call.name("execute").code.l
   def execHas(kw: String) = execCode.exists(_.toUpperCase.contains(kw))
@@ -81,8 +92,8 @@ cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m => methodsSee
   // filename as a plain string instead. See the equality filter below - do not reintroduce regex.
   val moduleCalls = cpg.method.name("<module>").filter(_.filename == file).call.code.l
     .filter(_.contains(name)).map(_.toLowerCase)
-  val hasAuthz  = blobHas(AUTHZ)      || moduleCalls.exists(c => AUTHZ.exists(c.contains))
-  val authnTok  = (AUTHN_ONLY.filter(blob.contains) ++ AUTHN_ONLY.filter(a => moduleCalls.exists(_.contains(a)))).distinct
+  val hasAuthz  = guardHas(AUTHZ)     || moduleCalls.exists(c => AUTHZ.exists(c.contains))
+  val authnTok  = (AUTHN_ONLY.filter(guardText.contains) ++ AUTHN_ONLY.filter(a => moduleCalls.exists(_.contains(a)))).distinct
   val protectedM = hasAuthz
   // evidence for the verifier: the method is authenticated but nothing in it authorizes the record
   val authnNote = if (authnTok.nonEmpty && !hasAuthz) s" AUTHENTICATED_NOT_AUTHORIZED(${authnTok.mkString(",")})" else ""
@@ -104,7 +115,7 @@ cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m => methodsSee
     val iteratesData = m.call.name("items", "to_dict", "keys", "values").nonEmpty ||
       blobHas(List("request.form", "request.json", "**data", "**request", "**kwargs"))
     val updateWrite = execHas("UPDATE") || execHas("INSERT") || m.call.name("setattr").nonEmpty
-    if (iteratesData && updateWrite && !blobHas(ALLOWLIST)) {
+    if (iteratesData && updateWrite && !guardHas(ALLOWLIST)) {
       val ev = (m.call.name("execute").code.l ++ m.call.name("setattr").code.l).headOption.getOrElse("")
       add("CWE-915", "high", file, line, name, "joern-mass-assignment",
         "Writes every field of a caller-supplied data mapping into a record with no allow-list, so a client can set fields that were never meant to be user-writable (e.g. is_admin, role, balance).", ev)
@@ -116,7 +127,7 @@ cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m => methodsSee
     val qtyMult = m.call.name("<operator>.multiplication").code.exists(c => QTY.exists(c.toLowerCase.contains))
     val posGuard = m.call.name("<operator>.greaterThan", "<operator>.greaterEqualsThan",
       "<operator>.lessThan", "<operator>.lessEqualsThan").code.exists(c => QTY.exists(c.toLowerCase.contains)) ||
-      blobHas(List("max(0", "abs(", "> 0", ">= 0", "> 1"))
+      guardHas(List("max(0", "abs(", "> 0", ">= 0", "> 1"))
     if (qtyMult && !posGuard) {
       val ev = m.call.name("<operator>.multiplication").code.l.headOption.getOrElse("")
       add("CWE-840", "medium", file, line, name, "joern-unchecked-quantity",
@@ -131,7 +142,7 @@ cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m => methodsSee
     val hasCheck = cmpCalls.nonEmpty
     val hasWrite = execHas("UPDATE") || execHas("INSERT") || execHas("DELETE") || m.call.name("commit").nonEmpty
     val checkOnResource = cmpCalls.code.exists(c => QTY.exists(c.toLowerCase.contains))
-    if (hasCheck && hasWrite && checkOnResource && !blobHas(LOCK)) {
+    if (hasCheck && hasWrite && checkOnResource && !guardHas(LOCK)) {
       val ev = m.call.name("execute").code.l.headOption.getOrElse("")
       add("CWE-362", "high", file, line, name, "joern-toctou-check-then-write",
         "Checks a resource value (e.g. stock/balance) and then mutates it in the same method with no lock or atomic transaction. Concurrent requests can both pass the check before either writes (TOCTOU race), oversubscribing the resource.", ev)
