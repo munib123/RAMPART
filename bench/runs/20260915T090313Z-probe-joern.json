@@ -1,0 +1,99 @@
+{
+ "run_id": "20260915T090313Z-probe-joern",
+ "benchmark": "probe",
+ "backend": "joern",
+ "verdict_gated": false,
+ "elapsed_s": 19.5,
+ "fingerprint": {
+  "backend": "joern",
+  "rampart_git_sha": "4958ecd1",
+  "joern_version": "4.0.589",
+  "java_major": 21,
+  "rules_file": "locators.sc",
+  "rules_sha256": "606a2c8bfb5ef4bc",
+  "diag": {
+   "used": true,
+   "reason": "",
+   "elapsed_ms": 18596,
+   "candidates": 1,
+   "rules_file": "locators.sc",
+   "methods_seen": 7,
+   "methods_threw": 0,
+   "rule_state": {
+    "joern-idor-missing-ownership": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-mass-assignment": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-unchecked-quantity": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-toctou-check-then-write": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    }
+   }
+  }
+ },
+ "key": {
+  "version": "probe-key-v1",
+  "rows": 7,
+  "usable": 7,
+  "accepted": 0,
+  "proposed": 7
+ },
+ "score": {
+  "tp": 1,
+  "fn": 4,
+  "fp": 0,
+  "bait_fp": 0,
+  "tn": 2,
+  "cleared": 0,
+  "unresolvable_keys": 0,
+  "reachable_tp": 1,
+  "reachable_fn": 4,
+  "vuln_rows": 5,
+  "safe_rows": 2,
+  "candidates": 1,
+  "reported": 1,
+  "matched_keys": [
+   2
+  ],
+  "missed_keys": [
+   3,
+   5,
+   6,
+   7
+  ],
+  "recall": 0.2,
+  "reachable_recall": 0.2,
+  "precision": 1.0,
+  "f1": 0.3333
+ },
+ "candidates": [
+  {
+   "tool": "joern",
+   "rule_id": "joern-idor-missing-ownership",
+   "path": "D:\\d\\RAMPART\\testbeds\\probe\\views_authn.py",
+   "line": 8,
+   "end_line": 8,
+   "cwe_id": "CWE-639",
+   "verdict": null,
+   "confidence": null,
+   "rel_path": "views_authn.py",
+   "function": "order_detail",
+   "family": "authz",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 2
+  }
+ ]
+}

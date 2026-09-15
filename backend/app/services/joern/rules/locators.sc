@@ -42,9 +42,20 @@ def guarded(rule: String)(body: => Unit): Unit =
 def jstr(s: String): String = "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
 // Tokens whose PRESENCE in a method suppresses a candidate (a guard is there).
-val AUTH = List("current_user", "login_required", "requires_auth", "requires_login", "authorize",
-  "authenticated", "is_owner", "owner_id", "check_owner", "abort(", "g.user", "current_identity",
-  "has_permission", "access_denied", "unauthorized", "forbidden")
+//
+// Fix 2: authentication is not authorization. IDOR is BY DEFINITION a bug in code that a
+// logged-in user reaches, so a token that only proves "the caller is logged in" must never
+// suppress the IDOR rule - with login_required in the suppressor list, the rule went silent on
+// every decorated view, which is every view in a real Flask-Login or Django app. Shopfast could
+// not show this because it has no decorators at all.
+//   AUTHZ      proves the caller may touch THIS record -> suppresses
+//   AUTHN_ONLY proves the caller is logged in           -> never suppresses; becomes evidence
+//              the LLM sees ("AUTHENTICATED_NOT_AUTHORIZED"), which is strictly better input
+//              than silence.
+val AUTHZ = List("is_owner", "owner_id", "check_owner", "has_permission", "authorize",
+  "access_denied", "unauthorized", "forbidden", "abort(")
+val AUTHN_ONLY = List("current_user", "login_required", "requires_auth", "requires_login",
+  "authenticated", "g.user", "current_identity", "session[", "session.get(")
 val LOCK = List("lock", "acquire", "atomic", "select_for_update", "with_for_update", "for update",
   "begin(", "savepoint", "transaction", "serializable", "mutex", "semaphore")
 val ALLOWLIST = List("allow", "whitelist", "permitted", "allowed_fields", " in [", " in (", " in {")
@@ -62,16 +73,19 @@ cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m => methodsSee
 
   val execCode = m.call.name("execute").code.l
   def execHas(kw: String) = execCode.exists(_.toUpperCase.contains(kw))
-  val hasAuth = blobHas(AUTH)
   // decorator-based auth: pysrc2cpg lowers @login_required(view) to a module-scope wrapping
   // call, invisible to an in-method scan, so check the module for a decorator wrapping this method.
   // NB: .filename(s) matches s as a REGEX, and m.filename is an import-root-relative path that
   // uses the platform separator ("split\jobs.py" on Windows). Feeding that to a regex either
   // throws (\j = illegal escape) or silently matches nothing (\d = digit class), so compare the
   // filename as a plain string instead. See the equality filter below - do not reintroduce regex.
-  val decoAuth = cpg.method.name("<module>").filter(_.filename == file).call.code.l
-    .exists(c => c.contains(name) && AUTH.exists(a => c.toLowerCase.contains(a)))
-  val protectedM = hasAuth || decoAuth
+  val moduleCalls = cpg.method.name("<module>").filter(_.filename == file).call.code.l
+    .filter(_.contains(name)).map(_.toLowerCase)
+  val hasAuthz  = blobHas(AUTHZ)      || moduleCalls.exists(c => AUTHZ.exists(c.contains))
+  val authnTok  = (AUTHN_ONLY.filter(blob.contains) ++ AUTHN_ONLY.filter(a => moduleCalls.exists(_.contains(a)))).distinct
+  val protectedM = hasAuthz
+  // evidence for the verifier: the method is authenticated but nothing in it authorizes the record
+  val authnNote = if (authnTok.nonEmpty && !hasAuthz) s" AUTHENTICATED_NOT_AUTHORIZED(${authnTok.mkString(",")})" else ""
 
   // ---- IDOR / missing authorization (CWE-639) ----
   guarded("joern-idor-missing-ownership") {
@@ -81,7 +95,7 @@ cpg.method.isExternal(false).nameNot("<.*>", "__.*__").foreach { m => methodsSee
       val idName = params.find(p => p == "id" || p.endsWith("_id")).getOrElse("id")
       val ev = (m.call.name("fetchone").code.l ++ m.call.name("execute").code.l).headOption.getOrElse("")
       add("CWE-639", "high", file, line, name, "joern-idor-missing-ownership",
-        s"Reads a record by the caller-supplied id '${idName}' with no ownership or authorization check in the method. If this record is user-owned, any authenticated user can read another user's data (IDOR).", ev)
+        s"Reads a record by the caller-supplied id '${idName}' with no ownership or authorization check in the method. If this record is user-owned, any authenticated user can read another user's data (IDOR).$authnNote", ev)
     }
   }
 
