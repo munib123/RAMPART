@@ -35,6 +35,7 @@ import os
 import re
 import shutil
 import subprocess
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -122,15 +123,20 @@ def _scratch_root() -> Path:
     return runtime.TOOLS / "_rampart_joern_tmp"
 
 
-def _workspace_dir() -> Path:
-    # Joern creates its workspace relative to the process CWD; script mode sets cwd to the
-    # scratch dir, so the project lands under <scratch>/workspace/<proj> and is removed with it.
-    return _scratch_root() / "workspace"
+def _workspace_dirs() -> list[Path]:
+    """Where a CPG project can land on disk: Joern creates `workspace/` relative to the process
+    cwd - the scratch dir in script mode, the sidecar's cwd in server mode."""
+    dirs = [_scratch_root() / "workspace"]
+    srv = server.get()
+    if srv is not None:
+        dirs.append(srv.cwd / "workspace")
+    return dirs
 
 
 def _parse_tsv(text: str, input_dir: str) -> list[Finding]:
     out: list[Finding] = []
-    for raw in text.splitlines():
+    for raw in text.split("\n"):                        # not splitlines(): see san() in the rules
+        raw = raw.rstrip("\r")
         if not raw.strip():
             continue
         parts = raw.split("\t")
@@ -145,6 +151,8 @@ def _parse_tsv(text: str, input_dir: str) -> list[Finding]:
             meta["slots"] = parts[9]
         if len(parts) > 10 and parts[10]:                   # column 11 (P7): route reachability
             meta["route"] = parts[10]
+        if len(parts) > 11 and parts[11]:                   # column 12 (P8): enclosing class
+            meta["class"] = parts[11]
         try:
             ln = int(line)
         except ValueError:
@@ -181,12 +189,55 @@ def _sections(rendered: str) -> list[tuple[str, str, str]]:
     return out
 
 
+# Every placeholder in locators.sc sits inside a Scala string literal. Anything substituted
+# into one MUST be escaped as a Scala string literal, or a value containing a quote ends the
+# literal and the rest is compiled as code by the JVM (a path with a `"` on POSIX, or the
+# request-controlled file/method names of a re-verification). Escaping is the floor;
+# the re-verification inputs are additionally validated against a strict grammar first.
+_SCALA_ESCAPES = {"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t", "\f": "\\f", "\b": "\\b"}
+_REL_FILE_RE = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.\-]*(?:/[A-Za-z0-9_][A-Za-z0-9_.\-]*)*\.py$")
+_METHOD_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,127}$")
+
+
+def scala_str(value) -> str:
+    """The contents of a Scala double-quoted string literal for `value` (no surrounding quotes).
+    Every backslash, quote and control character is escaped; nothing can close the literal."""
+    out = []
+    for ch in str(value):
+        if ch in _SCALA_ESCAPES:
+            out.append(_SCALA_ESCAPES[ch])
+        elif ord(ch) < 0x20 or ord(ch) == 0x7F or ch in "  ":
+            out.append("\\u%04x" % ord(ch))
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def valid_reverify_target(rel_file: str, method: str) -> Optional[str]:
+    """None if (rel_file, method) may be substituted into the rules; else the reason. rel_file
+    is a forward-slash relative .py path with no `..` segment; method is one Python identifier
+    (the class part of `Class.method` is carried separately, see reverify.py)."""
+    if not rel_file or not _REL_FILE_RE.match(rel_file) or ".." in rel_file.split("/"):
+        return f"re-verification file must be a relative .py path: {rel_file!r}"
+    if not method or not _METHOD_RE.match(method):
+        return f"re-verification method must be a Python identifier: {method!r}"
+    return None
+
+
 def _render(input_dir: str, out_file: Path, diag_file: Path, proj: str,
             pack_file: Path | None = None, pack_tag: str = "",
             reverify: tuple[str, str] | None = None, reverify_out: Path | None = None) -> str:
-    fwd = lambda p: str(p).replace("\\", "/")
+    fwd = lambda p: scala_str(str(p).replace("\\", "/"))
     base = vocab.pack_path(vocab.BASE_ID)
-    rv_file, rv_method = reverify if reverify else ("", "")
+    rv_file, rv_method, rv_class = (tuple(reverify) + ("",))[:3] if reverify else ("", "", "")
+    if reverify:
+        why = valid_reverify_target(rv_file, rv_method)
+        if why is None and rv_class and not _METHOD_RE.match(rv_class):
+            why = f"re-verification class must be a Python identifier: {rv_class!r}"
+        if why:
+            raise ValueError(why)
+    if not re.fullmatch(r"[A-Za-z0-9_]{1,64}", proj):
+        raise ValueError(f"project name is not an identifier: {proj!r}")
     return (RULES.read_text(encoding="utf-8")
             .replace("__INPUT_DIR__", fwd(input_dir))
             .replace("__OUT_FILE__", fwd(out_file))
@@ -194,9 +245,10 @@ def _render(input_dir: str, out_file: Path, diag_file: Path, proj: str,
             .replace("__PROJECT__", proj)
             .replace("__PACK_FILE__", fwd(pack_file if pack_file is not None else base))
             .replace("__BASE_PACK_FILE__", fwd(base))
-            .replace("__PACK_TAG__", pack_tag)
-            .replace("__REVERIFY_FILE__", fwd(rv_file))
-            .replace("__REVERIFY_METHOD__", rv_method)
+            .replace("__PACK_TAG__", scala_str(pack_tag))
+            .replace("__REVERIFY_FILE__", scala_str(rv_file))
+            .replace("__REVERIFY_METHOD__", scala_str(rv_method))
+            .replace("__REVERIFY_CLASS__", scala_str(rv_class))
             .replace("__REVERIFY_OUT__", fwd(reverify_out) if reverify_out is not None else ""))
 
 
@@ -258,12 +310,28 @@ def _collect(out_file: Path, diag_file: Path, input_dir: str, diag: dict,
 
 
 def _run_script(info, script: Path, tmp: Path, out_file: Path, diag: dict) -> Optional[str]:
-    """Script mode: one `joern --script` per scan. Returns an error string, or None."""
-    proc = subprocess.run(
-        [str(info.launcher), "--script", str(script)],
-        capture_output=True, text=True, encoding="utf-8", errors="replace",
-        env=runtime.subprocess_env(info), cwd=str(tmp), timeout=config.JOERN_TIMEOUT,
-    )
+    """Script mode: one `joern --script` per scan. Returns an error string, or None.
+    Raises subprocess.TimeoutExpired after killing the whole process tree: `joern.bat` is
+    cmd.exe -> java.exe, and subprocess.run(timeout=) would kill only cmd.exe, leaving the JVM
+    running and holding the scratch directory the caller is about to delete."""
+    kw: dict = dict(stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.DEVNULL,
+                    text=True, encoding="utf-8", errors="replace",
+                    env=runtime.subprocess_env(info), cwd=str(tmp))
+    if os.name == "nt":
+        kw["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        kw["start_new_session"] = True
+    proc = subprocess.Popen([str(info.launcher), "--script", str(script)], **kw)
+    try:
+        stdout, stderr = proc.communicate(timeout=config.JOERN_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        server.kill_tree(proc)
+        try:
+            proc.communicate(timeout=15)
+        except Exception:
+            pass
+        raise
+    proc.stdout, proc.stderr = stdout, stderr           # shape _error_summary expects below
     # A crashed script and a genuine "nothing found" must not look alike. locators.sc ALWAYS
     # writes findings.tsv (empty when clean) and exits 0, so a missing file or a non-zero exit
     # means the locators never ran: the target is UNSCANNED, not clean.
@@ -278,60 +346,84 @@ def _run_script(info, script: Path, tmp: Path, out_file: Path, diag: dict) -> Op
     return None
 
 
+# The sidecar is ONE REPL: every section of every scan defines the same vals (`cpg`, `ctxs`,
+# `findings`, ...). Two scans interleaving their sections would read each other's state, so
+# server-mode runs are serialised. A scan that arrives while another holds the lock waits;
+# script mode is not affected.
+_server_lock = threading.Lock()
+_TRANSPORT_MARKERS = ("HTTP ", "URLError", "ConnectionRefusedError", "RemoteDisconnected",
+                      "TimeoutError", "timed out", "ConnectionResetError", "IncompleteRead")
+
+
+def _is_transport_failure(out: str, err: str) -> bool:
+    """query() reports a transport failure as (False, "", "<ExceptionName>: ...") - no stdout at
+    all. An evaluation failure (compile error, thrown exception) always has stdout."""
+    return not (out or "").strip() and any(m in (err or "") for m in _TRANSPORT_MARKERS)
+
+
 def _run_server(srv, rendered: str, proj: str, out_file: Path,
                 compile_errors: dict) -> Optional[str]:
-    """Server mode: one /query-sync per section. A failing RULE section is recorded and skipped;
-    a failing prelude/import/context/finish section aborts (the caller falls back to script
+    """Server mode: one /query-sync per section. A RULE section that fails to evaluate is
+    recorded in compile_errors and skipped; a transport failure on ANY section, or an evaluation
+    failure on prelude/import/vocab/context/finish, aborts (the caller falls back to script
     mode). Returns an error string, or None on success."""
-    t_import = config.JOERN_TIMEOUT
+    t_full = config.JOERN_TIMEOUT                       # import and context are the heavy ones
     t_rule = max(60, config.JOERN_TIMEOUT // 3)
-    try:
-        for kind, name, code in _sections(rendered):
-            ok, out, err = srv.query(code, timeout=t_import if kind == "import" else t_rule)
-            if ok:
-                continue
-            tail = " | ".join((err or out or "").strip().splitlines()[-3:])[:300]
-            if kind == "rule":
-                compile_errors[name] = tail
-                print(f"[joern]     section 'rule {name}' failed; continuing: {tail[:120]}")
-                continue
-            if kind == "reverify":                       # P8: informational; the findings stand
-                print(f"[joern]     section 'reverify' failed; continuing: {tail[:120]}")
-                continue
-            return f"server section '{kind}' failed: {tail}"
-        if not out_file.exists():
-            return "server run finished but findings.tsv is missing"
-        return None
-    finally:
-        # free the CPG project in the long-lived JVM; a failure here must not mask the result
-        srv.query('delete("' + proj + '")', timeout=60)
+    with _server_lock:
+        try:
+            for kind, name, code in _sections(rendered):
+                ok, out, err = srv.query(code, timeout=t_full if kind in ("import", "context") else t_rule)
+                if ok:
+                    continue
+                tail = " | ".join((err or out or "").strip().splitlines()[-3:])[:300]
+                if _is_transport_failure(out, err):
+                    srv.ready = False                   # sidecar gone or wedged; health will re-probe
+                    return f"sidecar unreachable during '{kind}': {tail}"
+                if kind == "rule":
+                    compile_errors[name] = tail
+                    print(f"[joern]     section 'rule {name}' failed; continuing: {tail[:120]}")
+                    continue
+                if kind == "reverify":                   # P8: informational; the findings stand
+                    print(f"[joern]     section 'reverify' failed; continuing: {tail[:120]}")
+                    continue
+                return f"server section '{kind}' failed: {tail}"
+            if not out_file.exists():
+                return "server run finished but findings.tsv is missing"
+            return None
+        finally:
+            # free the CPG project in the long-lived JVM; a failure here must not mask the result
+            ok, out, err = srv.query('delete("' + proj + '")', timeout=60)
+            if not ok:
+                print(f"[joern]     delete({proj}) failed: {(err or out or '').strip()[-120:]}")
 
 
 def scan(path: str, pack: str | None = None,
-         reverify: tuple[str, str] | None = None) -> tuple[list[Finding], dict]:
+         reverify: tuple | None = None) -> tuple[list[Finding], dict]:
     """Build a CPG for `path` and return (candidates, diag). Never raises.
     Uses the server sidecar when it is up (P3), else one `joern --script` per scan.
     `pack` overrides JOERN_PACK for this scan (bench --pack); None means the config value.
-    `reverify=(relative_file, method)` (P8) additionally asks the rules to describe that one
-    method's guards and sinks; the answer lands in diag["reverify"]."""
+    `reverify=(relative_file, method[, class])` (P8) additionally asks the rules to describe that
+    one method's guards and sinks; the answer lands in diag["reverify"]. All three are validated
+    (relative .py path, identifiers) and Scala-escaped before they reach the rules."""
     t0 = time.time()
     diag: dict = {"used": False, "reason": "", "elapsed_ms": 0, "candidates": 0,
                   "rules_file": RULES.name, "mode": "script"}
-    ok, why, info = runtime.probe()
-    if not ok:
-        diag["reason"] = why
-        return [], diag
-
-    input_dir = os.path.abspath(path)
-    diag["target"] = input_dir
     proj = "rampart_" + uuid.uuid4().hex[:12]
-    tmp = _scratch_root() / proj
-    tmp.mkdir(parents=True, exist_ok=True)
-    out_file, diag_file, script = tmp / "findings.tsv", tmp / "diag.json", tmp / "run.sc"
-    reverify_out = tmp / "reverify.json" if reverify else None
+    tmp: Optional[Path] = None
     compile_errors: dict = {}
-
+    pack_info: dict = {}
     try:
+        ok, why, info = runtime.probe()
+        if not ok:
+            diag["reason"] = why
+            return [], diag
+        input_dir = os.path.abspath(path)
+        diag["target"] = input_dir
+        tmp = _scratch_root() / proj
+        tmp.mkdir(parents=True, exist_ok=True)
+        out_file, diag_file, script = tmp / "findings.tsv", tmp / "diag.json", tmp / "run.sc"
+        reverify_out = tmp / "reverify.json" if reverify else None
+
         pack_file, pack_info = prepare_pack(input_dir, pack, tmp)
         diag["pack"] = pack_info
         if pack_file is None:
@@ -366,7 +458,7 @@ def scan(path: str, pack: str | None = None,
         return out, diag
     except subprocess.TimeoutExpired:
         diag["reason"] = f"timed out after {config.JOERN_TIMEOUT}s"
-        print(f"[joern] {diag['reason']} on {input_dir}")
+        print(f"[joern] {diag['reason']} on {diag.get('target')}")
         return [], diag
     except Exception as e:
         diag["reason"] = f"{type(e).__name__}: {e}"
@@ -374,8 +466,12 @@ def scan(path: str, pack: str | None = None,
         return [], diag
     finally:
         diag["elapsed_ms"] = int((time.time() - t0) * 1000)
-        shutil.rmtree(tmp, ignore_errors=True)
-        shutil.rmtree(_workspace_dir() / proj, ignore_errors=True)
+        if tmp is not None:
+            shutil.rmtree(tmp, ignore_errors=True)
+        # the CPG workspace: script mode creates it under the scratch cwd, server mode under
+        # the sidecar's cwd; delete(proj) frees the JVM's copy, this removes what is on disk
+        for ws in _workspace_dirs():
+            shutil.rmtree(ws / proj, ignore_errors=True)
 
 
 def warm() -> None:

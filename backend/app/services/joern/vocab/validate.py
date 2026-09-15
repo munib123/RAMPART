@@ -8,7 +8,7 @@ grammar and this module enforces it - every rule below is a security control (TD
 
   * every slot declares its sink and the sink's character class is enforced per value, so a
     value written for String.contains can never reach a regex-taking accessor or Scala source
-  * caps: 8 KB per file, 64 values per slot, extends depth 3
+  * caps: 16 KB per file, 64 values per slot, extends depth 3
   * cross-slot rules: authz_guard never a substring of authn_only; qty/price disjoint; text
     sinks lower-case, SQL keywords upper-case (a wrong-case value could never match: a no-op)
   * composition is a per-slot UNION with the parent, sorted + de-duplicated before hashing, so
@@ -77,6 +77,18 @@ def validate_values(sink: str, values, where: str) -> list[str]:
         if not isinstance(v, str):
             errs.append(f"{where}: non-string value {v!r}")
             continue
+        # Whitespace is the one character the text sinks share with the Scala's node separator
+        # (nodes are joined by THREE spaces): "   " or "  " would match between every pair of
+        # nodes and flood the slot (T-10). A value must carry a non-space character and never a
+        # doubled space; one edge space is allowed - it is the word-boundary idiom the django
+        # pack uses (" f(" matches "= F(" but not "xf(") and cannot match without its content.
+        if not v.strip():
+            errs.append(f"{where}: {v!r} is empty or whitespace-only")
+            continue
+        if v.strip() != v.strip(" "):
+            errs.append(f"{where}: {v!r} has leading or trailing whitespace other than a space")
+        if "  " in v:
+            errs.append(f"{where}: {v!r} contains consecutive spaces (the node separator)")
         if len(v) < sk["min_len"]:
             errs.append(f"{where}: '{v}' shorter than {sk['min_len']}")
         if any(ch in v for ch in forbidden):
@@ -212,7 +224,9 @@ def read_file(path: Path) -> tuple[Optional[dict], list[str]]:
         return None, [f"{path.name}: {size} bytes exceeds cap {cap}"]
     try:
         return json.loads(path.read_text(encoding="utf-8")), []
-    except (OSError, ValueError) as e:
+    except (OSError, ValueError, RecursionError) as e:
+        # RecursionError: a few KB of nested '[' overflows the parser stack well under the byte
+        # cap; json.JSONDecodeError and UnicodeDecodeError are ValueError subclasses.
         return None, [f"{path.name}: {type(e).__name__}: {e}"]
 
 

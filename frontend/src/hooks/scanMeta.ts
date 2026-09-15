@@ -44,7 +44,7 @@ export function buildStageRows(
   activeScanner: string | undefined,
   stageTimes: (number | null)[],
   completed: boolean,
-  cpg: boolean = false,
+  cpg: boolean = false,          // the CPG phase will run: cpgPhaseRuns(health), not bare `available`
 ): StageRow[] {
   return STAGE_META.map((m, i) => {
     const done = stage > i || completed;

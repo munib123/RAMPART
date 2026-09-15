@@ -13,7 +13,7 @@ No new detection numbers: P4 changes what is *recorded* and *shown*, not what is
 | Health shows Joern state pre-scan | `joernStatus(health)` → `ready` on the live backend; `missing` / `starting` / `off` texts verified on synthetic health |
 | Migration idempotent | `python -m app.db` twice on the existing DB: `applied 0002_joern` then `up to date`; on a fresh DB: `0001_schema, 0002_joern`, then `up to date` |
 
-Tests: `backend/tests/test_persistence.py` (6, no DB) + `test_health.py` joern-shape; 44 backend +
+Tests: `backend/tests/test_persistence.py` (5, no DB) + `test_health.py` joern-shape; 44 backend +
 12 bench pass. Live check: `tests/check_db.py` reports migrations and findings by tool.
 
 ## Found on the way

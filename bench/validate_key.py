@@ -90,7 +90,7 @@ def resolve_row(row: dict, target_root: Path) -> dict:
     return row
 
 
-def validate(benchmark: str, check: bool = False) -> int:
+def validate(benchmark: str, check: bool = False, quiet: bool = False) -> int:
     key_path = paths.key_file(benchmark)
     target = paths.testbed_dir(benchmark)
     rows = _read_key(key_path)
@@ -103,7 +103,7 @@ def validate(benchmark: str, check: bool = False) -> int:
     accepted = [r for r in ok if r.get("status") == "accepted"]
     print(f"[key] {benchmark}: {len(rows)} rows | resolved {len(ok)} | unresolvable {len(bad)} "
           f"| accepted {len(accepted)} | proposed {len(ok) - len(accepted)}")
-    for r in ok:
+    for r in (ok if not quiet else []):
         print(f"   #{r['key_no']:<4} {r['relative_path']}:{r['resolved_line']:<4} "
               f"{r['enclosing_function']:20} {r['cwe_family']:16} {r['label']}")
     for r in bad:

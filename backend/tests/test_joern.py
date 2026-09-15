@@ -171,3 +171,69 @@ def test_server_mode_off_never_starts(monkeypatch):
     monkeypatch.setattr(config, "JOERN_SERVER", "off")
     assert joern_server.ensure_started() is None
     assert joern_server.status() == {"mode": "off", "running": False}
+
+
+# ---- placeholders are Scala string literals: escape, then validate (review blocker #1) ----
+
+@pytest.mark.parametrize("raw,expect", [
+    ('plain/path.py', 'plain/path.py'),
+    ('a"b', 'a\\"b'),
+    ('a\b', 'a\\b'),
+    ('x"; System.exit(3); val z = "', 'x\\"; System.exit(3); val z = \\"'),
+    ('line1\nline2', 'line1\\nline2'),
+    ('tab\there', 'tab\\there'),
+    ('u\u2028sep', 'u\\u2028sep'),
+])
+def test_scala_str_never_closes_the_literal(raw, expect):
+    out = joern_scan.scala_str(raw)
+    assert out == expect
+    assert '"' not in out.replace('\\"', '')          # every quote is escaped
+
+
+@pytest.mark.parametrize("rel,method", [
+    ('x"; System.exit(3); val zz = "y', "f"),
+    ("shop/views.py", 'f"; System exit 1; val q = "'),
+    ("../secrets.py", "f"),
+    ("shop/../views.py", "f"),
+    ("shop/views.txt", "f"),
+    ("/abs/views.py", "f"),
+    ("shop/views.py", "not an identifier"),
+    ("shop/views.py", ""),
+    ("", "f"),
+])
+def test_reverify_targets_are_validated(rel, method):
+    assert joern_scan.valid_reverify_target(rel, method) is not None
+    with pytest.raises(ValueError):
+        joern_scan._render("C:/t", Path("f.tsv"), Path("d.json"), "p", None, "", (rel, method), Path("rv.json"))
+
+
+def test_reverify_targets_accepted():
+    assert joern_scan.valid_reverify_target("shop/views.py", "order_detail") is None
+    assert joern_scan.valid_reverify_target("views.py", "OrderView_2") is None
+    r = joern_scan._render("C:/t", Path("f.tsv"), Path("d.json"), "p", None, "", ("shop/api.py", "cancel", "OrderViewSet"), Path("rv.json"))
+    assert 'val reverifyFile   = "shop/api.py"' in r and 'val reverifyClass  = "OrderViewSet"' in r
+
+
+def test_render_escapes_every_path_placeholder(tmp_path):
+    weird = tmp_path / 'we"ird'
+    r = joern_scan._render(str(weird), tmp_path / 'o"ut.tsv', tmp_path / "d.json", "p1")
+    assert 'we\\"ird' in r and 'o\\"ut.tsv' in r
+    import re
+    assert not re.search(r"__[A-Z_]+__", r)          # no placeholder left behind
+    with pytest.raises(ValueError):
+        joern_scan._render(str(tmp_path), tmp_path / "f", tmp_path / "d", 'p"; bad')
+
+
+def test_transport_failure_is_not_a_compile_error():
+    assert joern_scan._is_transport_failure("", "URLError: <urlopen error [WinError 10061]>")
+    assert joern_scan._is_transport_failure("", "HTTP 502: Bad Gateway")
+    assert not joern_scan._is_transport_failure("-- [E006] Not Found Error: rsc line 3", "")
+    assert not joern_scan._is_transport_failure("java.lang.NullPointerException: x", "")
+
+
+def test_tsv_rows_survive_odd_line_separators(tmp_path):
+    """san() strips \t \r \n only; a \x0b or \u2028 inside a code fragment must not split a row."""
+    row = "\t".join(["CWE-639", "high", "a.py", "5", "f", "joern-idor-missing-ownership",
+                     "msg", "ev\x0bfrag\u2028ment", "pk@1", "id_param_exact=id", "yes", "Cls"])
+    fs = joern_scan._parse_tsv(row + "\n", str(tmp_path))
+    assert len(fs) == 1 and fs[0].meta["class"] == "Cls" and "frag" in fs[0].message

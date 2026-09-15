@@ -257,18 +257,26 @@ def score(candidates: list[Candidate], key: list[KeyRow], target_root: Path,
 
         if not c.reported:
             if s_rows and c.verdict in CLEARED_VERDICTS:
-                c.outcome = "cleared"; c.matched_key = s_rows[0].key_no; s.cleared += 1
+                nearest = min(s_rows, key=lambda k: abs((k.resolved_line or 0) - c.line))
+                c.outcome = "cleared"; c.matched_key = nearest.key_no; s.cleared += 1
             else:
                 c.outcome = "ignored"
             continue
 
         s.reported += 1
         if v_rows:
-            c.outcome = "tp"; c.matched_key = v_rows[0].key_no
-            hit_vuln.update(k.key_no for k in v_rows)
+            # Two DIFFERENT bugs can share a (file, function, family) slot (orders.update_profile
+            # is both #3 and #23 on shopfast only across families, but a function with two
+            # injection sinks is one slot). One candidate credits ONE bug: the one whose
+            # resolved line is nearest the candidate. Rows of that same bug (its other
+            # locations) are credited with it.
+            nearest = min(v_rows, key=lambda k: abs((k.resolved_line or 0) - c.line))
+            c.outcome = "tp"; c.matched_key = nearest.key_no
+            hit_vuln.update(k.key_no for k in v_rows if k.key_no == nearest.key_no)
         elif s_rows:
-            c.outcome = "bait_fp"; c.matched_key = s_rows[0].key_no
-            hit_safe.update(k.key_no for k in s_rows); s.bait_fp += 1
+            nearest = min(s_rows, key=lambda k: abs((k.resolved_line or 0) - c.line))
+            c.outcome = "bait_fp"; c.matched_key = nearest.key_no
+            hit_safe.update(k.key_no for k in s_rows if k.key_no == nearest.key_no); s.bait_fp += 1
         else:
             c.outcome = "fp"; s.fp += 1
 

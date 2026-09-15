@@ -5,7 +5,7 @@ import { esc, langOf } from '@/utils/format';
 import { diffLines, diffReact } from '@/utils/diff';
 import { Icon } from '@/components/Icons';
 import PlanLimitCard from '@/components/PlanLimitCard';
-import type { DiffLine, Exemplar, Finding, FixState, PlanLimitPayload } from '@/types';
+import type { DiffLine, Exemplar, Finding, FixState, PlanLimitPayload, VerifyResult } from '@/types';
 
 interface Props {
   finding: Finding;
@@ -43,8 +43,8 @@ export default function FixPanel({ finding, scanId, target, onApplied, onReverte
   }, []);
 
   const run = async () => {
-    const id = ++requestId.current;
-    setFx({ loading: true });
+    const id = ++requestId.current;                    // also orphans any verify in flight
+    setFx({ loading: true, verify: null });
     try {
       const r = await generateFix({
         code: (finding.slice && finding.slice.code) || '',
@@ -104,14 +104,22 @@ export default function FixPanel({ finding, scanId, target, onApplied, onReverte
   // post-apply check against the snapshot afterwards.
   const canVerify = canApply && finding.tool === 'joern' && !!finding.slice?.name && !!finding.rule_id;
 
+  // A 401 comes back as FastAPI's {detail: "..."} with no `ok` (the JSON helper does not expose
+  // the status); the backend's own refusals always carry ok:false.
+  const verifyAuthFailed = (r: VerifyResult & { detail?: unknown }) =>
+    r.code === 'auth_required' || (r.ok === undefined && typeof r.detail === 'string');
+
   const onVerify = async () => {
     if (!canVerify) return;
+    const id = requestId.current;                      // the fix this verdict belongs to
     setFx((p) => ({ ...p, verifying: true, verify: null }));
     try {
       const r = await verifyFix({
         scan_id: scanId as string,
         path: finding.path as string,
-        function: finding.slice?.name as string,
+        // the locator names the method by class too (meta.class); two ViewSets in one file can
+        // both define retrieve(), and the verdict must come from THIS one
+        function: (finding.meta?.class ? finding.meta.class + '.' : '') + (finding.slice?.name as string),
         rule_id: finding.rule_id as string,
         ...(fx.applied ? {} : {
           fixed_code: fx.fixed_code || '',
@@ -120,9 +128,18 @@ export default function FixPanel({ finding, scanId, target, onApplied, onReverte
           original_code: finding.slice?.code,
         }),
       });
+      if (requestId.current !== id) return;            // regenerated meanwhile: verdict is for the old fix
+      if (verifyAuthFailed(r)) {
+        setFx((p) => ({ ...p, verifying: false, verify: { ok: false, code: 'auth_required', error: 'Sign in again to verify' } }));
+        announce('Sign in again to verify');
+        return;
+      }
       setFx((p) => ({ ...p, verifying: false, verify: r }));
-      announce(r.ok ? (r.converged ? 'Re-verified: the exploitable path is gone' : 'Re-verified: the locator still fires') : (r.error || 'Verification failed'));
+      announce(r.ok
+        ? (r.converged ? 'Re-verified: the exploitable path is gone' : `Not verified: ${r.reason || 'the locator still fires'}`)
+        : (r.error || 'Verification failed'));
     } catch (e) {
+      if (requestId.current !== id) return;
       setFx((p) => ({ ...p, verifying: false, verify: { ok: false, error: (e as Error).message || 'Verification failed' } }));
     }
   };
@@ -221,7 +238,7 @@ export default function FixPanel({ finding, scanId, target, onApplied, onReverte
               <button className={'segb ' + (useView === 'full' ? 'is-on' : '')} aria-pressed={useView === 'full'} onClick={() => setView('full')}>Full code</button>
             </span>
           )}
-          <button className="btn btn-xs" onClick={run}>Regenerate</button>
+          <button className="btn btn-xs" onClick={run} disabled={!!fx.verifying}>Regenerate</button>
           <button className={'btn btn-xs copybtn' + (copied ? ' copied' : '')} ref={btnRef} aria-label="Copy corrected code" onClick={onCopy}>Copy fix</button>
           {canVerify && (
             <button className="btn btn-xs verifybtn" onClick={onVerify} disabled={applying || !!fx.verifying} title="Rebuild the code property graph on the patched code and check whether the locator still fires">
@@ -253,6 +270,9 @@ export default function FixPanel({ finding, scanId, target, onApplied, onReverte
             {fx.verify.ok && fx.verify.reverify_method === 'pattern' ? ' (weaker text check — Joern is not available)' : ''}
             {fx.verify.ok && typeof fx.verify.elapsed_ms === 'number' ? ` · ${(fx.verify.elapsed_ms / 1000).toFixed(1)}s` : ''}
           </span>
+          {fx.verify.code === 'auth_required' && (
+            <button className="btn btn-xs" data-noprint onClick={() => { window.location.hash = '#/auth'; }}>Sign in</button>
+          )}
         </div>
       )}
       {fx.applyErr && <div className="applyerr">{fx.applyErr}</div>}

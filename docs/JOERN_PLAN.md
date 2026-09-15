@@ -126,8 +126,8 @@ The friction constraint, addressed first.
 **`backend/app/services/joern/runtime.py`**
 
 ```python
-JRE_URL   = "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jre/hotspot/normal/eclipse"
-JOERN_ZIP = "https://github.com/joernio/joern/releases/download/v4.0.589/joern-cli.zip"
+JRE_URL   = "https://api.adoptium.net/v3/binary/latest/21/ga/{os}/{arch}/jre/hotspot/normal/eclipse"
+JOERN_ZIP = "https://github.com/joernio/joern/releases/download/v4.0.589/joern-cli-{os}-{arch}.zip"
 
 def locate() -> RuntimeInfo:
     """Resolve java + joern in this order: JOERN_JAVA_HOME / JOERN_HOME env; tools/jre-21 +
@@ -144,6 +144,14 @@ def probe(info: RuntimeInfo) -> tuple[bool, str]:
 Ship a one-shot entry point: `python -m app.services.joern.runtime --install`. The README
 Prereqs gets one line. The 1.63 GB zip already sitting in `D:/d/FYP/tools/` means the first run on
 this machine copies rather than downloads.
+
+*Correction, 2026-09-15.* The first draft of this sketch pointed at a bare
+`.../v4.0.589/joern-cli.zip`; that URL returns 404. The release ships per-platform assets, and
+`runtime.py` as built selects `joern-cli-{windows-x86_64,linux-x86_64,linux-arm64,macos-x86_64,macos-arm64}.zip`
+and the matching Adoptium JRE for the host, verifies the zip against the published `.sha512`,
+and on failure prints a one-line reason plus the manual fallback (drop the asset zip and its
+`.sha512` into `tools/`, re-run `--install`) instead of a traceback. Only Windows x64 has been
+exercised end to end; the Linux/macOS paths are unit-tested only (`backend/tests/test_runtime.py`).
 
 **`config.py` additions**
 
@@ -350,7 +358,7 @@ Python before anything reaches the JVM, and records `diag.pack`; `bench.run --pa
 Measured: `_base` and `flask-sqlite3` both give shopfast 4/0/1 and probe 5/0/2 (non-regression;
 the testbeds contain only base vocabulary). `django.json` is NOT authored: the held-out protocol
 says the testbed freezes first, so the `flask-sqlite3` vs `django` ablation runs at the end of
-P6. Log: `bench/runs/2026-09-15-p5-vocab-packs.md`; tests `backend/tests/test_vocab.py` (31).
+P6. Log: `bench/runs/2026-09-15-p5-vocab-packs.md`; tests `backend/tests/test_vocab.py` (23 today).
 
 ### P6 — Django testbed, held-out (4 days)
 
@@ -368,14 +376,17 @@ This is where three of the four rules will be found to **fire on correctly fixed
 result shopfast structurally cannot show, and one of the best results available to the thesis.
 
 **Status 2026-09-15: DONE, protocol kept.** Testbeds frozen at `0249a60b`, pack authored from
-docs by a walled-off agent at `9d03ce96` (prompt + transcript committed), one DEV-informed Scala
-fix (`kw = value` normalisation, `82921d1f`), held-out evaluated once (`bench/runs/heldout.log`).
+docs by a walled-off agent at `9d03ce96` (prompt + transcript committed; digest `b38082f8d2b6`
+at the time - the shipped `django.json` is `b5df755be580` after P7's four slots and has never
+been scored on the held-out split), one DEV-informed Scala fix (`kw = value` normalisation,
+`82921d1f`), held-out evaluated once (`bench/runs/heldout.log`).
 Held-out, 9 SAST-blind rows: `_base` 5/9, `flask-sqlite3` 5/9, **`django` 7/9**; bandit and
 semgrep 0/9. Failure causes with the Django pack: 12 = 7 vocabulary (`get` excluded by the
 author for precision; `=request.user` scoping kwarg missing; `request.post` signal too broad) +
 5 structural (class-scope guard, receiver-chain ownership, cross-file bound, validation-vs-DB
-comparison ×2). Kill criterion (structural > half) not met, but close: the structural residue is
-exactly P7's three traversals. The prediction held - the rules fire on 3 correctly fixed twins
+comparison ×2). Kill criterion (structural > half) not met, but close: four of the five
+structural causes fall to P7's three traversals; receiver-chain ownership does not. The
+prediction held - the rules fire on 3 correctly fixed twins
 (`invoice_detail_safe`, `refund_line_form`, `WalletViewSet.statement`).
 Log: `bench/runs/2026-09-15-p6-django-heldout.md`. Do not re-run `9b4f52b3f5f1` after a pack change.
 
@@ -397,10 +408,15 @@ In order of reliability on `pysrc2cpg`:
 typeDecl bodies/members/bases resolve; callIn resolves Flask cross-module calls, Django views are
 found via urls.py references). TOCTOU = control dependence + receiver identity (`product.stock >= q`
 … `product.save()`; raw SQL keeps the token test). Class scope: class body + bases join the guard
-channel; for a scoped read (slot `scoped_read_calls`, DRF get_object) the `queryset_hooks` body and
-any `object_permission_hooks` class named in the body count as authz; the body of any instantiated
-project class joins the positive-guard channel (min_value in forms.py). Route flag = TSV column 11 →
-`meta.route` (yes|no|unknown), agreement with the key reported per run (10/10 where routes exist).
+channel (the class *body* only - member initialisers, nested `Meta`, bases - never sibling
+methods' bodies, since the 2026-09-15 review); for a scoped read (slot `scoped_read_calls`, DRF
+get_object) the `queryset_hooks` body and any `object_permission_hooks` class named in the body
+count as authz; the body of any instantiated project class joins the positive-guard channel
+(min_value in forms.py). Route flag = TSV column 11 → `meta.route` (yes|no|unknown), markers
+matched against module-level calls only; agreement with the key reported per run - it agrees in
+10 of 10 comparable cases (shopfast with `_base`, djshop-dev with the Django pack) and is
+`unknown` rather than a guess everywhere else (probe has no routes; the `_base` and Flask packs
+carry no Django markers).
 Schema v2: four slots; pack cap 16 KB. DEV/django: 5 TP / 2 FP / 2 bait → **5 / 0 / 0**;
 shopfast, probe, DEV _base/flask unchanged. Held-out NOT re-run (rules were written after reading
 its failures); the receiver-chain case (`request.user.invoices…`) remains unaddressed.

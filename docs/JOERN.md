@@ -22,7 +22,7 @@ f-string in SQL. They are blind to the opposite class: a **safe thing that is ab
 | Unchecked quantity | a *lower bound* on a count that money is computed from | CWE-840 | `joern-unchecked-quantity` |
 | Race condition / TOCTOU | a *lock or atomic transaction* around a check-then-write | CWE-362 | `joern-toctou-check-then-write` |
 
-Measured, not asserted: on `testbeds/shopfast` bandit finds 12 of 26 planted bugs and semgrep
+Measured, not asserted: on `testbeds/shopfast` bandit finds 12 of 26 bugs (25 planted + 1 undocumented) and semgrep
 13, and **neither finds any of the four above** [`083330`, `083415`]. On both Django splits the
 pattern arms find 0 of the 8 / 9 SAST-blind rows [`122402`, `122417`, `125014`, `125031`]. The
 engines are disjoint; their union on shopfast is 19 of 26.
@@ -52,12 +52,12 @@ rather than hidden.
 
 | file | role |
 |---|---|
-| `runtime.py` | finds or **installs** a portable Temurin JRE 21 and joern-cli 4.0.589 under `tools/` — no admin, nothing on PATH. `python -m app.services.joern.runtime --install` |
+| `runtime.py` | finds or **installs** a portable Temurin JRE 21 and joern-cli 4.0.589 under `tools/` — no admin, nothing on PATH. `python -m app.services.joern.runtime --install`. Picks the per-platform release asset (`joern-cli-{windows-x86_64,linux-x86_64,linux-arm64,macos-x86_64,macos-arm64}.zip`) and the matching Adoptium JRE, verifies the zip against the published `.sha512`, and on failure prints a one-line reason plus the manual fallback (drop the asset zip and its `.sha512` into `tools/`) instead of a traceback. Only Windows x64 has been exercised end to end; the Linux/macOS paths are unit-tested only |
 | `server.py` | one `joern --server` **sidecar per backend process** (127.0.0.1:8091, random per-process Basic-auth password, tree-killed on shutdown). Started by the FastAPI lifespan; `/api/health` shows `scanners.joern.server` |
 | `scan.py` | renders `rules/locators.sc`, picks and validates the vocabulary pack, runs the rules (one `/query-sync` per `// @@` section in server mode; one `joern --script` as the fallback), parses the TSV, returns `(findings, diag)` |
-| `rules/locators.sc` | the four rule **shapes** — 277 lines of hand-written, hashed Scala; zero framework vocabulary |
+| `rules/locators.sc` | the four rule **shapes** — 487 lines (291 non-blank, non-comment) of hand-written, hashed Scala; zero framework vocabulary. The hash is LF-normalised (`bench/backends/__init__.py`) and recorded as `rules_sha256` in every run artifact; today's is `11befcda9b9cf6bd` |
 | `vocab/` | `schema.json`, `validate.py`, `packs/{_base,flask-sqlite3,django}.json` + `digests.json` |
-| `reverify.py` | O3: rebuild the CPG on patched code and ask whether the locator still fires |
+| `reverify.py` | O3: rebuild the CPG on patched code and ask whether the locator still fires. The target method is class-qualified (`Class.method`); `file`, `method` and `class` are validated as a relative `.py` path / identifiers and Scala-escaped before they reach the rule |
 
 **Server mode** pays the JVM once. CPG phase per scan: shopfast **8.0–8.2 s** warm (19–34 s in
 script mode), djshop-dev **14.7 s**; sidecar ready ~25 s after the backend starts, without
@@ -92,7 +92,7 @@ id **looks like** in a framework is a JSON pack the Scala reads with `ujson` aft
 |---|---|---|---|
 | `_base` | 83 | the July/August Scala vals, verbatim | `ef5ac270285a` |
 | `flask-sqlite3` | 159 | Flask / Flask-Login / Flask-SQLAlchemy / WTForms / sqlite3 docs, hand-written | `edd46a9ed63d` |
-| `django` | 202 | Django 5.1 + DRF docs, drafted by a walled-off agent under the held-out protocol (§7), reviewed, not tuned | `b5df755be580` |
+| `django` | 202 | Django 5.1 + DRF docs, drafted by a walled-off agent under the held-out protocol (§7), reviewed, not tuned | `b5df755be580` (today's, with the four P7 slots); the held-out run scored `b38082f8d2b6`, the pack as it was before P7 |
 
 `JOERN_PACK=auto` picks the pack from `requirements.txt` / imports. `--pack _base` on any
 benchmark is the *no-vocabulary* ablation arm.
@@ -111,15 +111,20 @@ were added in P7, and only those, after running the probes nobody had run:
    control-dependent on a comparison over a resource term, and — for an ORM write `x.save()` —
    whose receiver `x` is the object that was compared. `if qty <= 0: return` followed by an
    unrelated `create()` is no longer a race. Raw SQL writes keep the token test.
-2. **Class scope** (`typeDecl`, `member`, `inheritsFromTypeFullName`). A method's class body
-   and bases join the guard channel; a DRF `get_object()` read honours the class's
+2. **Class scope** (`typeDecl`, `member`, `inheritsFromTypeFullName`). A method's class *body*
+   — member initialisers, a nested `Meta`, the bases — joins the guard channel, never its
+   sibling methods' bodies, so one method's ownership check cannot silence an IDOR in its
+   siblings; a DRF `get_object()` read honours the class's
    `get_queryset()` scoping and any project class it names that defines
    `has_object_permission` — a cross-file type lookup. A direct `Model.objects.get()` in the
    same class still fires, correctly: DRF never runs the object permission for it. The body of
    a form the view instantiates contributes its `min_value=1` to the quantity rule.
-3. **Route reachability** (`callIn` + route markers). `meta.route` = `yes | no | unknown` on
-   every finding; agrees with the answer keys 10/10 where routes exist. **Reported, never a
-   gate** — the call graph is name-based.
+3. **Route reachability** (`callIn` + route markers, matched against module-level calls only).
+   `meta.route` = `yes | no | unknown` on every finding; agrees with the key in 10 of 10
+   comparable cases (shopfast with `_base`, djshop-dev with the Django pack); everywhere else
+   — probe, which has no routes, and a Django target scanned with the `_base` or Flask pack,
+   whose markers do not describe Django routes — the flag is `unknown` rather than a guess
+   [`150728`, `150819`, `151058`]. **Reported, never a gate** — the call graph is name-based.
 
 Effect on the Django DEV split with the Django pack: 5 TP / 2 FP / 2 bait → **5 TP / 0 FP /
 0 bait** [`131151`]; shopfast, probe and the other packs unchanged
@@ -154,13 +159,13 @@ two safe counterparts stay quiet. shopfast is the regression guard (must stay 4 
 | bandit | 12 | 14 | 2 | 0 | 2 | 0.46 | 0.86 | 0.60 | 0.8 | `083330` |
 | semgrep | 13 | 13 | 0 | 0 | 2 | 0.50 | 1.00 | 0.67 | 28.6 | `083415` |
 | joern (`_base`) | 4 | 22 | 0 | 1 | 1 | 0.15 | 0.80 | 0.26 | 37.0 | `131241` |
-| **full** (semgrep + joern + RAG + Gemini) | **15** | 11 | 1 | 1 | 1 | 0.58 | 0.88 | **0.70** | 37.9 | `084600` |
+| **full** (bandit + joern + RAG + Gemini) | **15** | 11 | 1 | 1 | 1 | 0.58 | 0.88 | **0.70** | 37.9 | `084600` |
 
 Joern's four are exactly bugs #22–#25 — the four the testbed documents as SAST-blind — plus
 the `find_product` bait, by design. bandit's two FPs are import noise; semgrep's apparent FP was a
 CWE-96-vs-1336 labelling difference, fixed in the family map.
 
-### Django, held-out (billing domain; 15 vuln rows = 9 SAST-blind + 6 pattern; 14 fixed twins as safe rows; evaluated **once**, tree `9b4f52b3f5f1`)
+### Django, held-out (billing domain; 15 vuln rows = 9 SAST-blind + 6 pattern; 14 fixed twins as safe rows; evaluated **once**, tree `9b4f52b3f5f1`, Django pack at digest `b38082f8d2b6`)
 
 | arm | pack | TP | FN | FP | bait | TN | recall | precision | run |
 |---|---|---|---|---|---|---|---|---|---|
@@ -174,10 +179,16 @@ On the 9 SAST-blind rows: `_base` 5, **`django` 7**, bandit and semgrep 0. The F
 equals `_base` on Django — vocabulary is framework-specific, as it should be. Of the twelve
 failure causes with the Django pack, **7 are vocabulary** (the author excluded `get` for
 precision and said so; `=request.user` scoping kwargs; `request.post` as a wholesale-write
-signal) and **5 are structural** — and those five are exactly what P7 then built. The rules
-also fired on three *correctly fixed* twins, the result shopfast structurally cannot show.
+signal) and **5 are structural** — four of which P7 then built (the queryset-hook scope, the
+cross-file bound, the two validation-vs-resource comparisons); the fifth, ownership carried in
+a receiver chain (`request.user.invoices.filter(…)`), is not addressed. The rules also fired on
+three *correctly fixed* twins, the result shopfast structurally cannot show. On the three
+engines together: Joern is disjoint from both pattern arms, but bandit and semgrep overlap on
+#10 and #11, so the union is 12 of 15 (misses #2, #3, #15).
 These were the numbers **before** P7; P7 was written after reading this failure list, so the
-held-out split was **not** re-run — the post-P7 number belongs to a new held-out split
+held-out split was **not** re-run — the post-P7 number belongs to a new held-out split. The
+pack scored here is `b38082f8d2b6`; the shipped `django.json` (`b5df755be580`) gained its four
+P7 slots afterwards and has never been scored on the held-out split
 [`2026-09-15-p6-django-heldout.md`].
 
 ### Django, DEV split (the iteration split)
@@ -187,6 +198,16 @@ held-out split was **not** re-run — the post-P7 number belongs to a new held-o
 | `_base` | 2 / 0 / 1 bait | 2 / 0 / 1 | `131402` |
 | `flask-sqlite3` | 3 / 0 / 1 | 3 / 0 / 1 | `131447` |
 | `django` | 5 / 2 FP / 2 bait | **5 / 0 / 0** | `131151` |
+
+### Regression after the 2026-09-15 review fixes (rules `11befcda9b9cf6bd`, LF-normalised)
+
+| benchmark | pack | TP / FP / bait | route flags | run |
+|---|---|---|---|---|
+| shopfast | `_base` | 4 / 0 / 1 | 5/5 agree | `150728` |
+| probe | `_base` | 5 / 0 / 0 (2 TN) | all `unknown` (no routes) | `150819` |
+| djshop-dev | `_base` | 2 / 0 / 1 | `unknown` (pack has no Django markers) | `150912` |
+| djshop-dev | `flask-sqlite3` | 3 / 0 / 1 | `unknown` (pack has no Django markers) | `151005` |
+| djshop-dev | `django` | 5 / 0 / 0 | 5/5 agree | `151058` |
 
 ### O3 re-verification (P8)
 
@@ -230,9 +251,12 @@ pack included), and the `tool_stats` view.
   the rules reason within one method plus its class scope. A guard in the caller, or a query in
   a repository module, is invisible. `find_product` is the canonical example.
 - **Guard-as-configuration is only partly solved.** DRF `permission_classes` and
-  `get_queryset()` are handled (P7). Django `urls.py` wrappers, DRF `DEFAULT_PERMISSION_CLASSES`,
-  Flask `before_request`, and ownership carried in a receiver chain
-  (`request.user.invoices.filter(…)`) are not.
+  `get_queryset()` are handled (P7). Django `urls.py` wrappers, DRF `DEFAULT_PERMISSION_CLASSES`
+  and Flask `before_request` are not.
+- **Ownership in a receiver chain (`request.user.invoices.filter(…)`) is not addressed.** It
+  was the fifth structural cause on the held-out split and the one P7 did not build: it needs
+  the origin of the *receiver*, not of the compared value. `request.user.` as a token would
+  silence every IDOR, so it is not a vocabulary fix either.
 - **Token bags cannot say which call they guarded.** `user=request.user` on a
   `Cart.objects.get_or_create` suppresses an IDOR on a `Product` read in the same method — the
   right answer for the wrong reason.
@@ -243,6 +267,14 @@ pack included), and the `tool_stats` view.
 - **Gemini varies.** Two of three identical scans on 2026-09-15 returned `503` / `429` for a
   batch. The `full` arm was run once on shopfast and not at all on the Django splits.
 - **No multi-language.** `importCode.python` only.
+- **Security boundaries, as of the 2026-09-15 review.** Re-verification inputs (`file`,
+  `method`, `class`) are validated as a relative `.py` path and identifiers, and every
+  placeholder is Scala-escaped before it is rendered into the rule; `/api/fix/apply`, `/revert`
+  and `/verify` refuse any path outside the scan's own target; server-mode scans are serialised
+  with a lock, because the sidecar is a single REPL; a script-mode timeout kills the whole JVM
+  tree; pack values may not be whitespace-only or contain double spaces, and a deeply nested
+  JSON pack is refused without raising. The rule hash is LF-normalised so the same Scala hashes
+  the same on every checkout.
 
 ## 11. Adding a rule, a pack, or a framework
 

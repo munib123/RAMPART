@@ -1,4 +1,4 @@
-"""P4 provenance: what the scan router persists, and the migration runner's pure parts.
+r"""P4 provenance: what the scan router persists, and the migration runner's pure parts.
 No database needed - the DB helpers are captured with monkeypatch. Run from backend/:
     .venv\Scripts\python.exe -m pytest tests/test_persistence.py -q
 The live check (columns present, rows by tool) is tests/check_db.py.

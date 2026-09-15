@@ -61,8 +61,9 @@ The Django pack's author, working from the DRF documentation alone, independentl
 > load without multiplying coverage.
 
 *Status:* this is the hypothesis the held-out Django experiment (§4) tested. The September
-ratio on unseen code was 7 vocabulary : 5 structural — the same shape as the August estimate,
-and the five structural causes were the three traversals the paragraph predicted.
+ratio on unseen code was 7 vocabulary : 5 structural — the same shape as the August estimate.
+Four of the five structural causes fell to the three traversals the paragraph predicted; the
+fifth, ownership carried in a receiver chain, did not and remains open (§5).
 
 ---
 
@@ -110,19 +111,22 @@ Three traversals, each added once and shared by every framework (commit `e24c1f8
    control-dependent on a comparison over a resource term *and* — for an ORM write `x.save()` —
    `x` is the object that was compared. The July rule accepted any comparison plus any write in
    any order; an input validation followed by an unrelated insert was a "race".
-2. **Class scope.** A method's class body and bases join its guard channel, so a permission
-   declared on a Django REST Framework view class, or a mixin, is visible to the rule. A read that
+2. **Class scope.** A method's class body — its member initialisers, nested `Meta` and bases,
+   not its sibling methods' bodies — joins its guard channel, so a permission declared on a
+   Django REST Framework view class, or a mixin, is visible to the rule while one method's
+   ownership check cannot silence an IDOR in another. A read that
    goes through the framework's queryset hook honours `get_queryset()` scoping and any project
    class that defines `has_object_permission()` — a cross-file type lookup. A form the view
    instantiates contributes its declared `min_value` to the bound check.
-3. **Route reachability.** Names referenced by route-registering calls, registered view classes,
-   and two hops of the call graph. Emitted on every finding and compared with the answer key,
-   never used to suppress — the call graph is name-based.
+3. **Route reachability.** Names referenced by module-level route-registering calls, registered
+   view classes, and two hops of the call graph. Emitted on every finding and compared with the
+   answer key, never used to suppress — the call graph is name-based.
 
 ### 2.4 Re-verification after a fix (objective O3)
 
 After the LLM proposes a fix, RAMPART applies it to a scratch copy of the whole target, rebuilds
-the graph there, and asks whether the locator still fires on that method — and, when it does not,
+the graph there, and asks whether the locator still fires on that method (class-qualified, so
+`Order.get` and `Invoice.get` are distinct targets) — and, when it does not,
 whether a guard now sits in the method's guard channel (or its class, or a form it instantiates),
 or the sink itself has gone. The whole-target re-scan is diffed so a fix that moves a bug is a
 regression, not a success. A fix that renames a variable, or a docstring that claims a
@@ -140,7 +144,7 @@ Joern runtime is absent the endpoint still answers, labelled as a weaker text se
   CWE, because engines label the same defect differently. Safe rows — deliberate false-positive
   bait and the correctly fixed twins — are scored separately (`bait_fp`, `TN`) so precision is a
   measured quantity.
-- **Six arms** run against the same frozen keys: `null`, `bandit`, `semgrep`, `joern` (the
+- **Five arms**, plus a pack ablation, run against the same frozen keys: `null`, `bandit`, `semgrep`, `joern` (the
   locator alone), `full` (the whole pipeline, verdict-gated), and `joern --pack <p>` for the
   vocabulary ablation. Every run artifact carries the code hash, the rules hash, the pack digest,
   the key version and adjudication state, and every candidate with its outcome and the
@@ -151,8 +155,10 @@ Joern runtime is absent the endpoint still answers, labelled as a weaker text se
   were the schema, the two existing packs, and seventeen pages of the official Django and DRF
   documentation; it never read the testbed, and its prompt and transcript are committed. The
   held-out split was evaluated once; every run of it is appended to `bench/runs/heldout.log`. The
-  rules were later improved (P7) after reading that split's failure list, and it was deliberately
-  **not** re-run: that number belongs to a new held-out split.
+  pack scored there is digest `b38082f8d2b6`. The rules were later improved (P7) after reading
+  that split's failure list, and the pack gained four P7 slots (today's `b5df755be580`); the
+  split was deliberately **not** re-run with either: that number belongs to a new held-out
+  split.
 
 ---
 
@@ -160,12 +166,14 @@ Joern runtime is absent the endpoint still answers, labelled as a weaker text se
 
 ### 4.1 The engines are disjoint
 
-On the Flask testbed (26 planted bugs, 2 baits) bandit found 12 bugs, semgrep 13, and Joern's
+On the Flask testbed (25 planted bugs + 1 undocumented one the key records, 2 baits) bandit found 12 bugs, semgrep 13, and Joern's
 four rules found 4 — bugs #22–#25, the four the testbed documents as SAST-blind — and neither
-pattern scanner found any of those four [`083330`, `083415`, `131241`]. The whole pipeline found
-15 with F1 0.70 [`084600`]. On both Django splits the pattern arms found 0 of the 8 and 9
-SAST-blind rows [`122402`, `122417`, `125014`, `125031`]. "Overlap by exactly zero" is a
-`GROUP BY`, not a sentence.
+pattern scanner found any of those four [`083330`, `083415`, `131241`]. The whole pipeline
+(bandit + Joern + RAG + Gemini) found 15 with F1 0.70 [`084600`]. On both Django splits the
+pattern arms found 0 of the 8 and 9 SAST-blind rows [`122402`, `122417`, `125014`, `125031`].
+"Disjoint" is a statement about Joern against the pattern arms; bandit and semgrep overlap
+with each other (#10 and #11 on the held-out split), so the three-engine union there is 12 of
+15, not the sum. "Overlap by exactly zero" is a `GROUP BY`, not a sentence.
 
 ### 4.2 Each rule fix, measured
 
@@ -186,16 +194,16 @@ same hash:
 |---|---|---|---|
 | `_base` (no framework vocabulary) | 5 / 9 | 0 | 2 |
 | `flask-sqlite3` | 5 / 9 | 0 | 2 |
-| `django` (docs-only, walled off) | **7 / 9** | 7 | 3 |
+| `django` (docs-only, walled off; digest `b38082f8d2b6`) | **7 / 9** | 7 | 3 |
 
 [`124848`, `124929`, `125012`]. The Flask pack equals the base pack on Django code: vocabulary is
 framework-specific, as it should be. The Django pack's two additional hits are the two
 check-then-write races, found only because the pack names `save()` as a write. Its two misses
 are both `Manager.get()`, which the pack's author excluded for precision and documented. Of the
 twelve failure causes, seven were vocabulary and five structural: a permission scope on a view
-class, ownership carried in a queryset hook, a bound declared in another file, and two input
-validations read as resource checks. Three correctly fixed twins fired — the result the Flask
-testbed structurally cannot show, because its guards are all in the method.
+class via `get_queryset`, ownership carried in a receiver chain, a bound declared in another
+file, and two input validations read as resource checks. Three correctly fixed twins fired — the
+result the Flask testbed structurally cannot show, because its guards are all in the method.
 
 The plan had fixed a kill criterion in advance: if structural causes exceeded half, the
 vocabulary-pack conclusion would be wrong for these domains. They did not, but the margin is
@@ -207,10 +215,12 @@ graph traversal buys back.
 
 On the development split, after the three traversals of §2.3 were added — with shopfast, the
 probe suite and the base-pack arms unchanged — the Django-pack arm went from 5 TP / 2 FP / 2 bait
-to **5 TP / 0 FP / 0 bait** [`131151` vs `124738`]. Every false alarm the held-out analysis had
-called structural was removed by the capability it named. Route flags agreed with the answer
-keys in 10 of 10 cases where routes exist; a file with no routes says "unknown" rather than
-guessing.
+to **5 TP / 0 FP / 0 bait** [`131151` vs `124738`]. Every development-split false alarm of a
+kind the held-out analysis had called structural was removed by the capability it named; the
+receiver-chain case has no development-split twin and is not addressed. The route flag agrees
+with the key in 10 of 10 comparable cases (shopfast with its pack, djshop-dev with the Django
+pack); everywhere else — a target with no routes, or a pack whose markers do not describe the
+target's framework — the flag is "unknown" rather than a guess [`150728`, `151058`].
 
 ### 4.5 Re-verification distinguishes a fix from a rewrite
 
@@ -240,7 +250,11 @@ testbed and 14.7 s on the Django split in server mode, against 19–34 s per sca
   claims are about mechanism (which cause, which capability), not about population recall.
 - **Author overlap on the held-out split.** The rules and the held-out testbed share an author;
   the pack does not. The protocol isolates the pack, which is the variable the experiment
-  measures, and the post-P7 rules were not scored on it.
+  measures; neither the post-P7 rules nor the post-P7 pack (`b5df755be580`) were scored on it.
+- **One structural cause is open.** Ownership carried in a receiver chain
+  (`request.user.invoices.filter(…)`) needs the origin of the receiver, which the rules do not
+  compute; a token would silence every IDOR. Four of the five held-out structural causes were
+  addressed, not five.
 - **LLM variability.** Identical scans on the same day returned `503` / `429` for whole batches
   from the Gemini free tier; the `full` arm was run once on shopfast and not on Django. The
   locator numbers do not depend on the LLM; the pipeline numbers do, and were not repeated.

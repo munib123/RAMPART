@@ -64,6 +64,27 @@ def evaluation_failed(stdout: str) -> bool:
     return bool(_FAIL.search(strip_ansi(stdout)))
 
 
+def kill_tree(p: subprocess.Popen) -> None:
+    """Kill a joern launcher AND the JVM under it. `joern.bat` is cmd.exe -> java.exe, so
+    Popen.terminate()/kill() takes only cmd.exe and leaves the JVM running (holding its cwd
+    and, in script mode, the scratch directory). Windows: taskkill /T; POSIX: the process
+    group the child was started in (CREATE_NEW_PROCESS_GROUP / start_new_session)."""
+    if p is None or p.poll() is not None:
+        return
+    try:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+        else:
+            import signal
+            os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+    except Exception:
+        try:
+            p.kill()
+        except Exception:
+            pass
+
+
 class JoernServer:
     def __init__(self, port: int):
         self.port = port
@@ -101,21 +122,7 @@ class JoernServer:
             return
         self.proc = None
         self.ready = False
-        if p.poll() is not None:
-            return
-        try:
-            if os.name == "nt":
-                # kill the tree: joern.bat -> cmd.exe -> java.exe. terminate() would only take cmd.
-                subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
-            else:
-                import signal
-                os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-        except Exception:
-            try:
-                p.kill()
-            except Exception:
-                pass
+        kill_tree(p)
 
     # ---- HTTP --------------------------------------------------------------------
 
@@ -198,10 +205,17 @@ def ensure_started() -> Optional[JoernServer]:
 
 def ready(wait: float = 0.0) -> Optional[JoernServer]:
     """The server, if it is up and answering; otherwise None. `wait` bounds how long to give a
-    starting server before falling back."""
+    starting server before falling back. A sidecar whose process died is replaced (a new
+    ensure_started()) so the next scan gets a fresh JVM instead of script mode forever."""
     s = _srv
-    if s is None or not s.alive():
+    if s is None:
         return None
+    if not s.alive():
+        print("[joern] sidecar process is gone; restarting", flush=True)
+        stop()
+        s = ensure_started()
+        if s is None:
+            return None
     if s.ready or s.wait_ready(wait):
         return s
     return None

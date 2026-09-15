@@ -14,18 +14,21 @@ export default function History() {
   const health = useHealth();
   const [rows, setRows] = useState<HistoryRow[] | null>(null);
   const [error, setError] = useState('');
+  // Depend on the one boolean that matters, not the health object: HealthContext refetches on
+  // focus and polls while the sidecar starts, and each refresh is a new object.
+  const dbEnabled = health?.db_enabled;
 
   useEffect(() => {
     (async () => {
       if (!token) { setRows([]); return; }
-      if (health && health.db_enabled === false) { setRows([]); return; }
+      if (dbEnabled === false) { setRows([]); return; }
       try {
         setRows(await loadHistory());
       } catch (e) {
         setError((e as Error).message || 'Could not load history.');
       }
     })();
-  }, [token, health]);
+  }, [token, dbEnabled]);
 
   const totalOf = (s: HistoryRow) => {
     const c = s.counts || {};

@@ -30,7 +30,20 @@ from bench.match import Candidate
 
 
 def _sha256_file(p: Path) -> str:
-    return hashlib.sha256(p.read_bytes()).hexdigest()[:16] if p.is_file() else ""
+    """Content hash with line endings normalised to LF, so the hash quoted in a run artifact is
+    the same on a CRLF (Windows autocrlf) and an LF checkout of the same commit."""
+    if not p.is_file():
+        return ""
+    return hashlib.sha256(p.read_bytes().replace(b"\r\n", b"\n")).hexdigest()[:16]
+
+
+def _git_dirty() -> bool:
+    try:
+        out = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], cwd=paths.ROOT,
+                             capture_output=True, text=True, timeout=10).stdout
+        return bool(out.strip())
+    except Exception:
+        return False
 
 
 def _git_sha() -> str:
@@ -57,7 +70,7 @@ class LocatorBackend(ABC):
     def locate(self, target_dir: str) -> list[Candidate]: ...
 
     def fingerprint(self) -> dict:
-        return {"backend": self.name, "rampart_git_sha": _git_sha()}
+        return {"backend": self.name, "rampart_git_sha": _git_sha(), "rampart_git_dirty": _git_dirty()}
 
 
 class NullBackend(LocatorBackend):

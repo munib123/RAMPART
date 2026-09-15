@@ -1,0 +1,203 @@
+{
+ "run_id": "20260915T150912Z-djshop-dev-joern-pack-_base",
+ "benchmark": "djshop-dev",
+ "backend": "joern",
+ "pack_arg": "_base",
+ "split": "dev",
+ "tree_sha256": "e824a99673d94b4217037692416d59a250acddf1a80ef09349a9b274bb48fe2c",
+ "frozen_at": "2026-09-15T12:22:03Z",
+ "verdict_gated": false,
+ "elapsed_s": 53.0,
+ "fingerprint": {
+  "backend": "joern",
+  "rampart_git_sha": "21100770",
+  "rampart_git_dirty": true,
+  "joern_version": "4.0.589",
+  "mode": "script",
+  "java_major": 21,
+  "rules_file": "locators.sc",
+  "rules_sha256": "b992d63e790d67ad",
+  "pack": {
+   "requested": "_base",
+   "resolved": "_base",
+   "reason": "requested",
+   "listed": true,
+   "id": "_base",
+   "sha256": "ef5ac270285a897fca3f0c7fa0ed9c0c92ca82cba47cd068453e8a811a164212",
+   "chain": [
+    "_base"
+   ],
+   "authored_from": "hand_written",
+   "unlisted": false,
+   "values": 83,
+   "tag": "_base@ef5ac270285a",
+   "loaded": "_base",
+   "source": "pack"
+  },
+  "diag": {
+   "used": true,
+   "reason": "",
+   "elapsed_ms": 36702,
+   "candidates": 3,
+   "rules_file": "locators.sc",
+   "mode": "script",
+   "target": "D:\\d\\RAMPART\\testbeds\\djshop-dev",
+   "pack": {
+    "requested": "_base",
+    "resolved": "_base",
+    "reason": "requested",
+    "listed": true,
+    "id": "_base",
+    "sha256": "ef5ac270285a897fca3f0c7fa0ed9c0c92ca82cba47cd068453e8a811a164212",
+    "chain": [
+     "_base"
+    ],
+    "authored_from": "hand_written",
+    "unlisted": false,
+    "values": 83,
+    "tag": "_base@ef5ac270285a",
+    "loaded": "_base",
+    "source": "pack"
+   },
+   "methods_seen": 26,
+   "methods_threw": 0,
+   "rule_state": {
+    "joern-idor-missing-ownership": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-mass-assignment": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-unchecked-quantity": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-toctou-check-then-write": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    }
+   }
+  }
+ },
+ "key": {
+  "version": "djshop-dev-key-v1",
+  "rows": 23,
+  "usable": 23,
+  "accepted": 0,
+  "proposed": 23
+ },
+ "score": {
+  "tp": 2,
+  "fn": 10,
+  "fp": 0,
+  "bait_fp": 1,
+  "tn": 10,
+  "cleared": 0,
+  "unresolvable_keys": 0,
+  "reachable_tp": 2,
+  "reachable_fn": 8,
+  "vuln_rows": 12,
+  "safe_rows": 11,
+  "candidates": 3,
+  "reported": 3,
+  "matched_keys": [
+   5,
+   7
+  ],
+  "missed_keys": [
+   1,
+   2,
+   3,
+   4,
+   6,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "recall": 0.1667,
+  "reachable_recall": 0.2,
+  "precision": 0.6667,
+  "f1": 0.2667
+ },
+ "route_agreement": {
+  "compared": 0,
+  "agree": 0,
+  "unknown": 3
+ },
+ "candidates": [
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 69,
+   "end_line": 69,
+   "cwe_id": "CWE-915",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "profile_update",
+    "pack": "_base@ef5ac270285a",
+    "slots": "mapping_iter_calls;dyn_write_calls=setattr",
+    "route": "unknown"
+   },
+   "rel_path": "shop/views.py",
+   "function": "profile_update",
+   "family": "mass-assign",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 5
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 116,
+   "end_line": 116,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "add_to_cart",
+    "pack": "_base@ef5ac270285a",
+    "slots": "qty_terms=qty;price_terms=price",
+    "route": "unknown"
+   },
+   "rel_path": "shop/views.py",
+   "function": "add_to_cart",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 7
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 128,
+   "end_line": 128,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "add_to_cart_form",
+    "pack": "_base@ef5ac270285a",
+    "slots": "qty_terms=qty;price_terms=price",
+    "route": "unknown"
+   },
+   "rel_path": "shop/views.py",
+   "function": "add_to_cart_form",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "bait_fp",
+   "matched_key": 107
+  }
+ ]
+}

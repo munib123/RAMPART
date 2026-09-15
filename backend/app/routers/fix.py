@@ -8,6 +8,7 @@ loopback-only like the rest of the API; snapshot is the durable undo net."""
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -91,11 +92,43 @@ async def _owns_scan(scan_id: str, user_id: str) -> tuple[str | None, dict | Non
     return row.get("target"), None
 
 
+_FORBIDDEN = {"ok": False, "code": "forbidden", "error": "path is outside the scanned target"}
+
+
+def within_target(path: str | None, target: str | None) -> bool:
+    """Containment rule for apply/revert/verify: the client-supplied file path must resolve
+    inside the owned scan's target (or BE the target when a single file was scanned). Owning
+    a scan row must never turn into a write anywhere on the machine. Pure - resolve() only
+    (symlinks and '..' collapse there), so it is unit-testable without a DB."""
+    if not path or not target:
+        return False
+    try:
+        p, t = Path(path).resolve(), Path(target).resolve()
+    except (OSError, RuntimeError):
+        return False
+    return p.is_relative_to(t)
+
+
+def same_target(requested: str | None, target: str | None) -> bool:
+    """Revert restores the WHOLE target: the client may name it (resolved equality) or omit it,
+    never redirect it."""
+    if not requested:
+        return True
+    if not target:
+        return False
+    try:
+        return Path(requested).resolve() == Path(target).resolve()
+    except (OSError, RuntimeError):
+        return False
+
+
 @router.post("/api/fix/apply")
 async def apply_fix(req: ApplyFixReq, user=Depends(current_user)):
     target, err = await _owns_scan(req.scan_id, user["id"])
     if err:
         return err
+    if not within_target(req.path, target):
+        return dict(_FORBIDDEN)
     # The snapshot is the durable revert net - never apply without it.
     snap = await asyncio.to_thread(apply_svc.snapshot_target, req.scan_id, target)
     if not snap.get("ok"):
@@ -111,7 +144,9 @@ async def revert_fix(req: RevertReq, user=Depends(current_user)):
     target, err = await _owns_scan(req.scan_id, user["id"])
     if err:
         return err
-    return await asyncio.to_thread(apply_svc.revert_snapshot, req.scan_id, req.target or target)
+    if not same_target(req.target, target):
+        return {**_FORBIDDEN, "error": "target does not match the scanned target"}
+    return await asyncio.to_thread(apply_svc.revert_snapshot, req.scan_id, target)
 
 
 @router.post("/api/fix/verify")
@@ -122,6 +157,8 @@ async def verify_fix(req: VerifyFixReq, user=Depends(current_user)):
     target, err = await _owns_scan(req.scan_id, user["id"])
     if err:
         return err
+    if not within_target(req.path, target):
+        return dict(_FORBIDDEN)
     if not str(req.rule_id or "").startswith("joern-"):
         return {"ok": False, "code": "not_cpg",
                 "error": "re-verification runs the CPG locator; this finding came from a pattern scanner"}

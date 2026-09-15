@@ -1,0 +1,5 @@
+# Line endings: the Scala rules and packs are hashed (bench fingerprints, pack digests are
+# canonical-JSON so unaffected); keep them LF everywhere so hashes match across checkouts.
+*.sc text eol=lf
+backend/app/services/joern/vocab/packs/*.json text eol=lf
+bench/keys/*.jsonl text eol=lf

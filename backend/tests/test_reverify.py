@@ -154,3 +154,64 @@ def test_exit_gate_shopfast_get_order():
     r2 = rv.verify(str(root), str(path), "get_order", IDOR, fixed_code=cosmetic,
                    start_line=5, end_line=8, original_code=original, pack="_base")
     assert r2["ok"] and r2["locator_refires"] is True and not r2["converged"], r2
+
+
+# ---- review fixes: input validation, single-file targets, docstring-blind fallback ---------
+
+@pytest.mark.parametrize("path_tail,function", [
+    ('x"; System.exit(3); val zz = "y.py', "f"),
+    ("views.py", 'f"; System exit 1; val q = "'),
+    ("views.py", "Cls.f; bad"),
+    ("views.txt", "f"),
+])
+def test_verify_refuses_unsafe_names_before_any_scan(tmp_path, path_tail, function):
+    (tmp_path / "views.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    r = rv.verify(str(tmp_path), str(tmp_path / path_tail), function, IDOR)
+    assert not r["ok"] and r.get("code") in ("bad_request", "not_found"), r
+
+
+def test_verify_refuses_non_cpg_rules(tmp_path):
+    (tmp_path / "views.py").write_text("def f():\n    return 1\n", encoding="utf-8")
+    r = rv.verify(str(tmp_path), str(tmp_path / "views.py"), "f", "python.lang.security.x")
+    assert not r["ok"] and r["code"] == "not_cpg"
+
+
+def test_split_function_carries_the_class():
+    assert rv._split_function("OrderViewSet.cancel") == ("OrderViewSet", "cancel")
+    assert rv._split_function("get_order") == ("", "get_order")
+    assert rv._split_function("a.b.c") == ("b", "c")
+
+
+def test_single_file_target_resolves_to_its_name(tmp_path):
+    f = tmp_path / "app.py"
+    f.write_text("def f():\n    return 1\n", encoding="utf-8")
+    assert rv._rel(str(f), str(f)) == "app.py"
+    assert rv._rel(str(f), str(tmp_path / "other.py")) is None
+
+
+def test_hits_are_class_qualified():
+    class F:  # a Finding-like object
+        def __init__(self, cls): self.d = {"path": "D:/t/api.py", "rule_id": IDOR, "line": 1, "cwe_id": "CWE-639",
+                                            "meta": {"method": "get", "class": cls}}
+        def to_dict(self): return self.d
+    fs = [F("A"), F("B")]
+    assert [h["class"] for h in rv._hits(fs, "api.py", "get")] == ["A", "B"]
+    assert [h["class"] for h in rv._hits(fs, "api.py", "get", "B")] == ["B"]
+
+
+def test_pattern_fallback_ignores_docstrings_and_comments(tmp_path, monkeypatch):
+    from app.services.joern import scan as joern_scan
+    monkeypatch.setattr(joern_scan, "enabled", lambda p: (False, "no JRE 21 found"))
+    (tmp_path / "views.py").write_text("def get_order(order_id):\n    return fetch(order_id)\n", encoding="utf-8")
+    liar = ('def get_order(order_id):\n'
+            '    """Only the owner may read this: is_owner is checked, else PermissionDenied."""\n'
+            '    # TODO: abort(403) when not the owner\n'
+            '    return fetch(order_id)')
+    r = rv.verify(str(tmp_path), str(tmp_path / "views.py"), "get_order", IDOR,
+                  fixed_code=liar, start_line=1, end_line=2, pack="_base")
+    assert r["ok"] and r["reverify_method"] == "pattern"
+    assert not r["converged"] and r["guard_evidence"] == []
+    honest = 'def get_order(order_id):\n    row = fetch(order_id)\n    if not is_owner(row):\n        raise PermissionDenied()\n    return row'
+    r2 = rv.verify(str(tmp_path), str(tmp_path / "views.py"), "get_order", IDOR,
+                   fixed_code=honest, start_line=1, end_line=2, pack="_base")
+    assert r2["converged"] and "text:is_owner" in r2["guard_evidence"]

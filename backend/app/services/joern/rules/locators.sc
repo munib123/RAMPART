@@ -8,9 +8,10 @@
 //
 // __INPUT_DIR__, __OUT_FILE__, __DIAG_FILE__, __PROJECT__, __PACK_FILE__, __BASE_PACK_FILE__
 // and __PACK_TAG__ are substituted by scan.py (forward-slash paths). Output is TSV:
-//   cwe \t severity \t file \t line \t method \t rule \t message \t evidence \t pack_tag \t slot_trace \t route
+//   cwe \t severity \t file \t line \t method \t rule \t message \t evidence \t pack_tag \t slot_trace \t route \t class
 // Columns 9-10 are provenance (P5): which pack, and which slot=value made the rule fire.
 // Column 11 (P7) is route reachability: yes | no | unknown. Reported, never a gate.
+// Column 12 (P8) is the enclosing class ("" for a module-level function).
 //
 // VOCABULARY IS DATA (P5). This file holds the four rule SHAPES and nothing framework-specific.
 // Every token list - what an ownership check, a lock, an allow-list or an object id LOOKS LIKE -
@@ -42,8 +43,8 @@ val packTag      = "__PACK_TAG__"        // "<pack_id>@<sha256[:12]>", column 9 
 
 val findings = ListBuffer[String]()
 def san(s: String): String = s.replace("\t", " ").replace("\r", " ").replace("\n", " ").trim
-def add(cwe: String, sev: String, file: String, line: Int, meth: String, rule: String, msg: String, ev: String, trace: String, route: String = ""): Unit =
-  findings += List(cwe, sev, file, line.toString, meth, rule, san(msg), san(ev), packTag, san(trace), route).mkString("\t")
+def add(cwe: String, sev: String, file: String, line: Int, meth: String, rule: String, msg: String, ev: String, trace: String, route: String = "", cls: String = ""): Unit =
+  findings += List(cwe, sev, file, line.toString, meth, rule, san(msg), san(ev), packTag, san(trace), route, cls).mkString("\t")
 // slot trace helpers: "slot=value" for the first value of `toks` found in `text` (contains),
 // so the report can say WHICH vocabulary entry made the rule fire.
 def hit(slot: String, toks: List[String], text: String): String =
@@ -156,13 +157,34 @@ val projectTypeDecls: List[TypeDeclNode] = cpg.typeDecl.isExternal(false).nameNo
 // class name -> normalised lower-cased text of its body (member initialisers, nested Meta,
 // decorators) plus the names of its bases; and the identifiers the body names (the classes
 // listed in permission_classes = [...])
+// The class BODY is the TYPE_DECL's `<body>` method (plus nested classes such as Meta); the
+// class's real methods are separate METHOD nodes and their bodies are NOT class scope - one
+// method's ownership check must never silence IDOR in a sibling method.
+// A decorated method is lowered INTO the class body as `name = deco(def name(...))`; that call
+// guards one method (the per-method decoAnchor test below), never the whole class, so it is
+// kept out of the class text and out of the class identifiers.
+def isDecoLowering(n: io.shiftleft.codepropertygraph.generated.nodes.AstNode): Boolean =
+  n.inAst.isCall.exists(_.code.contains("(def ")) || (n match {
+    case c: io.shiftleft.codepropertygraph.generated.nodes.Call => c.code.contains("(def ")
+    case _ => false
+  })
+def classBodyNodes(t: TypeDeclNode) =
+  t.ast.filter { n =>
+    n.inAst.isMethod.headOption.forall(m => m.name == "<body>" || m.name.startsWith("<")) && !isDecoLowering(n)
+  }
 val classTextByName: Map[String, String] = projectTypeDecls.map { t =>
-  val body  = t.ast.isCall.code.l ++ t.ast.isIdentifier.name.l
+  val body  = classBodyNodes(t).isCall.code.l ++ classBodyNodes(t).isIdentifier.name.l
   val bases = t.inheritsFromTypeFullName.l
   t.name -> norm((body ++ bases).mkString("   ").toLowerCase)
 }.toMap
 val classIdentsByName: Map[String, Set[String]] =
-  projectTypeDecls.map(t => t.name -> t.ast.isIdentifier.name.toSet).toMap
+  projectTypeDecls.map(t => t.name -> classBodyNodes(t).isIdentifier.name.toSet).toMap
+// class name -> the decorator lowerings in its body, lower-cased + normalised, so a class
+// method's own decorator (`@check_owner def a(...)`) counts for `a` exactly as a module-level
+// decorator does for a module-level function
+val classDecoCallsByName: Map[String, List[String]] = projectTypeDecls.map { t =>
+  t.name -> t.ast.isCall.code.l.filter(_.contains("(def ")).map(c => norm(c.toLowerCase))
+}.toMap
 val CMP_OPS = Set("<operator>.greaterThan", "<operator>.greaterEqualsThan",
                   "<operator>.lessThan", "<operator>.lessEqualsThan")
 // classes that define an object-level permission hook (DRF has_object_permission)
@@ -185,6 +207,7 @@ val querysetTextByClass: Map[String, String] =
 // A routed CLASS routes all its methods. Then two hops of the (name-based) call graph.
 // Reported on every finding, never used to gate a rule.
 val routedNames: Set[String] = cpg.method.nameExact("<module>").ast.isCall.l
+  .filter(c => c.method.name == "<module>")            // module level only, not nested defs
   .filter(c => ROUTE_MARKERS.exists(norm(c.code.toLowerCase).contains))
   .flatMap(c => c.ast.isFieldIdentifier.canonicalName.l ++ c.ast.isIdentifier.name.l)
   .toSet
@@ -226,15 +249,25 @@ case class Ctx(name: String, file: String, line: Int, params: List[String],
 
 // P7 (1): the receiver of `x.y.save()` is `x`; of `product.stock` is `product`. Crude on
 // purpose - the identity test only has to hold within one method's own spelling.
+// `cart.product.save()` -> "cart.product": the dotted chain in front of the last call.
 def receiverOf(code: String): String = {
-  val c = code.trim
-  val end = c.indexWhere(ch => ch == '.' || ch == '(' || ch == '[' || ch == ' ')
-  if (end > 0) c.substring(0, end) else ""
+  val c = code.trim.toLowerCase
+  val paren = c.indexOf('(')
+  val head = if (paren > 0) c.substring(0, paren) else c
+  val dot = head.lastIndexOf('.')
+  if (dot > 0) head.substring(0, dot).trim else ""
 }
-// receivers of every `obj.field` in a comparison whose field mentions a resource term
-val fieldRef = """([a-z_][a-z0-9_]*)\.([a-z_][a-z0-9_]*)""".r
+// receivers of every `a.b.field` in a comparison whose field mentions a resource term:
+// "cart.product.stock >= q" -> Set("cart.product")
+val fieldRef = """((?:[a-z_][a-z0-9_]*\.)+)([a-z_][a-z0-9_]*)""".r
 def resourceReceivers(cmp: String): Set[String] =
-  fieldRef.findAllMatchIn(cmp.toLowerCase).filter(mm => QTY.exists(mm.group(2).contains)).map(_.group(1)).toSet
+  fieldRef.findAllMatchIn(cmp.toLowerCase).filter(mm => QTY.exists(mm.group(2).contains))
+    .map(_.group(1).stripSuffix(".")).toSet
+// the write's receiver is the compared object, or a suffix/prefix of it (`self.cart.product`)
+def sameReceiver(write: String, cmpReceivers: Set[String]): Boolean = {
+  val w = receiverOf(write)
+  w.nonEmpty && cmpReceivers.exists(r => r == w || r.endsWith("." + w) || w.endsWith("." + r))
+}
 
 // Fix 8: every .name(s) / .code(s) / .filename(s) accessor treats s as a REGEX. The July
 // prototype lost an entire run to a Windows path in .filename() and then routed around it
@@ -265,11 +298,13 @@ def ctx(m: io.shiftleft.codepropertygraph.generated.nodes.Method): Ctx = {
   // contains(), `get_note_extra = check_owner(def get_note_extra(...))` credited the shorter,
   // undecorated sibling get_note with a guard it does not have.
   val decoAnchor  = "(def " + name.toLowerCase + "("
-  val moduleCalls = moduleCallsByFile.getOrElse(file, Nil).filter(_.contains(decoAnchor))
-
   // P7 (2): the enclosing class, if the method is a method. The module's own pseudo-class is
   // not a class; only project TYPE_DECLs count.
   val className = m.typeDecl.headOption.map(_.name).filter(classTextByName.contains).getOrElse("")
+  // this method's OWN decorator lowering: at module level for a function, in the class body
+  // for a method (matched as "(def <name>(", never by contains(name) - fix 7)
+  val moduleCalls = (moduleCallsByFile.getOrElse(file, Nil) ++ classDecoCallsByName.getOrElse(className, Nil))
+    .filter(_.contains(decoAnchor))
   val classText = classTextByName.getOrElse(className, "")
   // project classes this method instantiates (AddToCartForm(request.POST) -> the form's body)
   val instText  = m.call.name.l.distinct.flatMap(classTextByName.get).mkString("   ")
@@ -320,7 +355,7 @@ def ctx(m: io.shiftleft.codepropertygraph.generated.nodes.Method): Ctx = {
   )
 }
 
-val ctxs: List[Ctx] = cpg.method.isExternal(false).nameNot("<.*>\\d*", "__.*__").l.flatMap { m =>
+val ctxs: List[Ctx] = cpg.method.isExternal(false).nameNot("<.*>\\d*", "__.*__", ".*<.*>.*").l.flatMap { m =>
   methodsSeen += 1
   try Some(ctx(m)) catch { case NonFatal(e) => methodsThrew += 1; None }
 }
@@ -340,7 +375,7 @@ ctxs.foreach { c => guarded("joern-idor-missing-ownership") {
                       .getOrElse(c.execHit("sql_read_kw", SQL_READ))
     add("CWE-639", "high", c.file, c.line, c.name, "joern-idor-missing-ownership",
       s"Reads a record by the caller-supplied id '${idName}' with no ownership or authorization check in the method${if (c.className.nonEmpty) " or on its class " + c.className else ""}. If this record is user-owned, any authenticated user can read another user's data (IDOR).${c.authnNote}", ev,
-      trace(idTrace, readTrace, if (c.scopedRead) "scoped_read" else ""), c.route)
+      trace(idTrace, readTrace, if (c.scopedRead) "scoped_read" else ""), c.route, c.className)
   }
 }}
 
@@ -357,7 +392,7 @@ ctxs.foreach { c => guarded("joern-mass-assignment") {
                   else c.execHit("sql_write_kw", SQL_WRITE)
     add("CWE-915", "high", c.file, c.line, c.name, "joern-mass-assignment",
       "Writes every field of a caller-supplied data mapping into a record with no allow-list, so a client can set fields that were never meant to be user-writable (e.g. is_admin, role, balance).", ev,
-      trace(sigTrace, wrTrace), c.route)
+      trace(sigTrace, wrTrace), c.route, c.className)
   }
 }}
 
@@ -373,7 +408,7 @@ ctxs.foreach { c => guarded("joern-unchecked-quantity") {
     val ev = c.multCode.headOption.getOrElse("")
     add("CWE-840", "medium", c.file, c.line, c.name, "joern-unchecked-quantity",
       "Computes a monetary amount from a caller-supplied quantity/price with no lower-bound (>0) guard. A negative or zero quantity can yield a negative total (store credit / free goods).", ev,
-      trace(hitAny("qty_terms", QTY_TERMS, multLc), hitAny("price_terms", PRICE_TERMS, multLc)), c.route)
+      trace(hitAny("qty_terms", QTY_TERMS, multLc), hitAny("price_terms", PRICE_TERMS, multLc)), c.route, c.className)
   }
 }}
 
@@ -389,7 +424,7 @@ ctxs.foreach { c => guarded("joern-toctou-check-then-write") {
   val isExecWrite = (w: String) => (SQL_WRITE ++ SQL_DELETE).exists(w.toUpperCase.contains) && EXEC_CALLS.exists(e => w.contains(e + "("))
   val pairs = c.ctlWrites.filter { case (w, cmp) =>
     val cmpLc = cmp.toLowerCase
-    QTY.exists(cmpLc.contains) && (isExecWrite(w) || resourceReceivers(cmpLc).contains(receiverOf(w).toLowerCase))
+    QTY.exists(cmpLc.contains) && (isExecWrite(w) || sameReceiver(w, resourceReceivers(cmpLc)))
   }
   if (pairs.nonEmpty && !c.guardHas(LOCK)) {
     val (w, cmp) = pairs.head
@@ -398,7 +433,7 @@ ctxs.foreach { c => guarded("joern-toctou-check-then-write") {
                   else COMMIT_CALLS.find(cc => w.contains("." + cc + "(")).map("commit_calls=" + _).getOrElse("commit_calls")
     add("CWE-362", "high", c.file, c.line, c.name, "joern-toctou-check-then-write",
       s"Checks a resource value (${san(cmp)}) and then writes it in the branch that check decides, with no lock or atomic transaction. Concurrent requests can both pass the check before either writes (TOCTOU race), oversubscribing the resource.", w,
-      trace(hitAny("qty_terms", QTY_TERMS, List(cmpLc)), hitAny("price_terms", PRICE_TERMS, List(cmpLc)), wrTrace, "controlled_by"), c.route)
+      trace(hitAny("qty_terms", QTY_TERMS, List(cmpLc)), hitAny("price_terms", PRICE_TERMS, List(cmpLc)), wrTrace, "controlled_by"), c.route, c.className)
   }
 }}
 
@@ -410,11 +445,13 @@ ctxs.foreach { c => guarded("joern-toctou-check-then-write") {
 // or not at all. A no-op when __REVERIFY_METHOD__ is empty (every ordinary scan).
 val reverifyFile   = "__REVERIFY_FILE__"
 val reverifyMethod = "__REVERIFY_METHOD__"
+val reverifyClass  = "__REVERIFY_CLASS__"      // "" = any class / module level
 val reverifyOut    = "__REVERIFY_OUT__"
 if (reverifyMethod.nonEmpty) {
   def fwd(s: String) = s.replace('\\', '/')
   def jlist(xs: List[String]) = xs.map(jstr).mkString("[", ",", "]")
-  val hits = ctxs.filter(c => fwd(c.file) == reverifyFile && c.name == reverifyMethod)
+  val hits = ctxs.filter(c => fwd(c.file) == reverifyFile && c.name == reverifyMethod &&
+                              (reverifyClass.isEmpty || c.className == reverifyClass))
   val methodsJson = hits.map { c =>
     val where = (label: String, text: String, toks: List[String]) => toks.filter(text.contains).map(t => label + ":" + t)
     val authz = where("method", c.guardText, AUTHZ) ++ where("class", c.classText, AUTHZ) ++

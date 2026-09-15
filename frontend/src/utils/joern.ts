@@ -42,6 +42,12 @@ export function joernStatus(health: Health | null | undefined): JoernStatus {
     detail: 'Joern CPG phase runs per scan in script mode (~20-35 s extra) · IDOR, mass assignment, unchecked quantity, TOCTOU.' };
 }
 
+/** Will a scan started now run the CPG phase? Only these states do: `available` alone is not
+ *  enough (JOERN_ENABLED=off still reports the install as available). */
+export function cpgPhaseRuns(health: Health | null | undefined): boolean {
+  return ['ready', 'starting', 'script'].includes(joernStatus(health).state);
+}
+
 export const isCpg = (f: Finding): boolean => f.tool === 'joern';
 
 /** "pack flask-sqlite3 · fired on id_param_suffix=_id, orm_read_calls=fetchone" - for the badge tooltip. */

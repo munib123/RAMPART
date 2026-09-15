@@ -1,6 +1,6 @@
 # RAMPART — working brief
 
-> Full history, design decisions, and the August audit live in `D:\d\FYP\CLAUDE.md` (481 lines).
+> Full history, design decisions, and the August audit live in `D:\d\FYP\CLAUDE.md` (495 lines).
 > This file is the short, current-state version for the live repo. Verified by execution 2026-09-15.
 
 **RAMPART** — Retrieval-Augmented Multi-tier Pipeline for Application Remediation & Testing.
@@ -108,17 +108,25 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   authored AFTER the freeze by a fresh agent from Django/DRF docs only (`packs/django.prompt.md`,
   `django.transcript.json`). Scala got one general fix from DEV: pysrc2cpg renders `kw = value` with
   spaces → `norm()` in the vocab section. **Held-out, evaluated once:** SAST-blind `_base` 5/9,
-  `django` 7/9, bandit/semgrep 0/9; 12 failure causes = 7 vocabulary + 5 structural (class-scope
-  guard, receiver-chain ownership, cross-file bound, validation-vs-DB comparison). **Never re-run
-  `djshop-heldout` after changing a pack or rule** - that is tuning on the test set; measure on DEV,
-  report on a new held-out split. Log: `bench/runs/2026-09-15-p6-django-heldout.md`.
+  `django` 7/9, bandit/semgrep 0/9 (three-engine union 12/15: bandit and semgrep overlap on #10,
+  #11); 12 failure causes = 7 vocabulary + 5 structural (class-scope guard, receiver-chain
+  ownership, cross-file bound, validation-vs-DB comparison ×2). The pack scored there is digest
+  `b38082f8d2b6`; the shipped `django.json` (`b5df755be580`, four P7 slots added later) has never
+  been scored on held-out. **Never re-run `djshop-heldout` after changing a pack or rule** - that
+  is tuning on the test set; measure on DEV, report on a new held-out split.
+  Log: `bench/runs/2026-09-15-p6-django-heldout.md`.
   **P7 done:** the rules now use the graph. TOCTOU = write control-dependent on a resource
-  comparison + same receiver (`x.stock >= q` … `x.save()`); class scope via `typeDecl` (class body +
-  bases in the guard channel; DRF `get_object` reads honour `get_queryset` text and any project class
-  defining `has_object_permission`; an instantiated form's `min_value` bounds the quantity rule);
-  `meta.route` = yes|no|unknown from route markers + 2 hops of `callIn`, reported never gated.
+  comparison + same receiver (`x.stock >= q` … `x.save()`); class scope via `typeDecl` (class BODY
+  only - member initialisers, nested Meta, bases - never sibling methods' bodies, so one method's
+  ownership check cannot silence an IDOR in its siblings; DRF `get_object` reads honour `get_queryset`
+  text and any project class defining `has_object_permission`; an instantiated form's `min_value`
+  bounds the quantity rule); `meta.route` = yes|no|unknown from route markers (module-level calls
+  only) + 2 hops of `callIn`, reported never gated - agrees with the key in 10/10 comparable cases
+  (shopfast with `_base`, djshop-dev with the Django pack), `unknown` rather than a guess elsewhere.
   Schema v2 (+4 slots), pack cap 16 KB. DEV/django 5 TP / 0 FP / 0 bait; regressions unchanged.
-  Held-out deliberately not re-run. Log: `bench/runs/2026-09-15-p7-graph.md`.
+  Four of the five held-out structural causes addressed; receiver-chain ownership
+  (`request.user.invoices…`) is NOT. Held-out deliberately not re-run.
+  Log: `bench/runs/2026-09-15-p7-graph.md`.
   **P8 done:** O3 re-verification. `joern/reverify.py` - preview (scratch copy + `apply_fix` there,
   live tree untouched) or post-apply (snapshot = before); `decide()` = fired before ∧ silent after ∧
   no new candidate anywhere; reason names the guard and where it lives (`method:` / `class:` /
@@ -132,6 +140,24 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   Owed by humans: adjudicate 90 key rows; `full` arm on Django when Gemini quota allows; score the
   post-P7 rules on a NEW held-out split (never re-run `djshop-heldout` after a rule/pack change).
   Gemini key is in `.env` (pasted in chat 2026-09-15 - rotate it).
+  **Post-review hardening (2026-09-15):** re-verification inputs (file, method, class) are
+  validated as a relative `.py` path / identifiers and every placeholder is Scala-escaped before
+  rendering; re-verification is class-qualified (`Class.method`); `/api/fix/apply`, `/revert`,
+  `/verify` refuse paths outside the owned scan target; server-mode scans are serialised with a
+  lock (the sidecar is one REPL); script-mode timeouts kill the JVM tree; pack values may not be
+  whitespace-only or contain double spaces; deeply nested JSON packs are refused without raising.
+  Rule hashes are LF-normalised (`bench/backends/__init__.py`) - `locators.sc` is 487 lines
+  (291 non-blank non-comment), sha `11befcda9b9cf6bd`; earlier CRLF-computed hashes in old logs
+  no longer apply, quote the run artifact's `rules_sha256`. Post-fix regression: shopfast 4/0/1
+  (`150728`), probe 5/0/0 (`150819`), djshop-dev `_base` 2/0/1, flask 3/0/1, django 5/0/0
+  (`150912`, `151005`, `151058`). The shopfast `full` arm (`084600`) ran bandit + joern, not semgrep.
+  Tests: 181 backend pass (1 skipped: POSIX chmod on Windows) + 1 JVM exit-gate test, 16 bench
+  (test_joern 20, test_vocab 23, test_reverify 20, test_runtime 15, test_fix_paths 10,
+  test_persistence 5, plus the older health/apply tests).
+  Installer: per-platform Joern asset (`joern-cli-{windows-x86_64,linux-x86_64,linux-arm64,
+  macos-x86_64,macos-arm64}.zip`) + matching Adoptium JRE, `.sha512` verified, one-line failure
+  reason + manual fallback (drop zip + `.sha512` into `tools/`); only Windows x64 exercised end to
+  end, Linux/macOS unit-tested only.
   Open: the `full` arm Confirmed the find_product bait; extract.py gives module-level findings
   a slice that reaches into the next function. A second process on the same machine cannot bind
   8091 and silently runs script mode - check `joern.mode` before quoting timings.

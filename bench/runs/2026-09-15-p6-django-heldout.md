@@ -12,7 +12,11 @@ is the gap vocabulary (fixable by a data pack) or structure (needs a new travers
 | 3 | `82921d1f` | DEV runs exposed a representation gap: pysrc2cpg renders `kw = value` with spaces, so no `kw=value` token from any pack could ever match. Fixed in the Scala (`norm`), a general change validated on shopfast/probe (unchanged) and DEV. Held-out still untouched. |
 | 4 | this log | **Held-out evaluated once**: joern × {`_base`, `flask-sqlite3`, `django`}, bandit, semgrep, back to back. Every run is in `bench/runs/heldout.log`. Nothing was changed afterwards. |
 
-Rules `locators.sc` sha `459a9902f1993db2` for every Joern run below. 0 of 52 Django key rows are
+The same `locators.sc` for every Joern run below (see each artifact's `rules_sha256`; the hash
+first quoted here was computed on CRLF bytes, and rule hashes are now LF-normalised in
+`bench/backends/__init__.py`, so it no longer applies). The Django pack scored is digest
+`b38082f8d2b6` - the pack as authored, before P7 added four slots; the shipped `django.json`
+(`b5df755be580`) has never been scored on the held-out split. 0 of 52 Django key rows are
 adjudicated (all `proposed`), same caveat as shopfast.
 
 ## The numbers
@@ -28,8 +32,9 @@ adjudicated (all `proposed`), same caveat as shopfast.
 | semgrep | - | 3 | 12 | 2 | 0 | 14 | 0.20 | 0.60 | 0.30 |
 
 On the **9 SAST-blind rows only**: `_base` 5/9, `django` **7/9**. bandit and semgrep find 0 of 9.
-Engines disjoint again: joern {1,4,5,6,7,8,9}, bandit {10,11,13,14}, semgrep {10,11,12};
-union 14 of 15.
+Joern disjoint from both pattern arms again: joern {1,4,5,6,7,8,9}, bandit {10,11,13,14},
+semgrep {10,11,12}; bandit and semgrep overlap on #10 and #11, so the union is 12 of 15
+(misses #2, #3, #15).
 
 ### DEV (`djshop-dev`, 12 vuln: 8 SAST-blind + 4 pattern; 11 safe twins)
 
@@ -73,10 +78,12 @@ decision costs #2, #3, #4.
 was "structural failures exceed ~half → the vocabulary-pack conclusion is wrong". It is not
 exceeded, but it is close, and the honest reading is: **vocabulary takes Joern from 5/9 to 7/9 on
 unseen Django code and would take it to 9/9 with two tokens (`get`, `=request.user`) - at the price
-of precision that only a graph traversal can buy back.** The five structural causes are exactly
-the three capabilities P7 was scoped for: class-scope resolution (`permission_classes`,
+of precision that only a graph traversal can buy back.** Four of the five structural causes fall
+inside the three capabilities P7 was scoped for: class-scope resolution (`permission_classes`,
 `get_queryset`), origin of the compared value (DB read vs request input), and the cross-file
-guard (`forms.py`, `serializers.py`).
+guard (`forms.py`, `serializers.py`). The fifth - ownership carried in a receiver chain
+(`request.user.invoices.filter(...)`) - needs the origin of the *receiver*, which none of the
+three provides; it stays open after P7.
 
 `flask-sqlite3` equals `_base` on both Django splits: the Flask pack neither helps nor hurts
 Django code, which is what "framework vocabulary" should mean.

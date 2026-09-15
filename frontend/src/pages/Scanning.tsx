@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useHealth } from '@/context/HealthContext';
 import { useScan } from '@/hooks/useScan';
+import { cpgPhaseRuns } from '@/utils/joern';
 import { Icon } from '@/components/Icons';
 
 export default function Scanning() {
@@ -19,7 +20,7 @@ export default function Scanning() {
     scope,
     model: health?.model,
     activeScanner: health?.scanner,
-    cpg: !!health?.scanners?.joern?.available,
+    cpg: cpgPhaseRuns(health),
   });
 
   // Start once when mounted.

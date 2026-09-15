@@ -20,17 +20,25 @@ re-scan added no new candidate anywhere (a fix that moves the bug is not a fix).
 is a pure function of the two scan results - decide() - so it is unit-tested without a JVM.
 
 reverify_method is "cpg" when the graph answered, "pattern" when Joern is unavailable and the
-only evidence is a token search over the patched function text. The weaker answer is labelled.
+only evidence is a token search over the patched function's code (strings and comments
+blanked). The weaker answer is labelled.
+
+The method is addressed as (relative file, class, method); `function` may be `Class.method`
+as the UI's slice name spells it. All three are validated as identifiers / a relative .py path
+before they go anywhere near the Scala, and escaped again when they do.
 """
 from __future__ import annotations
 
-import os
+import ast
+import io
 import shutil
 import time
+import tokenize
 import uuid
 from pathlib import Path
 from typing import Optional
 
+from app import config
 from app.services import apply as apply_svc
 from app.services.joern import runtime, scan as joern_scan
 from app.services.joern.vocab import validate as vocab
@@ -51,34 +59,53 @@ _RULE_SLOTS = {   # pack slots for the pattern fallback
 
 
 def _rel(target: str, path: str) -> Optional[str]:
+    """`path` relative to the scanned target, forward slashes; the file's own name when the
+    target IS that file (a single-file scan). None when `path` is outside the target."""
+    t, f = Path(target).resolve(), Path(path).resolve()
+    if t.is_file():
+        return f.name if f == t else None
     try:
-        return Path(path).resolve().relative_to(Path(target).resolve()).as_posix()
+        return f.relative_to(t).as_posix()
     except ValueError:
         return None
 
 
+def _split_function(fn: str) -> tuple[str, str]:
+    """'OrderViewSet.cancel' -> ('OrderViewSet', 'cancel'); 'get_order' -> ('', 'get_order').
+    Joern names a method by its bare name and knows its class separately."""
+    parts = [x.strip() for x in (fn or "").split(".") if x.strip()]
+    if not parts:
+        return "", ""
+    return (parts[-2] if len(parts) > 1 else ""), parts[-1]
+
+
 def _method_of(fn: str) -> str:
-    """'OrderViewSet.cancel' -> 'cancel'; Joern names methods by their bare name."""
-    return (fn or "").split(".")[-1].strip()
+    return _split_function(fn)[1]
 
 
-def _hits(findings, rel: str, method: str) -> list[dict]:
+def _hits(findings, rel: str, method: str, cls: str = "") -> list[dict]:
+    """Findings on (rel file, method[, class]). The class is matched when the request named
+    one, so a same-named method in another class of the file cannot drive the verdict."""
     out = []
     for f in findings:
         d = f.to_dict() if hasattr(f, "to_dict") else dict(f)
-        if (d.get("meta") or {}).get("method") != method:
+        meta = d.get("meta") or {}
+        if meta.get("method") != method:
+            continue
+        if cls and meta.get("class", "") != cls:
             continue
         if Path(d["path"]).as_posix().replace("\\", "/").endswith(rel):
             out.append({"rule_id": d["rule_id"], "line": d["line"], "cwe_id": d.get("cwe_id"),
-                        "slots": (d.get("meta") or {}).get("slots", "")})
+                        "class": meta.get("class", ""), "slots": meta.get("slots", "")})
     return out
 
 
 def _key(f, root: str) -> tuple:
-    """(path relative to the scan root, method, rule) - comparable across the two copies."""
+    """(path relative to the scan root, method, rule, class) - comparable across the two copies."""
     d = f.to_dict() if hasattr(f, "to_dict") else dict(f)
     rel = _rel(root, d["path"]) or Path(d["path"]).name
-    return (rel, (d.get("meta") or {}).get("method", ""), d["rule_id"])
+    meta = d.get("meta") or {}
+    return (rel, meta.get("method", ""), d["rule_id"], meta.get("class", ""))
 
 
 # --------------------------------------------------------------------------- #
@@ -92,11 +119,13 @@ def decide(rule_id: str, before_hits: Optional[list[dict]], after_hits: list[dic
     fam, sink_keys = _RULE_GUARD.get(rule_id, ("", ()))
     fired_before = None if before_hits is None else any(h["rule_id"] == rule_id for h in before_hits)
     refires = any(h["rule_id"] == rule_id for h in after_hits)
-    m = ((reverify or {}).get("methods") or [{}])[0] if reverify else {}
+    methods = (reverify or {}).get("methods") or []
+    m = methods[0] if methods else {}
     guards = (m.get("guards") or {}).get(fam, []) if fam else []
     sinks = m.get("sinks") or {}
     sink_present = any(int(sinks.get(k, 0) or 0) > 0 for k in sink_keys) if sinks else None
-    method_found = bool((reverify or {}).get("found", True))
+    # a candidate ON this method is proof the method exists, whatever the reverify block says
+    method_found = bool((reverify or {}).get("found", True)) or bool(after_hits)
 
     if not method_found:
         reason = "method not found after the fix (renamed or removed) - nothing to verify"
@@ -136,30 +165,71 @@ def _copy_tree(src: str) -> Path:
     return dest
 
 
-def _pattern_fallback(after_file: Path, function: str, rule_id: str, pack: Optional[str]) -> dict:
-    """Joern unavailable: does the patched function's text contain a guard token for the rule?
-    Weaker on purpose and labelled as such."""
-    from app.services.extract import extract_slice
+def _code_only(src: str) -> str:
+    """Source with string literals and comments blanked IN PLACE (same length, spaces), so a
+    docstring saying 'lock' or a comment saying 'authorized' cannot pass as a guard - the same
+    literal/code split the CPG rules keep - while every other character keeps its position, so
+    multi-token guards (`!= request.user`, `abort(403`, `owner=request.user`) still match.
+    If the source does not tokenize, returns "" (never the raw text: a broken fix with a lying
+    docstring must not pass either)."""
+    skip = {tokenize.STRING, tokenize.COMMENT}
+    for name in ("FSTRING_START", "FSTRING_MIDDLE", "FSTRING_END"):   # 3.12+ f-string pieces
+        if hasattr(tokenize, name):
+            skip.add(getattr(tokenize, name))
+    lines = src.splitlines(keepends=True)
+    try:
+        spans = [(t.start, t.end) for t in tokenize.generate_tokens(io.StringIO(src).readline) if t.type in skip]
+    except (tokenize.TokenError, SyntaxError, IndentationError):
+        return ""
+    for (r1, c1), (r2, c2) in spans:                    # rows are 1-based
+        for r in range(r1, r2 + 1):
+            if r - 1 >= len(lines):
+                break
+            line = lines[r - 1]
+            a = c1 if r == r1 else 0
+            b = c2 if r == r2 else len(line.rstrip("\r\n"))
+            lines[r - 1] = line[:a] + " " * max(0, b - a) + line[b:]
+    return "".join(lines)
+
+
+def _pattern_fallback(target: str, after_file: Path, function: str, rule_id: str,
+                      pack: Optional[str]) -> dict:
+    """Joern unavailable: does the patched function's CODE (not its strings or comments) contain
+    a guard token for the rule, using the same pack the CPG path would have used? Weaker on
+    purpose and labelled as such."""
+    cls, method = _split_function(function)
     text = ""
     try:
         src = after_file.read_text(encoding="utf-8", errors="replace")
-        import ast
         tree = ast.parse(src)
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == _method_of(function):
-                text = "\n".join(src.splitlines()[node.lineno - 1:(node.end_lineno or node.lineno)])
+        lines = src.splitlines()
+        # (class name, def) pairs so `Class.method` picks the right one of two same-named defs
+        def walk(node, owner):
+            for ch in ast.iter_child_nodes(node):
+                if isinstance(ch, ast.ClassDef):
+                    yield from walk(ch, ch.name)
+                elif isinstance(ch, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    yield owner, ch
+                    yield from walk(ch, owner)
+                else:
+                    yield from walk(ch, owner)
+        for owner, node in walk(tree, ""):
+            if node.name == method and (not cls or owner == cls):
+                text = "\n".join(lines[node.lineno - 1:(node.end_lineno or node.lineno)])
                 break
-    except (OSError, SyntaxError):
+    except (OSError, SyntaxError, ValueError):
         pass
-    eff, _ = vocab.load(pack or vocab.BASE_ID, allow_unlisted=True)
-    eff = eff or vocab.load(vocab.BASE_ID, allow_unlisted=True)[0]
+    chosen, _why = vocab.resolve(target, pack if pack is not None else getattr(config, "JOERN_PACK", "auto"))
+    eff, _ = vocab.load(chosen, allow_unlisted=bool(getattr(config, "JOERN_PACK_ALLOW_UNLISTED", False)))
+    if eff is None:
+        eff, _ = vocab.load(vocab.BASE_ID, allow_unlisted=True)
     toks = []
     for slot in _RULE_SLOTS.get(rule_id, []):
         toks += eff["slots"].get(slot, {}).get("values", []) if eff else []
-    low = text.lower().replace(" = ", "=")
+    low = _code_only(text).lower().replace(" = ", "=")
     found = sorted({t for t in toks if t in low})
     return {"guard_present": bool(found), "guard_evidence": [f"text:{t}" for t in found],
-            "method_found": bool(text)}
+            "method_found": bool(text), "pack": chosen}
 
 
 def verify(target: str, path: str, function: str, rule_id: str, *,
@@ -170,11 +240,20 @@ def verify(target: str, path: str, function: str, rule_id: str, *,
     """Never raises. See the module docstring for the two modes."""
     t0 = time.time()
     rel = _rel(target, path)
-    method = _method_of(function)
+    cls, method = _split_function(function)
     if rel is None:
         return {"ok": False, "error": f"{path} is not inside the scanned target {target}"}
     if not method:
         return {"ok": False, "error": "function name is required"}
+    # These three strings are substituted into Scala source. _render() escapes them, but a
+    # value that is not a plain relative .py path / identifier is wrong anyway: refuse early.
+    why = joern_scan.valid_reverify_target(rel, method)
+    if why is None and cls and not joern_scan._METHOD_RE.match(cls):
+        why = f"class name must be a Python identifier: {cls!r}"
+    if why:
+        return {"ok": False, "code": "bad_request", "error": why}
+    if not rule_id.startswith("joern-"):
+        return {"ok": False, "code": "not_cpg", "error": "re-verification runs the CPG locator; rule_id must be a joern-* rule"}
     scratch: Optional[Path] = None
     try:
         if fixed_code is not None:
@@ -182,45 +261,54 @@ def verify(target: str, path: str, function: str, rule_id: str, *,
                 return {"ok": False, "error": "start_line and end_line are required with fixed_code"}
             scratch = _copy_tree(target)
             after_dir = str(scratch)
-            after_file = scratch / rel if Path(target).is_dir() else scratch / Path(path).name
+            after_file = scratch / rel                   # rel is the file's name for a lone file
             applied = apply_svc.apply_fix(str(after_file), start_line, end_line, fixed_code, original_code)
             if not applied.get("ok"):
                 return {"ok": False, **{k: v for k, v in applied.items() if k != "ok"}, "mode": "preview"}
             before = target
             mode = "preview"
         else:
-            after_dir = target
-            after_file = Path(path)
-            before = before_dir
             mode = "post_apply"
+            before = before_dir
+            if Path(target).is_file():
+                # pysrc2cpg reports an empty filename for a lone file, which no (rel, method)
+                # lookup can match: build the CPG on a directory holding a copy of it instead
+                scratch = _copy_tree(target)
+                after_dir = str(scratch)
+                after_file = scratch / Path(target).name
+            else:
+                after_dir = target
+                after_file = Path(path)
 
+        if not after_file.is_file():
+            return {"ok": False, "code": "not_found", "error": f"{rel} does not exist in the target", "mode": mode}
         ok, why = joern_scan.enabled(after_dir)
         if not ok:
-            pf = _pattern_fallback(after_file, function, rule_id, pack)
+            pf = _pattern_fallback(after_dir, after_file, function, rule_id, pack)
             return {"ok": True, "mode": mode, "reverify_method": "pattern", "converged": pf["guard_present"],
                     "locator_refires": None, "fired_before": None, "regressions": [],
                     **pf, "reason": ("guard token found in the patched function text (pattern fallback; Joern unavailable: " + why + ")")
                     if pf["guard_present"] else "no guard token in the patched function text (pattern fallback; Joern unavailable: " + why + ")",
                     "elapsed_ms": int((time.time() - t0) * 1000)}
 
-        after_f, after_diag = joern_scan.scan(after_dir, pack=pack, reverify=(rel, method))
+        after_f, after_diag = joern_scan.scan(after_dir, pack=pack, reverify=(rel, method, cls))
         if not after_diag.get("used"):
             return {"ok": False, "mode": mode, "reverify_method": "cpg",
                     "error": "CPG phase did not run on the patched copy: " + str(after_diag.get("reason")),
                     "elapsed_ms": int((time.time() - t0) * 1000)}
-        after_hits = _hits(after_f, rel, method)
+        after_hits = _hits(after_f, rel, method, cls)
 
         before_hits: Optional[list[dict]] = None
         regressions: list[dict] = []
         before_diag: dict = {}
         if before and regress:
-            before_f, before_diag = joern_scan.scan(before, pack=pack, reverify=(rel, method))
+            before_f, before_diag = joern_scan.scan(before, pack=pack, reverify=(rel, method, cls))
             if before_diag.get("used"):
-                before_hits = _hits(before_f, rel, method)
+                before_hits = _hits(before_f, rel, method, cls)
                 seen = {_key(f, before) for f in before_f}
                 for f in after_f:
                     k = _key(f, after_dir)
-                    if k not in seen and not (k[0] == rel and k[1] == method):
+                    if k not in seen and not (k[0] == rel and k[1] == method and (not cls or k[3] == cls)):
                         d = f.to_dict()
                         regressions.append({"path": k[0], "line": d["line"], "method": k[1], "rule_id": k[2]})
 

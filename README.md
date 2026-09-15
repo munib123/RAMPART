@@ -62,14 +62,15 @@ This concurrently launches:
 - **backend** - FastAPI on `http://127.0.0.1:8000/` (API docs at `/docs`)
 - **frontend** - Vite dev server on `http://127.0.0.1:5173/`
 
-`Ctrl+C` stops both. Enter a folder/file path, pick a scanner, press **Start scan**. The
-default points at the bundled vulnerable sample (`semgrep_test/test_code`).
+`Ctrl+C` stops both. Sign in (the UI needs the database - see **Database** under Prereqs),
+enter a folder/file path, pick a scanner, press **Start scan**. The default points at the
+bundled vulnerable sample (`semgrep_test/test_code`).
 
 ### Manual / split startup
 
 | What | Command |
 |---|---|
-| Backend only | `backend\.venv\Scripts\python.exe backend\run_server.py` |
+| Backend only | `backend\.venv\Scripts\python.exe backend\run_server.py` (port 8000; set `RAMPART_PORT` for a second checkout) |
 | Frontend only | `cd frontend && npm run dev:web` |
 | Frontend + backend together (npm) | `cd frontend && npm run dev:all` |
 
@@ -91,14 +92,35 @@ the backend it spawned.
 ### Prereqs (already done in this working copy, re-run if cloning fresh)
 
 ```bash
-python -m venv backend/.venv          # Python 3.13: apply.py uses read_text(newline=), added in 3.13
+uv venv backend/.venv --python 3.13   # Python 3.13 is REQUIRED (apply.py uses read_text(newline=), 3.13+).
+                                      # `python -m venv` picks whatever `python` is on PATH (often 3.12): use uv,
+                                      # or `py -3.13 -m venv backend/.venv` if the launcher lists 3.13.
 backend\.venv\Scripts\pip install -r backend\requirements.txt
-cd frontend && npm install
+cd frontend && npm install            # npm 11 may skip esbuild's postinstall (allow-scripts): run
+                                      # `npm approve-scripts esbuild` if `npm run dev:web` fails to start
 ```
+
+**Database (required for the UI).** The API answers anonymous `POST /api/scan` and
+`GET /api/health` without a database, but the SPA is gated on a signed-in JWT: `/setup`,
+`/scan`, `/history` and `/profile` all need `DATABASE_URL` and `JWT_SECRET` set, so a fresh
+clone without Postgres shows only the sign-in page. A disposable Postgres 17 in Docker is
+enough:
+
+```bash
+docker run -d --name rampart-pg -e POSTGRES_USER=rampart -e POSTGRES_PASSWORD=rampart -e POSTGRES_DB=rampart -p 55432:5432 postgres:17
+python -c "import secrets; print(secrets.token_urlsafe(48))"     # -> JWT_SECRET
+```
+
+Then in `.env`: `DATABASE_URL=postgresql://rampart:rampart@127.0.0.1:55432/rampart` and
+`JWT_SECRET=<the printed value>`. The schema is applied automatically when the backend starts
+(`app/db.py` `migrate`), or by hand with `backend\.venv\Scripts\python.exe -m app.db` from
+`backend/`; sign up once through the UI.
 
 **Knowledge base.** The pipeline code under `knowledge_base/` is in the repo, but the built
 Chroma store (`knowledge_base/out/`, ~600 MB) is git-ignored. A fresh clone has no vectors,
-and the app degrades to ungrounded scans until the store exists. Either copy `out/` from a
+and the app degrades to ungrounded scans until the store exists (starting the backend or the tests
+first creates an EMPTY store - copy `out/` in with the backend stopped, replacing that directory).
+Either copy `out/` from a
 teammate, or rebuild it from the corpora in `data/` - one command per source, run from
 `knowledge_base/` with the backend venv:
 
@@ -169,10 +191,16 @@ The runtime is portable and self-installing (Temurin JRE 21 + joern-cli 4.0.589 
 cd backend && .venv\Scripts\python.exe -m app.services.joern.runtime --install
 ```
 
+The installer picks the release asset for the host - `joern-cli-{windows-x86_64, linux-x86_64,
+linux-arm64, macos-x86_64, macos-arm64}.zip` - and the matching Adoptium JRE, verifies the zip
+against the published `.sha512`, and on failure prints a one-line reason plus the manual fallback
+(drop the asset zip and its `.sha512` into `tools/` and re-run) rather than a traceback. Only
+Windows x64 has been exercised end to end; the Linux and macOS paths are unit-tested only.
+
 Without it the phase is skipped and `/api/health` says why (`scanners.joern.note`). By default
 the backend keeps one `joern --server` sidecar alive (127.0.0.1:8091, random per-process
 password) so a scan costs the CPG build only - about 8 s for a small Flask app instead of
-20-35 s for a fresh JVM per scan. `JOERN_SERVER=off` (or a sidecar that fails to start)
+19-34 s for a fresh JVM per scan. `JOERN_SERVER=off` (or a sidecar that fails to start)
 falls back to one `joern --script` per scan with identical results. Each scan's report carries
 a `joern` block: `mode`, `candidates`, `elapsed_ms` and a per-rule `rule_state`, so a rule that
 breaks costs that rule, not the phase.
@@ -200,16 +228,20 @@ so a report can be traced to the exact pack. Validate or re-freeze the digests w
 control-dependent on a comparison over the same object (`product.stock >= q … product.save()`);
 an IDOR read inside a DRF ViewSet honours `get_queryset()` scoping and any project permission
 class defining `has_object_permission`; a form's `min_value` in `forms.py` bounds the quantity the
-view multiplies; every finding carries a route-reachability flag. And after a fix, **Verify with
+view multiplies; every finding carries a route-reachability flag (`yes` / `no`, or `unknown`
+when the pack's route markers do not describe the target). And after a fix, **Verify with
 CPG** rebuilds the graph on the patched code and says whether the locator still fires - a
-comment that claims "atomic" does not pass, a real `select_for_update()` does.
+comment that claims "atomic" does not pass, a real `select_for_update()` does. The verify
+inputs (file, method, class) are validated as a relative `.py` path and identifiers and
+Scala-escaped before rendering, and `/api/fix/apply`, `/revert` and `/verify` refuse any path
+outside the scan's own target.
 
 The full account - what the phase is, how it runs, every measured number and where it comes
 from - is [`docs/JOERN.md`](docs/JOERN.md); the plan it followed is `docs/JOERN_PLAN.md`; the
 thesis paragraphs are `docs/THESIS_JOERN.md`.
 
 The rules are measured, not trusted: `bench/` holds line-anchored answer keys for
-`testbeds/shopfast` (Flask; 26 planted bugs, 2 baits), the per-fix `testbeds/probe` suite, and the
+`testbeds/shopfast` (Flask; 25 planted bugs + 1 undocumented one the key records, 2 baits), the per-fix `testbeds/probe` suite, and the
 Django pair `testbeds/djshop-dev` / `testbeds/djshop-heldout` (each SAST-blind bug next to the
 fix the Django docs prescribe; the held-out half is frozen - `FREEZE.json`, `bench/freeze.py` -
 and evaluated once, after `django.json` was authored from documentation alone). Run
@@ -267,7 +299,7 @@ sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
 | Apply / revert a fix | `apply.py` + `POST /api/fix/apply`, `POST /api/fix/revert` | writes the fix into the user's codebase and can undo it; snapshots the target into `backend/.fix_snapshots/` (git-ignored) |
 | Orchestration | `backend/app/services/pipeline.py` | scan -> extract -> ground -> verify -> rank |
 | API | `backend/app/main.py` | FastAPI on localhost; CORS for the dev/Tauri webviews |
-| Database | `backend/db/schema.sql`, `db/migrations/`, `app/db.py` | optional Supabase/Postgres via `DATABASE_URL`; degrades gracefully when unset. `schema.sql` creates a fresh DB; `migrations/NNNN_*.sql` bring an existing one forward and are applied automatically at start-up (or by `python -m app.db`), recorded in `schema_migrations`. Every finding row carries `tool` (`semgrep` / `bandit` / `joern`) and every scan its `joern` block |
+| Database | `backend/db/schema.sql`, `db/migrations/`, `app/db.py` | Supabase/Postgres via `DATABASE_URL`; the API degrades gracefully when unset (anonymous scans only), but the SPA's pages need a signed-in user and therefore a DB. `schema.sql` creates a fresh DB; `migrations/NNNN_*.sql` bring an existing one forward and are applied automatically at start-up (or by `python -m app.db`), recorded in `schema_migrations`. Every finding row carries `tool` (`semgrep` / `bandit` / `joern`) and every scan its `joern` block |
 | Auth | `app/routers/auth.py`, `app/core/security.py` | bcrypt + JWT (email/password) |
 | UI | `frontend/src` + `src-tauri/` | React SPA; the Tauri shell (`src-tauri/`) spawns the backend sidecar and loads this UI in a native window |
 
@@ -303,8 +335,10 @@ sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
   `auto` prefers it (multi-language) and falls back to Bandit (python-only) when not installed.
 - Embeddings use the **MiniLM placeholder** index (torch/gte-large can't build on this box);
   retrieval quality improves once a gte-large index is built on a GPU.
-- Persistence is optional: without `DATABASE_URL` the app runs fully, only scan history / auth are
-  disabled.
+- Persistence is optional **for the API only**: without `DATABASE_URL` the endpoints still answer
+  anonymous scans, but the SPA's `/setup`, `/scan`, `/history` and `/profile` pages require a
+  JWT and are unreachable. Bring up Postgres and set `DATABASE_URL` + `JWT_SECRET` (see Prereqs)
+  to use the UI.
 - Apply/revert fixes are **local-only**: snapshots live in `backend/.fix_snapshots/` (git-ignored)
   keyed by scan id and are not sent to the database; deleting them removes the revert net.
 - Plans/billing: per-plan scan/fix quotas (Free 10/5, Pro 30/20, Premium 500/200) enforced server-side

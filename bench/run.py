@@ -29,7 +29,7 @@ from bench.validate_key import validate
 def run(backend_name: str, benchmark: str, scanner: str = "auto", quiet: bool = False,
         pack: str | None = None) -> dict:
     target = paths.testbed_dir(benchmark)
-    validate(benchmark)                                   # re-resolve anchors; prints summary
+    validate(benchmark, quiet=quiet)                      # re-resolve anchors; prints summary
     key = load_key(benchmark)
     kw: dict = {"scanner": scanner} if backend_name == "full" else {}
     if pack and backend_name in ("joern", "full"):
@@ -53,9 +53,11 @@ def run(backend_name: str, benchmark: str, scanner: str = "auto", quiet: bool = 
     # P7: the finding's own route_reachable flag (meta.route) against the key row it matched.
     # Reported, never scored: the call graph is name-based and a file with no route markers
     # says "unknown" rather than guessing.
-    by_no = {k.key_no: k for k in key}
-    route_pairs = [(c.meta.get("route"), "yes" if by_no[c.matched_key].route_reachable else "no")
-                   for c in cands if c.matched_key in by_no and c.meta.get("route")]
+    reach_by_no: dict[int, bool] = {}                  # a bug is reachable if ANY of its rows is
+    for k in key:
+        reach_by_no[k.key_no] = reach_by_no.get(k.key_no, False) or bool(k.route_reachable)
+    route_pairs = [(c.meta.get("route"), "yes" if reach_by_no[c.matched_key] else "no")
+                   for c in cands if c.matched_key in reach_by_no and c.meta.get("route")]
     known = [p for p in route_pairs if p[0] in ("yes", "no")]
     route_agreement = {"compared": len(known), "agree": sum(1 for g, w in known if g == w),
                        "unknown": sum(1 for g, _ in route_pairs if g == "unknown")}

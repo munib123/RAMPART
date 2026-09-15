@@ -85,6 +85,41 @@ def test_value_rejected(tmp_path, slot, sink, value, msg):
     assert any(msg in e for e in info["errors"]), info["errors"]
 
 
+@pytest.mark.parametrize("slot,sink,value,msg", [
+    ("authz_guard", "guard_text", "   ", "whitespace-only"),           # == the 3-space node separator
+    ("authz_guard", "guard_text", "      ", "whitespace-only"),
+    ("authz_guard", "guard_text", "", "whitespace-only"),
+    ("authz_guard", "guard_text", "\t\t\t", "whitespace-only"),
+    ("authz_guard", "guard_text", "  owner", "consecutive spaces"),       # doubled edge space
+    ("authz_guard", "guard_text", "owner  ", "consecutive spaces"),
+    ("authz_guard", "guard_text", "abort  401", "consecutive spaces"),
+    ("authz_guard", "guard_text", "abort   401", "consecutive spaces"),
+    ("authz_guard", "guard_text", "\towner", "other than a space"),
+    ("authz_guard", "guard_text", "owner\n", "other than a space"),
+    ("mass_assign_signal", "signal_text", "   ", "whitespace-only"),
+    ("mass_assign_signal", "signal_text", "  in", "consecutive spaces"),
+    ("mass_assign_signal", "signal_text", "in   [", "consecutive spaces"),
+    ("qty_terms", "token", "   ", "whitespace-only"),
+    ("qty_terms", "token", "qty  ", "consecutive spaces"),
+    ("qty_terms", "token", "qty  x", "consecutive spaces"),
+])
+def test_whitespace_values_rejected(tmp_path, slot, sink, value, msg):
+    """The text sinks match a 3-space-joined node list, so a whitespace-only or doubled-space
+    value would match between every pair of nodes and flood the slot (T-10)."""
+    eff, info = v.load(str(_write(tmp_path, _child(**{slot: {"sink": sink, "values": [value]}}))), allow_unlisted=True)
+    assert eff is None
+    assert any(msg in e for e in info["errors"]), info["errors"]
+
+
+@pytest.mark.parametrize("value", ["ownz chk", " f(", "f( ", " ownz "])
+def test_single_space_still_allowed(tmp_path, value):
+    """One interior space ("abort 401") or one edge space (" f(" - the django pack's F() word
+    boundary) is legitimate: it cannot match the separator without its non-space content."""
+    eff, info = v.load(str(_write(tmp_path, _child(authz_guard={"sink": "guard_text", "values": [value]}))), allow_unlisted=True)
+    assert eff is not None, info["errors"]
+    assert value in eff["slots"]["authz_guard"]["values"]
+
+
 def test_sink_must_match_schema(tmp_path):
     """A pack cannot re-route a text token into the call_name accessor (or vice versa)."""
     bad = _child(orm_read_calls={"sink": "guard_text", "values": [".*"]})
@@ -126,6 +161,20 @@ def test_malformed_json_and_missing_parent(tmp_path):
     p = _child(); p["extends"] = "nonexistent"
     eff, info = v.load(str(_write(tmp_path, p)), allow_unlisted=True)
     assert eff is None and any("not found in packs" in e for e in info["errors"])
+
+
+def test_deeply_nested_json_never_raises(tmp_path):
+    """load() promises never to raise. A few KB of '[' overflows the JSON parser's stack
+    (RecursionError, not a ValueError) well under the byte cap; a 100 KB one hits the cap."""
+    deep = tmp_path / "deep.json"
+    deep.write_text("[" * 10000, encoding="utf-8")
+    assert deep.stat().st_size < v._s()["limits"]["max_pack_bytes"]
+    eff, info = v.load(str(deep), allow_unlisted=True)
+    assert eff is None and "RecursionError" in info["errors"][0]
+    huge = tmp_path / "huge.json"
+    huge.write_text("[" * 100000, encoding="utf-8")
+    eff, info = v.load(str(huge), allow_unlisted=True)
+    assert eff is None and isinstance(info["errors"][0], str) and info["errors"][0]
 
 
 # ---- composition + hashing ---------------------------------------------------------------

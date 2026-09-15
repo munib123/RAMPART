@@ -15,7 +15,7 @@ sys.path.insert(0, HERE)
 from app.main import app  # noqa: E402
 
 if __name__ == "__main__":
-    HOST, PORT = "127.0.0.1", 8000
+    HOST, PORT = "127.0.0.1", int(os.environ.get("RAMPART_PORT", "8000"))   # second checkout: set RAMPART_PORT
     print(f"RAMPART API starting on http://{HOST}:{PORT}/  (docs at /docs, Ctrl+C to stop)")
     print("Loading scanners / RAG embedder / Gemini - first boot can take 10-30s without output, please wait...")
     # log_level=info so uvicorn prints its "running on" + "Application startup complete"
