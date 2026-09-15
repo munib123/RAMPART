@@ -6,7 +6,7 @@ retrieved real-world exemplars, and produces a calm, ranked report. This reposit
 proof-of-concept slice of the full RAMPART pipeline.
 
 ```
-scan (bandit / semgrep)  ->  extract code slice  ->  RAG ground (ChromaDB)  ->  Gemini verify  ->  ranked report
+scan (bandit / semgrep)  +  Joern CPG locator  ->  extract code slice  ->  RAG ground (ChromaDB)  ->  Gemini verify  ->  ranked report  ->  fix  ->  CPG re-verify
 ```
 
 ## Layout
@@ -204,6 +204,10 @@ view multiplies; every finding carries a route-reachability flag. And after a fi
 CPG** rebuilds the graph on the patched code and says whether the locator still fires - a
 comment that claims "atomic" does not pass, a real `select_for_update()` does.
 
+The full account - what the phase is, how it runs, every measured number and where it comes
+from - is [`docs/JOERN.md`](docs/JOERN.md); the plan it followed is `docs/JOERN_PLAN.md`; the
+thesis paragraphs are `docs/THESIS_JOERN.md`.
+
 The rules are measured, not trusted: `bench/` holds line-anchored answer keys for
 `testbeds/shopfast` (Flask; 26 planted bugs, 2 baits), the per-fix `testbeds/probe` suite, and the
 Django pair `testbeds/djshop-dev` / `testbeds/djshop-heldout` (each SAST-blind bug next to the
@@ -317,6 +321,23 @@ sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
 
 Newest first - what changed in the repo and why, so the state is legible without digging
 through git history.
+
+### 2026-09-15 - the Joern / CPG phase, restored and measured (P0-P9)
+
+**What landed:** `backend/app/services/joern/` - a self-installing runtime, a `joern --server`
+sidecar, four locator rules that now use the graph (control dependence, class scope, route
+reachability), schema-validated vocabulary packs (`_base`, `flask-sqlite3`, `django`), O3
+re-verification (`POST /api/fix/verify`), persistence (`findings.tool`, `scans.joern`) and UI
+provenance. `bench/` - the evaluation harness: line-anchored answer keys for four testbeds
+(`shopfast`, `probe`, `djshop-dev`, `djshop-heldout`), five arms, frozen trees and a once-only
+held-out log. Every number in `docs/JOERN.md` and `docs/THESIS_JOERN.md` cites a run artifact
+under `bench/runs/`.
+
+**Why:** the August repo had removed Joern entirely for environment friction, and the only
+detection numbers ever quoted were hand-traced. The phase is back with no admin install, no
+PATH change, an 8 s per-scan cost in server mode, and measured - not asserted - recall on the
+bugs pattern scanners cannot see. Open: 0 of 90 answer-key rows adjudicated; the `full` arm
+not run on Django (Gemini quota); the post-P7 rules not scored on a held-out split yet.
 
 ### 2026-08-19 - CrossVul added as a third knowledge-base corpus
 

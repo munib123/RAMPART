@@ -126,7 +126,11 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   `POST /api/fix/verify`; FixPanel "Verify with CPG". Pattern fallback labelled when Joern is absent.
   Gate met: get_order ownership fix converges (`method:permissiondenied`), cosmetic rename and a
   docstring-only "fix" do not; 13-17 s via the sidecar. Log: `bench/runs/2026-09-15-p8-reverify.md`.
-  Next: P9 docs + thesis text.
+  **P9 done:** `docs/JOERN.md` (regenerated, every number cites a run), `docs/THESIS_JOERN.md`
+  (August paragraphs verbatim + evaluation text), README, `bench.report --latest --split`. The three
+  docs are un-ignored (`!docs/JOERN*.md`, `!docs/THESIS_JOERN.md`). **All nine phases complete.**
+  Owed by humans: adjudicate 90 key rows; `full` arm on Django when Gemini quota allows; score the
+  post-P7 rules on a NEW held-out split (never re-run `djshop-heldout` after a rule/pack change).
   Gemini key is in `.env` (pasted in chat 2026-09-15 - rotate it).
   Open: the `full` arm Confirmed the find_product bait; extract.py gives module-level findings
   a slice that reaches into the next function. A second process on the same machine cannot bind

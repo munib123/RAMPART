@@ -68,6 +68,11 @@ backend/.fix_snapshots/
 
 # ---- Planfiles -------
 docs/**
+# ... except the Joern documents: the phase-by-phase plan with its status notes, the regenerated
+# JOERN.md (every number from a committed bench run), and the thesis text. These are deliverables.
+!docs/JOERN.md
+!docs/JOERN_PLAN.md
+!docs/THESIS_JOERN.md
 
 # ---- opencode (local-only: project guide + skills) ----
 AGENTS.md
