@@ -69,9 +69,18 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
 - `HealthContext` fetches once and never refetches; backend availability in the SPA goes stale.
 - `schema.sql` disables RLS by design — never expose these tables to Supabase anon/authenticated.
   (`findings.code_slice` is deliberately **not** written; code never reaches the DB.)
-- **Joern/CPG was removed in the backend rewrite.** The August design for it is in the FYP brief
-  §7. Whether to restore it is a thesis-scope decision.
+- **Joern/CPG is BACK (2026-09-15, Day 1 of `docs/JOERN_PLAN.md`).** `backend/app/services/joern/`
+  — `runtime.py` (self-installing portable JRE 21 + joern-cli under `tools/`, no admin, no PATH),
+  `scan.py` (additive, never raises, returns `(findings, diag)`), `rules/locators.sc` (the four
+  July rules, byte-identical — the eight August fixes are P2). Wired in `pipeline.py` with a
+  reserved `JOERN_LLM_QUOTA`; `/api/health` reports `scanners.joern`. **First real execution ever:**
+  5 candidates on `testbeds/shopfast` = 4 TP + the known `find_product` bait FP, 34.7 s cold /
+  14.7 s warm, bandit/joern overlap 0. Log: `docs/joern-runs/2026-09-15-first-run.md`.
+  Next: P1 (`bench/` harness + line-anchored key), then P2 (the eight fixes, each behind a number).
+  Install on a fresh clone: `python -m app.services.joern.runtime --install`.
 
 ## Data residency
 Three corpora under `data/` (HackerOne 12k, Nuclei 5.3k, CrossVul 9.3k) are tracked. The
 top-level `nuclei_classified/` is an untracked leftover; the adapter reads `data/nuclei_classified/`.
+`testbeds/shopfast/` (restored 2026-09-15) is the planted-vulnerability ground truth: 25 bugs, answer key
+in `VULNERABILITIES.md`, bugs #22–#25 are the four SAST-blind ones the Joern rules target.
