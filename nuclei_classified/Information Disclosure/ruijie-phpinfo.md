@@ -1,0 +1,19 @@
+# Nuclei Template: Ruijie Phpinfo Configuration - Detect
+**Template ID:** ruijie-phpinfo
+**Vulnerability Class:** Information Disclosure
+**Severity:** Low
+**CWE:** CWE-200
+**Source:** Nuclei Template (`ruijie-phpinfo.yaml`)
+
+## Vulnerability Information & PoC
+
+## Description
+Ruijie phpinfo configuration was detected.
+
+## Steps to reproduce / Exploit Payload
+```http
+GET {{BaseURL}}/tool/view/phpinfo.view.php
+```
+
+## References
+- https://github.com/PeiQi0/PeiQi-WIKI-POC/blob/PeiQi/PeiQi_Wiki/%E7%BD%91%E7%BB%9C%E8%AE%BE%E5%A4%87%E6%BC%8F%E6%B4%9E/%E9%94%90%E6%8D%B7/%E9%94%90%E6%8D%B7EG%E6%98%93%E7%BD%91%E5%85%B3%20phpinfo.view.php%20%E4%BF%A1%E6%81%AF%E6%B3%84%E9%9C%B2%E6%BC%8F%E6%B4%9E.md
