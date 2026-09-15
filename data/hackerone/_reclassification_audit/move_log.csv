@@ -1,0 +1,1091 @@
+id,file,from,to,action,method,confidence
+1001218,Report_1001218.md,Uncategorized,Modification of Assumed-Immutable Data (MAID),MOVED,tier3-vote,voted
+100509,Report_100509.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier3-vote,voted
+1007689,Report_1007689.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+1017576,Report_1017576.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,medium
+1018094,Report_1018094.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,high
+1019389,Report_1019389.md,Uncategorized,Unrestricted Upload of File with Dangerous Type,MOVED,tier2-llm,medium
+1022211,Report_1022211.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,high
+102236,Report_102236.md,Uncategorized,Improper Access Control - Generic,MOVED,tier3-vote,voted
+1027873,Report_1027873.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier3-vote,voted
+1027949,Report_1027949.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+1029466,Report_1029466.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,medium
+10373,Report_10373.md,Uncategorized,Improper Access Control - Generic,MOVED,tier3-vote,voted
+1037430,Report_1037430.md,Uncategorized,Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition'),MOVED,tier2-llm,high
+1038594,Report_1038594.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+1039805,Report_1039805.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier1-regex,high
+1039821,Report_1039821.md,Uncategorized,SQL Injection,MOVED,tier1-regex,high
+103990,Report_103990.md,Uncategorized,NULL Pointer Dereference,MOVED,tier1-regex,high
+103991,Report_103991.md,Uncategorized,Uncontrolled Recursion,MOVED,tier2-llm,medium
+103992,Report_103992.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+103994,Report_103994.md,Uncategorized,Out-of-bounds Read,MOVED,tier1-regex,high
+103995,Report_103995.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+103996,Report_103996.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+103997,Report_103997.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+103998,Report_103998.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+103999,Report_103999.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+104000,Report_104000.md,Uncategorized,Type Confusion,MOVED,tier1-regex,high
+104001,Report_104001.md,Uncategorized,Buffer Over-read,MOVED,tier1-regex,high
+104002,Report_104002.md,Uncategorized,Buffer Over-read,MOVED,tier1-regex,high
+104003,Report_104003.md,Uncategorized,Memory Corruption - Generic,MOVED,tier1-regex,med
+104004,Report_104004.md,Uncategorized,Memory Corruption - Generic,MOVED,tier1-regex,med
+104005,Report_104005.md,Uncategorized,NULL Pointer Dereference,MOVED,tier1-regex,high
+104006,Report_104006.md,Uncategorized,NULL Pointer Dereference,MOVED,tier1-regex,high
+104007,Report_104007.md,Uncategorized,Buffer Over-read,MOVED,tier1-regex,high
+104008,Report_104008.md,Uncategorized,Memory Corruption - Generic,MOVED,tier1-regex,med
+104009,Report_104009.md,Uncategorized,Use of Externally-Controlled Format String,MOVED,tier1-regex,high
+104010,Report_104010.md,Uncategorized,Type Confusion,MOVED,tier1-regex,high
+104011,Report_104011.md,Uncategorized,Classic Buffer Overflow,MOVED,tier1-regex,high
+104012,Report_104012.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+104013,Report_104013.md,Uncategorized,Heap Overflow,MOVED,tier1-regex,high
+104014,Report_104014.md,Uncategorized,Out-of-bounds Read,MOVED,tier2-llm,high
+104015,Report_104015.md,Uncategorized,Type Confusion,MOVED,tier1-regex,high
+104016,Report_104016.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier1-regex,high
+104017,Report_104017.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier3-vote,voted
+104018,Report_104018.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+104019,Report_104019.md,Uncategorized,Path Traversal,MOVED,tier2-llm,high
+104020,Report_104020.md,Uncategorized,Buffer Over-read,MOVED,tier1-regex,high
+104021,Report_104021.md,Uncategorized,Buffer Over-read,MOVED,tier1-regex,high
+104022,Report_104022.md,Uncategorized,Heap Overflow,MOVED,tier1-regex,high
+104023,Report_104023.md,Uncategorized,Buffer Over-read,MOVED,tier1-regex,high
+104024,Report_104024.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+104025,Report_104025.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+104026,Report_104026.md,Uncategorized,Free of Memory not on the Heap,MOVED,tier3-vote,voted
+104027,Report_104027.md,Uncategorized,Memory Corruption - Generic,MOVED,tier1-regex,med
+104028,Report_104028.md,Uncategorized,Heap Overflow,MOVED,tier1-regex,high
+104032,Report_104032.md,Uncategorized,Buffer Over-read,MOVED,tier2-llm,high
+104033,Report_104033.md,Uncategorized,Improper Handling of Unexpected Data Type,MOVED,tier3-vote,voted
+1044285,Report_1044285.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,medium
+104543,Report_104543.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier2-llm,medium
+1046084,Report_1046084.md,Uncategorized,SQL Injection,MOVED,tier1-regex,high
+104620,Report_104620.md,Uncategorized,XML External Entities (XXE),MOVED,tier1-regex,high
+1050244,Report_1050244.md,Uncategorized,Authentication Bypass,MOVED,tier2-llm,medium
+1050656,Report_1050656.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+105363,Report_105363.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier3-vote,voted
+1058135,Report_1058135.md,Uncategorized,Information Exposure Through Directory Listing,MOVED,tier2-llm,medium
+106360,Report_106360.md,Uncategorized,Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition'),MOVED,tier2-llm,high
+1064087,Report_1064087.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+106427,Report_106427.md,Uncategorized,HTTP Response Splitting,MOVED,tier2-llm,high
+1064869,Report_1064869.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,high
+1073202,Report_1073202.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,high
+107664,Report_107664.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+107849,Report_107849.md,Uncategorized,Use of Default Credentials,MOVED,tier2-llm,high
+107960,Report_107960.md,Uncategorized,External Control of File Name or Path,MOVED,tier2-llm,medium
+1081986,Report_1081986.md,Uncategorized,Authentication Bypass,MOVED,tier2-llm,high
+108682,Report_108682.md,Uncategorized,Type Confusion,MOVED,tier1-regex,high
+1087489,Report_1087489.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+1088159,Report_1088159.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,high
+1093,Report_1093.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+1093577,Report_1093577.md,Uncategorized,Cross-site Scripting (XSS) - Reflected,MOVED,tier1-regex,high
+1095633,Report_1095633.md,Uncategorized,Improper Export of Android Application Components,MOVED,tier2-llm,high
+109959,Report_109959.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+110,Report_110.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+1101882,Report_1101882.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,medium
+1102546,Report_1102546.md,Uncategorized,Information Exposure Through Directory Listing,MOVED,tier2-llm,high
+1103212,Report_1103212.md,Uncategorized,Missing Authentication for Critical Function,MOVED,tier2-llm,high
+1103812,Report_1103812.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+1104077,Report_1104077.md,Uncategorized,XML Injection,MOVED,tier3-vote,voted
+111094,Report_111094.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+1115763,Report_1115763.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+112166,Report_112166.md,Uncategorized,External Control of File Name or Path,MOVED,tier2-llm,medium
+1121990,Report_1121990.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+112306,Report_112306.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+1125143,Report_1125143.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+112935,Report_112935.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier2-llm,medium
+112955,Report_112955.md,Uncategorized,Open Redirect,MOVED,tier2-llm,medium
+1130721,Report_1130721.md,Uncategorized,SQL Injection,MOVED,tier1-regex,high
+1130874,Report_1130874.md,Uncategorized,SQL Injection,MOVED,tier1-regex,high
+113798,Report_113798.md,Uncategorized,NULL Pointer Dereference,MOVED,tier1-regex,high
+113799,Report_113799.md,Uncategorized,NULL Pointer Dereference,MOVED,tier1-regex,high
+1142918,Report_1142918.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+114339,Report_114339.md,Uncategorized,Type Confusion,MOVED,tier1-regex,high
+1145293,Report_1145293.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier3-vote,voted
+115857,Report_115857.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier1-regex,high
+116189,Report_116189.md,Uncategorized,Improper Null Termination,MOVED,tier3-vote,voted
+1166054,Report_1166054.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+1166076,Report_1166076.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+1167608,Report_1167608.md,Uncategorized,Code Injection,MOVED,tier2-llm,high
+1168804,Report_1168804.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+117080,Report_117080.md,Uncategorized,SQL Injection,MOVED,tier1-regex,high
+1176090,Report_1176090.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+1176104,Report_1176104.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier1-regex,high
+1176174,Report_1176174.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+1180668,Report_1180668.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+118103,Report_118103.md,Uncategorized,Improper Neutralization of Formula Elements in a CSV File,MOVED,tier2-llm,high
+1181213,Report_1181213.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+1183302,Report_1183302.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,high
+1185479,Report_1185479.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+1185903,Report_1185903.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+1186701,Report_1186701.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+1186897,Report_1186897.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+1186985,Report_1186985.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+1188128,Report_1188128.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,medium
+1188684,Report_1188684.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+1189162,Report_1189162.md,Uncategorized,Improper Verification of Cryptographic Signature,MOVED,tier2-llm,medium
+1189168,Report_1189168.md,Uncategorized,Insecure Storage of Sensitive Information,MOVED,tier2-llm,medium
+1189363,Report_1189363.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+1191209,Report_1191209.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+1192144,Report_1192144.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+1192147,Report_1192147.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+1192159,Report_1192159.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+119220,Report_119220.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+1192470,Report_1192470.md,Uncategorized,Improper Certificate Validation,MOVED,tier2-llm,medium
+1195194,Report_1195194.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+1195429,Report_1195429.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier3-vote,voted
+1195568,Report_1195568.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+1195593,Report_1195593.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+1196253,Report_1196253.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+1200700,Report_1200700.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+1200785,Report_1200785.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+1200810,Report_1200810.md,Uncategorized,Insufficient Logging,MOVED,tier2-llm,high
+1200989,Report_1200989.md,Uncategorized,Insufficient Logging,MOVED,tier2-llm,high
+1200992,Report_1200992.md,Uncategorized,Insufficient Logging,MOVED,tier2-llm,high
+1210458,Report_1210458.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+1218173,Report_1218173.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+1218784,Report_1218784.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier3-vote,voted
+12297,Report_12297.md,Uncategorized,Out-of-bounds Read,MOVED,tier2-llm,high
+1241849,Report_1241849.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+124737,Report_124737.md,Uncategorized,Heap Overflow,MOVED,tier2-llm,high
+125000,Report_125000.md,Uncategorized,Open Redirect,MOVED,tier1-regex,high
+1250474,Report_1250474.md,Uncategorized,Improper Authorization,MOVED,tier3-vote,voted
+1253124,Report_1253124.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+125397,Report_125397.md,Uncategorized,NULL Pointer Dereference,MOVED,tier1-regex,high
+125791,Report_125791.md,Uncategorized,Cross-site Scripting (XSS) - Reflected,MOVED,tier1-regex,high
+125984,Report_125984.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+126235,Report_126235.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+126416,Report_126416.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+1265344,Report_1265344.md,Uncategorized,Code Injection,MOVED,tier1-regex,high
+1266828,Report_1266828.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+1267677,Report_1267677.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier2-llm,medium
+1268115,Report_1268115.md,Uncategorized,Information Disclosure,MOVED,tier3-vote,voted
+1269332,Report_1269332.md,Uncategorized,Open Redirect,MOVED,tier2-llm,high
+127235,Report_127235.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+1276992,Report_1276992.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+1279322,Report_1279322.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+1283605,Report_1283605.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+1285694,Report_1285694.md,Uncategorized,Weak Password Requirements,MOVED,tier2-llm,medium
+1294043,Report_1294043.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+1300583,Report_1300583.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+130136,Report_130136.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier2-llm,high
+1301696,Report_1301696.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+130990,Report_130990.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+131560,Report_131560.md,Uncategorized,Brute Force,MOVED,tier2-llm,high
+1317236,Report_1317236.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,high
+1318087,Report_1318087.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+1320138,Report_1320138.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+1320242,Report_1320242.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+1327443,Report_1327443.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+1327742,Report_1327742.md,Uncategorized,Open Redirect,MOVED,tier1-regex,high
+133360,Report_133360.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+1337425,Report_1337425.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+1341142,Report_1341142.md,Uncategorized,Improper Validation of Certificate with Host Mismatch,MOVED,tier2-llm,high
+1350444,Report_1350444.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,high
+1351338,Report_1351338.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+1351341,Report_1351341.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+13551,Report_13551.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+1356,Report_1356.md,Uncategorized,Heap Overflow,MOVED,tier1-regex,high
+135620,Report_135620.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+13602,Report_13602.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+137181,Report_137181.md,Uncategorized,Cache Poisoning,MOVED,tier3-vote,voted
+1379451,Report_1379451.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+1379635,Report_1379635.md,Uncategorized,Modification of Assumed-Immutable Data (MAID),MOVED,tier3-vote,voted
+1379645,Report_1379645.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+1379910,Report_1379910.md,Uncategorized,Externally Controlled Reference to a Resource in Another Sphere,MOVED,tier3-vote,voted
+1380157,Report_1380157.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier2-llm,medium
+1391549,Report_1391549.md,Uncategorized,HTTP Request Smuggling,MOVED,tier2-llm,high
+1392287,Report_1392287.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,high
+139321,Report_139321.md,Uncategorized,SQL Injection,MOVED,tier2-llm,medium
+1397786,Report_1397786.md,Uncategorized,Use of Default Credentials,MOVED,tier2-llm,high
+1397940,Report_1397940.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+1404770,Report_1404770.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier1-regex,high
+1404986,Report_1404986.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+1406471,Report_1406471.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,high
+140742,Report_140742.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+140865,Report_140865.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+1410357,Report_1410357.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+141174,Report_141174.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+1411867,Report_1411867.md,Uncategorized,"Improper Neutralization of Escape, Meta, or Control Sequences",MOVED,tier2-llm,high
+1418101,Report_1418101.md,Uncategorized,Missing Authentication for Critical Function,MOVED,tier2-llm,medium
+1425,Report_1425.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+142569,Report_142569.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+1427086,Report_1427086.md,Uncategorized,Path Traversal,MOVED,tier1-regex,high
+143541,Report_143541.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+143672,Report_143672.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+1438052,Report_1438052.md,Uncategorized,Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition'),MOVED,tier2-llm,high
+1439025,Report_1439025.md,Uncategorized,Information Disclosure,MOVED,tier3-vote,voted
+143966,Report_143966.md,Uncategorized,Command Injection - Generic,MOVED,tier2-llm,high
+1443211,Report_1443211.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,high
+1444501,Report_1444501.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+1444675,Report_1444675.md,Uncategorized,Open Redirect,MOVED,tier1-regex,high
+144526,Report_144526.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,high
+1448218,Report_1448218.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+145128,Report_145128.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+145260,Report_145260.md,Uncategorized,Information Exposure Through an Error Message,MOVED,tier2-llm,high
+145430,Report_145430.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+1454552,Report_1454552.md,Uncategorized,Improper Access Control - Generic,MOVED,tier3-vote,voted
+145467,Report_145467.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,high
+145524,Report_145524.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier1-regex,high
+145893,Report_145893.md,Uncategorized,Information Exposure Through an Error Message,MOVED,tier2-llm,medium
+1459338,Report_1459338.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+1459714,Report_1459714.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,high
+1460373,Report_1460373.md,Uncategorized,Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition'),MOVED,tier2-llm,high
+146180,Report_146180.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+146182,Report_146182.md,Uncategorized,Heap Overflow,MOVED,tier1-regex,high
+146183,Report_146183.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+146184,Report_146184.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+146185,Report_146185.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+1463028,Report_1463028.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+147237,Report_147237.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,high
+147388,Report_147388.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+14747,Report_14747.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier3-vote,voted
+1474784,Report_1474784.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+147776,Report_147776.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+1485501,Report_1485501.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+1485717,Report_1485717.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+1486670,Report_1486670.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+1487889,Report_1487889.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+1489141,Report_1489141.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+1498,Report_1498.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+1501611,Report_1501611.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,high
+1509,Report_1509.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+1509211,Report_1509211.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+1516520,Report_1516520.md,Uncategorized,Information Exposure Through Directory Listing,MOVED,tier2-llm,high
+15232,Report_15232.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+152717,Report_152717.md,Uncategorized,Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition'),MOVED,tier2-llm,high
+1536299,Report_1536299.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+1536899,Report_1536899.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+1536901,Report_1536901.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+154275,Report_154275.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+154306,Report_154306.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+1550400,Report_1550400.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,high
+15574,Report_15574.md,Uncategorized,Unrestricted Upload of File with Dangerous Type,MOVED,tier2-llm,medium
+1559262,Report_1559262.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,high
+156537,Report_156537.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,high
+1566325,Report_1566325.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+156948,Report_156948.md,Uncategorized,Client-Side Enforcement of Server-Side Security,MOVED,tier2-llm,medium
+1570874,Report_1570874.md,Uncategorized,Path Traversal,MOVED,tier3-vote,voted
+1577793,Report_1577793.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+1578121,Report_1578121.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+1579374,Report_1579374.md,Uncategorized,Open Redirect,MOVED,tier1-regex,high
+158118,Report_158118.md,Uncategorized,Use of Default Credentials,MOVED,tier2-llm,high
+1581454,Report_1581454.md,Uncategorized,Cache Poisoning,MOVED,tier1-regex,high
+158148,Report_158148.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,high
+158186,Report_158186.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+1582778,Report_1582778.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+1584569,Report_1584569.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,high
+1584718,Report_1584718.md,Uncategorized,Information Disclosure,MOVED,tier3-vote,voted
+1591085,Report_1591085.md,Uncategorized,Misconfiguration,MOVED,tier3-vote,voted
+1592587,Report_1592587.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,high
+1594627,Report_1594627.md,Uncategorized,HTTP Request Smuggling,MOVED,tier1-regex,high
+159536,Report_159536.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,high
+159686,Report_159686.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+159687,Report_159687.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+159693,Report_159693.md,Uncategorized,Memory Corruption - Generic,MOVED,tier2-llm,medium
+159696,Report_159696.md,Uncategorized,Use After Free,MOVED,tier1-regex,med
+159943,Report_159943.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier1-regex,high
+159946,Report_159946.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier2-llm,medium
+1600720,Report_1600720.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+1606957,Report_1606957.md,Uncategorized,Unrestricted Upload of File with Dangerous Type,MOVED,tier1-regex,high
+1607645,Report_1607645.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,high
+1607756,Report_1607756.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+161428,Report_161428.md,Uncategorized,Externally Controlled Reference to a Resource in Another Sphere,MOVED,tier3-vote,voted
+1615743,Report_1615743.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+1618347,Report_1618347.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,medium
+161932,Report_161932.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,high
+1624911,Report_1624911.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,high
+1625036,Report_1625036.md,Uncategorized,Untrusted Search Path,MOVED,tier2-llm,medium
+1627159,Report_1627159.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+163087,Report_163087.md,Uncategorized,Improper Initialization,MOVED,tier2-llm,high
+163381,Report_163381.md,Uncategorized,Improper Authentication - Generic,MOVED,tier3-vote,voted
+163677,Report_163677.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+16439,Report_16439.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+164419,Report_164419.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,high
+164483,Report_164483.md,Uncategorized,Weak Password Recovery Mechanism for Forgotten Password,MOVED,tier2-llm,medium
+165102,Report_165102.md,Uncategorized,CRLF Injection,MOVED,tier2-llm,high
+165154,Report_165154.md,Uncategorized,CRLF Injection,MOVED,tier2-llm,medium
+1664914,Report_1664914.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier1-regex,high
+167380,Report_167380.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+1679734,Report_1679734.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,high
+1684163,Report_1684163.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+168574,Report_168574.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,high
+1691888,Report_1691888.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+1696814,Report_1696814.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier2-llm,medium
+1698006,Report_1698006.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,high
+1700276,Report_1700276.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+170301,Report_170301.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+170548,Report_170548.md,Uncategorized,"Reusing a Nonce, Key Pair in Encryption",MOVED,tier2-llm,high
+1707616,Report_1707616.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,high
+1707680,Report_1707680.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+1714970,Report_1714970.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,high
+1716286,Report_1716286.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,high
+171942,Report_171942.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+1726445,Report_1726445.md,Uncategorized,Authentication Bypass,MOVED,tier3-vote,voted
+173412,Report_173412.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+173417,Report_173417.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+1739099,Report_1739099.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier1-regex,high
+175451,Report_175451.md,Uncategorized,Information Exposure Through an Error Message,MOVED,tier2-llm,medium
+1755552,Report_1755552.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+176076,Report_176076.md,Uncategorized,Improper Check or Handling of Exceptional Conditions,MOVED,tier3-vote,voted
+176083,Report_176083.md,Uncategorized,Open Redirect,MOVED,tier2-llm,medium
+1763266,Report_1763266.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+1763704,Report_1763704.md,Uncategorized,Command Injection - Generic,MOVED,tier2-llm,high
+17638,Report_17638.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier2-llm,medium
+176929,Report_176929.md,Uncategorized,User Interface (UI) Misrepresentation of Critical Information,MOVED,tier2-llm,high
+17766,Report_17766.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier2-llm,high
+1777077,Report_1777077.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+1780399,Report_1780399.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+178293,Report_178293.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+178409,Report_178409.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+1785260,Report_1785260.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+1785378,Report_1785378.md,Uncategorized,Code Injection,MOVED,tier2-llm,medium
+178567,Report_178567.md,Uncategorized,Reliance on Cookies without Validation and Integrity Checking in a Security Decision,MOVED,tier2-llm,high
+1787810,Report_1787810.md,Uncategorized,Improper Neutralization of Value Delimiters,MOVED,tier2-llm,medium
+1794462,Report_1794462.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+180388,Report_180388.md,Uncategorized,Weak Password Requirements,MOVED,tier2-llm,medium
+1804128,Report_1804128.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+181088,Report_181088.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+181210,Report_181210.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+181212,Report_181212.md,Uncategorized,Insufficient Verification of Data Authenticity,MOVED,tier2-llm,medium
+181214,Report_181214.md,Uncategorized,Man-in-the-Middle,MOVED,tier2-llm,medium
+181225,Report_181225.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+181315,Report_181315.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+1815355,Report_1815355.md,Uncategorized,Externally Controlled Reference to a Resource in Another Sphere,MOVED,tier3-vote,voted
+1829170,Report_1829170.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+183352,Report_183352.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier3-vote,voted
+183568,Report_183568.md,Uncategorized,External Control of File Name or Path,MOVED,tier2-llm,medium
+1848062,Report_1848062.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+1848780,Report_1848780.md,Uncategorized,Information Exposure Through Debug Information,MOVED,tier2-llm,high
+185775,Report_185775.md,Uncategorized,Reachable Assertion,MOVED,tier2-llm,high
+185833,Report_185833.md,Uncategorized,Use of Cache Containing Sensitive Information,MOVED,tier2-llm,medium
+185835,Report_185835.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+185907,Report_185907.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier1-regex,high
+185909,Report_185909.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier1-regex,high
+185914,Report_185914.md,Uncategorized,Use of Hard-coded Cryptographic Key,MOVED,tier2-llm,medium
+1862677,Report_1862677.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+186316,Report_186316.md,Uncategorized,Misconfiguration,MOVED,tier3-vote,voted
+186352,Report_186352.md,Uncategorized,Download of Code Without Integrity Check,MOVED,tier2-llm,high
+1872682,Report_1872682.md,Uncategorized,Incorrect Permission Assignment for Critical Resource,MOVED,tier2-llm,high
+1874836,Report_1874836.md,Uncategorized,Information Exposure Through Debug Information,MOVED,tier2-llm,high
+18846,Report_18846.md,Uncategorized,Improper Authentication - Generic,MOVED,tier3-vote,voted
+1888803,Report_1888803.md,Uncategorized,Use of Cryptographically Weak Pseudo-Random Number Generator (PRNG),MOVED,tier2-llm,high
+1889474,Report_1889474.md,Uncategorized,HTTP Response Splitting,MOVED,tier1-regex,high
+1889477,Report_1889477.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+190015,Report_190015.md,Uncategorized,Use of a Broken or Risky Cryptographic Algorithm,MOVED,tier2-llm,high
+1901713,Report_1901713.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,high
+190194,Report_190194.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+191323,Report_191323.md,Uncategorized,Improper Access Control - Generic,MOVED,tier3-vote,voted
+1913951,Report_1913951.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier3-vote,voted
+1916565,Report_1916565.md,Uncategorized,Improper Access Control - Generic,MOVED,tier3-vote,voted
+194454,Report_194454.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+1952124,Report_1952124.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier3-vote,voted
+196937,Report_196937.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,medium
+1971610,Report_1971610.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,medium
+1974296,Report_1974296.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,medium
+198494,Report_198494.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+198723,Report_198723.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier1-regex,high
+1990443,Report_1990443.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,high
+1991428,Report_1991428.md,Uncategorized,Expected Behavior Violation,MOVED,tier2-llm,high
+199286,Report_199286.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+1998179,Report_1998179.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+20122,Report_20122.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,medium
+201489,Report_201489.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+202797,Report_202797.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier2-llm,high
+2037902,Report_2037902.md,Uncategorized,Authentication Bypass,MOVED,tier2-llm,high
+204774,Report_204774.md,Uncategorized,NULL Pointer Dereference,MOVED,tier3-vote,voted
+2048725,Report_2048725.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+2061367,Report_2061367.md,Uncategorized,Improper Authorization,MOVED,tier3-vote,voted
+206653,Report_206653.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+20671,Report_20671.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+2076019,Report_2076019.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier2-llm,high
+2076786,Report_2076786.md,Uncategorized,Improper Neutralization of HTTP Headers for Scripting Syntax,MOVED,tier2-llm,medium
+20861,Report_20861.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+2094346,Report_2094346.md,Uncategorized,Improper Authorization,MOVED,tier3-vote,voted
+2106,Report_2106.md,Uncategorized,Type Confusion,MOVED,tier1-regex,high
+2107,Report_2107.md,Uncategorized,Authentication Bypass Using an Alternate Path or Channel,MOVED,tier2-llm,medium
+211206,Report_211206.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+21172,Report_21172.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+212239,Report_212239.md,Uncategorized,Use of Externally-Controlled Format String,MOVED,tier1-regex,high
+213991,Report_213991.md,Uncategorized,Cross-Site Scripting (XSS),MOVED,tier3-vote,voted
+214001,Report_214001.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+214340,Report_214340.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+2144870,Report_2144870.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+215372,Report_215372.md,Uncategorized,Information Exposure Through Sent Data,MOVED,tier2-llm,medium
+216615,Report_216615.md,Uncategorized,Memory Corruption - Generic,MOVED,tier2-llm,medium
+216700,Report_216700.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+217381,Report_217381.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+217679,Report_217679.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+2182202,Report_2182202.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+218680,Report_218680.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+218733,Report_218733.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+218748,Report_218748.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,high
+219197,Report_219197.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+219499,Report_219499.md,Uncategorized,Use of a Broken or Risky Cryptographic Algorithm,MOVED,tier2-llm,medium
+2208656,Report_2208656.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,high
+220909,Report_220909.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,high
+221133,Report_221133.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+221325,Report_221325.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier1-regex,high
+221461,Report_221461.md,Uncategorized,User Interface (UI) Misrepresentation of Critical Information,MOVED,tier3-vote,voted
+2215578,Report_2215578.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+221558,Report_221558.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+221625,Report_221625.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,medium
+221712,Report_221712.md,Uncategorized,NULL Pointer Dereference,MOVED,tier1-regex,high
+221955,Report_221955.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+222171,Report_222171.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+223374,Report_223374.md,Uncategorized,Weak Password Requirements,MOVED,tier2-llm,high
+223391,Report_223391.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier1-regex,high
+223531,Report_223531.md,Uncategorized,Information Disclosure,MOVED,tier3-vote,voted
+223542,Report_223542.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier2-llm,high
+223545,Report_223545.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+223557,Report_223557.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier2-llm,high
+223625,Report_223625.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier1-regex,high
+223630,Report_223630.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+223637,Report_223637.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+223694,Report_223694.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+224108,Report_224108.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+224186,Report_224186.md,Uncategorized,Improper Authentication - Generic,MOVED,tier3-vote,voted
+224214,Report_224214.md,Uncategorized,Unverified Password Change,MOVED,tier2-llm,high
+2243003,Report_2243003.md,Uncategorized,Information Exposure Through Debug Information,MOVED,tier2-llm,high
+224362,Report_224362.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+224379,Report_224379.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+224572,Report_224572.md,Uncategorized,Weak Password Requirements,MOVED,tier2-llm,high
+2248689,Report_2248689.md,Uncategorized,Authentication Bypass,MOVED,tier2-llm,high
+225722,Report_225722.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier3-vote,voted
+225769,Report_225769.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier3-vote,voted
+226037,Report_226037.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,medium
+226104,Report_226104.md,Uncategorized,Open Redirect,MOVED,tier3-vote,voted
+226334,Report_226334.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+226343,Report_226343.md,Uncategorized,Information Exposure Through an Error Message,MOVED,tier2-llm,high
+2264960,Report_2264960.md,Uncategorized,Missing Authentication for Critical Function,MOVED,tier2-llm,high
+226505,Report_226505.md,Uncategorized,Information Exposure Through Directory Listing,MOVED,tier2-llm,medium
+226518,Report_226518.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+226896,Report_226896.md,Uncategorized,OS Command Injection,MOVED,tier2-llm,high
+2270633,Report_2270633.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+2271095,Report_2271095.md,Uncategorized,Insufficient Verification of Data Authenticity,MOVED,tier2-llm,medium
+227659,Report_227659.md,Uncategorized,Weak Password Requirements,MOVED,tier2-llm,high
+228873,Report_228873.md,Uncategorized,Information Exposure Through an Error Message,MOVED,tier2-llm,high
+229483,Report_229483.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,high
+229498,Report_229498.md,Uncategorized,Open Redirect,MOVED,tier2-llm,medium
+229577,Report_229577.md,Uncategorized,Weak Password Requirements,MOVED,tier2-llm,medium
+229584,Report_229584.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier3-vote,voted
+229599,Report_229599.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+229796,Report_229796.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+229869,Report_229869.md,Uncategorized,Unverified Password Change,MOVED,tier2-llm,medium
+229909,Report_229909.md,Uncategorized,Insufficient Logging,MOVED,tier3-vote,voted
+230633,Report_230633.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+230648,Report_230648.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+2307813,Report_2307813.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+231041,Report_231041.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+2315026,Report_2315026.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+232306,Report_232306.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,medium
+2326618,Report_2326618.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+233379,Report_233379.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier2-llm,high
+2334446,Report_2334446.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+2336236,Report_2336236.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,high
+2341063,Report_2341063.md,Uncategorized,Improper Check for Certificate Revocation,MOVED,tier2-llm,high
+234701,Report_234701.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+2357012,Report_2357012.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+236390,Report_236390.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+236552,Report_236552.md,Uncategorized,Code Injection,MOVED,tier2-llm,medium
+236607,Report_236607.md,Uncategorized,Unrestricted Upload of File with Dangerous Type,MOVED,tier2-llm,medium
+237927,Report_237927.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier1-regex,high
+2387600,Report_2387600.md,Uncategorized,Path Traversal,MOVED,tier1-regex,high
+23913,Report_23913.md,Uncategorized,Cleartext Storage of Sensitive Information,MOVED,tier2-llm,high
+239359,Report_239359.md,Uncategorized,Information Exposure Through Timing Discrepancy,MOVED,tier2-llm,high
+239762,Report_239762.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+239818,Report_239818.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier2-llm,medium
+2399386,Report_2399386.md,Uncategorized,Improper Access Control - Generic,MOVED,tier3-vote,voted
+240091,Report_240091.md,Uncategorized,Open Redirect,MOVED,tier1-regex,high
+240098,Report_240098.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+240886,Report_240886.md,Uncategorized,File Manipulation,MOVED,tier2-llm,high
+241044,Report_241044.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,high
+241192,Report_241192.md,Uncategorized,Cross-Site Scripting (XSS),MOVED,tier2-llm,medium
+241194,Report_241194.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+241323,Report_241323.md,Uncategorized,Cache Poisoning,MOVED,tier2-llm,medium
+241341,Report_241341.md,Uncategorized,Cross-Site Scripting (XSS),MOVED,tier2-llm,medium
+241503,Report_241503.md,Uncategorized,Externally Controlled Reference to a Resource in Another Sphere,MOVED,tier3-vote,voted
+241596,Report_241596.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+241598,Report_241598.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+242407,Report_242407.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,high
+242489,Report_242489.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+242579,Report_242579.md,Uncategorized,Double Free,MOVED,tier1-regex,med
+242765,Report_242765.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+243611,Report_243611.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+243616,Report_243616.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+243619,Report_243619.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+243635,Report_243635.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+2438265,Report_2438265.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier2-llm,high
+2439734,Report_2439734.md,Uncategorized,Weak Password Requirements,MOVED,tier2-llm,high
+2441029,Report_2441029.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,medium
+2442613,Report_2442613.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+244287,Report_244287.md,Uncategorized,Weak Password Recovery Mechanism for Forgotten Password,MOVED,tier2-llm,medium
+244555,Report_244555.md,Uncategorized,Content Spoofing,MOVED,tier3-vote,voted
+245228,Report_245228.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier2-llm,high
+245233,Report_245233.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier2-llm,high
+245311,Report_245311.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+245514,Report_245514.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+245527,Report_245527.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier2-llm,high
+246085,Report_246085.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+2463279,Report_2463279.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,high
+247072,Report_247072.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+247084,Report_247084.md,Uncategorized,Use of Cache Containing Sensitive Information,MOVED,tier2-llm,high
+2476149,Report_2476149.md,Uncategorized,Open Redirect,MOVED,tier2-llm,high
+248599,Report_248599.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+249695,Report_249695.md,Uncategorized,Improper Authentication - Generic,MOVED,tier3-vote,voted
+250457,Report_250457.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+250741,Report_250741.md,Uncategorized,Weak Password Requirements,MOVED,tier3-vote,voted
+251200,Report_251200.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+251469,Report_251469.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+251526,Report_251526.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+252043,Report_252043.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+2520679,Report_2520679.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+252324,Report_252324.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+2523677,Report_2523677.md,Uncategorized,Insufficient Verification of Data Authenticity,MOVED,tier2-llm,medium
+2526046,Report_2526046.md,Uncategorized,Improper Handling of Exceptional Conditions,MOVED,tier2-llm,medium
+252699,Report_252699.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+25275,Report_25275.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+253202,Report_253202.md,Uncategorized,Unrestricted Upload of File with Dangerous Type,MOVED,tier1-regex,high
+2542372,Report_2542372.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,high
+254869,Report_254869.md,Uncategorized,Improper Authentication - Generic,MOVED,tier3-vote,voted
+255041,Report_255041.md,Uncategorized,Use of a Broken or Risky Cryptographic Algorithm,MOVED,tier2-llm,high
+255679,Report_255679.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+255708,Report_255708.md,Uncategorized,Weak Password Requirements,MOVED,tier2-llm,high
+256649,Report_256649.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+257035,Report_257035.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+2575079,Report_2575079.md,Uncategorized,Authentication Bypass,MOVED,tier2-llm,medium
+2584,Report_2584.md,Uncategorized,Exposure of Data Element to Wrong Session,MOVED,tier2-llm,high
+2584376,Report_2584376.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+2586433,Report_2586433.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+258710,Report_258710.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+260239,Report_260239.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+260278,Report_260278.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+260299,Report_260299.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+260390,Report_260390.md,Uncategorized,Encoding Error,MOVED,tier3-vote,voted
+260492,Report_260492.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,high
+260591,Report_260591.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+260648,Report_260648.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+260662,Report_260662.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+260744,Report_260744.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+260755,Report_260755.md,Uncategorized,Improper Authentication - Generic,MOVED,tier3-vote,voted
+260838,Report_260838.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+260928,Report_260928.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+260938,Report_260938.md,Uncategorized,User Interface (UI) Misrepresentation of Critical Information,MOVED,tier2-llm,high
+2612028,Report_2612028.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier1-regex,high
+261734,Report_261734.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+262262,Report_262262.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+2627062,Report_2627062.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,high
+2627221,Report_2627221.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+263109,Report_263109.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+263589,Report_263589.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+263718,Report_263718.md,Uncategorized,Cross-Site Scripting (XSS),MOVED,tier2-llm,medium
+263743,Report_263743.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+263866,Report_263866.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+264023,Report_264023.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+2646493,Report_2646493.md,Uncategorized,SQL Injection,MOVED,tier1-regex,high
+264934,Report_264934.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+265160,Report_265160.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+265232,Report_265232.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+265619,Report_265619.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+265749,Report_265749.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,high
+265930,Report_265930.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+265931,Report_265931.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+266288,Report_266288.md,Uncategorized,Improper Authentication - Generic,MOVED,tier3-vote,voted
+26647,Report_26647.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+2671404,Report_2671404.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+267356,Report_267356.md,Uncategorized,Information Disclosure,MOVED,tier3-vote,voted
+2686225,Report_2686225.md,Uncategorized,Information Disclosure,MOVED,tier3-vote,voted
+268981,Report_268981.md,Uncategorized,Content Spoofing,MOVED,tier3-vote,voted
+269047,Report_269047.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier1-regex,high
+269184,Report_269184.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+269243,Report_269243.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,high
+269288,Report_269288.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier3-vote,voted
+2693786,Report_2693786.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+2696271,Report_2696271.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier1-regex,high
+2696294,Report_2696294.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+270060,Report_270060.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+270119,Report_270119.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+2705661,Report_2705661.md,Uncategorized,Command Injection - Generic,MOVED,tier1-regex,high
+271506,Report_271506.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+2721478,Report_2721478.md,Uncategorized,OS Command Injection,MOVED,tier2-llm,high
+272426,Report_272426.md,Uncategorized,Information Exposure Through an Error Message,MOVED,tier2-llm,medium
+272824,Report_272824.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+273365,Report_273365.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+274285,Report_274285.md,Uncategorized,Information Exposure Through Directory Listing,MOVED,tier2-llm,high
+274324,Report_274324.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier2-llm,high
+2746709,Report_2746709.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,high
+275,Report_275.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+275186,Report_275186.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+275303,Report_275303.md,Uncategorized,Improper Authentication - Generic,MOVED,tier3-vote,voted
+276244,Report_276244.md,Uncategorized,Phishing,MOVED,tier2-llm,medium
+277192,Report_277192.md,Uncategorized,Cache Poisoning,MOVED,tier1-regex,high
+277407,Report_277407.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,high
+2778400,Report_2778400.md,Uncategorized,Forced Browsing,MOVED,tier3-vote,voted
+278718,Report_278718.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+2798380,Report_2798380.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+27987,Report_27987.md,Uncategorized,Open Redirect,MOVED,tier3-vote,voted
+279945,Report_279945.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+280,Report_280.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+280803,Report_280803.md,Uncategorized,Improper Authentication - Generic,MOVED,tier3-vote,voted
+281296,Report_281296.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,high
+281387,Report_281387.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+281449,Report_281449.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+281575,Report_281575.md,Uncategorized,Open Redirect,MOVED,tier2-llm,medium
+2819573,Report_2819573.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier1-regex,high
+282363,Report_282363.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+282564,Report_282564.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+282570,Report_282570.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+282572,Report_282572.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+283058,Report_283058.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+283063,Report_283063.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+283502,Report_283502.md,Uncategorized,Misconfiguration,MOVED,tier3-vote,voted
+283742,Report_283742.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier2-llm,medium
+283786,Report_283786.md,Uncategorized,Cache Poisoning,MOVED,tier1-regex,high
+284143,Report_284143.md,Uncategorized,"Improper Neutralization of Escape, Meta, or Control Sequences",MOVED,tier3-vote,voted
+2841436,Report_2841436.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+28445,Report_28445.md,Uncategorized,Type Confusion,MOVED,tier1-regex,high
+28449,Report_28449.md,Uncategorized,SQL Injection,MOVED,tier1-regex,high
+28450,Report_28450.md,Uncategorized,SQL Injection,MOVED,tier1-regex,high
+284963,Report_284963.md,Uncategorized,Missing Authentication for Critical Function,MOVED,tier2-llm,medium
+2858802,Report_2858802.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,medium
+287758,Report_287758.md,Uncategorized,Weak Password Requirements,MOVED,tier2-llm,high
+287789,Report_287789.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,high
+287837,Report_287837.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+288,Report_288.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+288540,Report_288540.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+2888001,Report_2888001.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+288846,Report_288846.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+288912,Report_288912.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,high
+290889,Report_290889.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+291012,Report_291012.md,Uncategorized,Cache Poisoning,MOVED,tier1-regex,high
+2915502,Report_2915502.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+29234,Report_29234.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+292797,Report_292797.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+293105,Report_293105.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+2931636,Report_2931636.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier2-llm,high
+293581,Report_293581.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+2939104,Report_2939104.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,medium
+294334,Report_294334.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier1-regex,high
+2946927,Report_2946927.md,Uncategorized,Use of Cache Containing Sensitive Information,MOVED,tier2-llm,high
+294867,Report_294867.md,Uncategorized,Open Redirect,MOVED,tier2-llm,medium
+295330,Report_295330.md,Uncategorized,Improper Access Control - Generic,MOVED,tier3-vote,voted
+2954547,Report_2954547.md,Uncategorized,Use of Default Credentials,MOVED,tier3-vote,voted
+2964441,Report_2964441.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier1-regex,high
+298265,Report_298265.md,Uncategorized,Improper Neutralization of Value Delimiters,MOVED,tier3-vote,voted
+29839,Report_29839.md,Uncategorized,OS Command Injection,MOVED,tier2-llm,high
+2991326,Report_2991326.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+300301,Report_300301.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+3008878,Report_3008878.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier1-regex,high
+301406,Report_301406.md,Uncategorized,Code Injection,MOVED,tier1-regex,high
+3014158,Report_3014158.md,Uncategorized,Code Injection,MOVED,tier2-llm,medium
+301592,Report_301592.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+3018307,Report_3018307.md,Uncategorized,Improper Check or Handling of Exceptional Conditions,MOVED,tier2-llm,medium
+301862,Report_301862.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+3023139,Report_3023139.md,Uncategorized,Missing Release of Memory after Effective Lifetime,MOVED,tier2-llm,high
+304073,Report_304073.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,medium
+3052880,Report_3052880.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+305518,Report_305518.md,Uncategorized,Information Disclosure,MOVED,tier3-vote,voted
+3056937,Report_3056937.md,Uncategorized,LLM01- Prompt Injection,MOVED,tier2-llm,medium
+305915,Report_305915.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+306414,Report_306414.md,Uncategorized,Open Redirect,MOVED,tier3-vote,voted
+3068485,Report_3068485.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+30787,Report_30787.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+3079966,Report_3079966.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier3-vote,voted
+308156,Report_308156.md,Uncategorized,Insufficient Logging,MOVED,tier3-vote,voted
+308489,Report_308489.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier1-regex,high
+3085889,Report_3085889.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+310339,Report_310339.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+310446,Report_310446.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+310706,Report_310706.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+3112106,Report_3112106.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+311333,Report_311333.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+311336,Report_311336.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+311337,Report_311337.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+311913,Report_311913.md,Uncategorized,Cross-site Scripting (XSS) - Reflected,MOVED,tier1-regex,high
+3122019,Report_3122019.md,Uncategorized,Code Injection,MOVED,tier2-llm,high
+3135673,Report_3135673.md,Uncategorized,External Control of File Name or Path,MOVED,tier2-llm,medium
+317243,Report_317243.md,Uncategorized,Open Redirect,MOVED,tier3-vote,voted
+3183046,Report_3183046.md,Uncategorized,Cache Poisoning,MOVED,tier2-llm,high
+321029,Report_321029.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier2-llm,medium
+321213,Report_321213.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+321938,Report_321938.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,high
+324372,Report_324372.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+327867,Report_327867.md,Uncategorized,Reliance on Untrusted Inputs in a Security Decision,MOVED,tier3-vote,voted
+328486,Report_328486.md,Uncategorized,Improper Export of Android Application Components,MOVED,tier2-llm,medium
+3287208,Report_3287208.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+330008,Report_330008.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+330122,Report_330122.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+3302484,Report_3302484.md,Uncategorized,Improper Handling of Unexpected Data Type,MOVED,tier2-llm,medium
+330378,Report_330378.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier3-vote,voted
+330721,Report_330721.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+3310318,Report_3310318.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,high
+331428,Report_331428.md,Uncategorized,Privacy Violation,MOVED,tier3-vote,voted
+331984,Report_331984.md,Uncategorized,CRLF Injection,MOVED,tier3-vote,voted
+3321406,Report_3321406.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+3324901,Report_3324901.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+335330,Report_335330.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+3357036,Report_3357036.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier3-vote,voted
+337189,Report_337189.md,Uncategorized,Privacy Violation,MOVED,tier3-vote,voted
+3378635,Report_3378635.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+3395218,Report_3395218.md,Uncategorized,Classic Buffer Overflow,MOVED,tier2-llm,medium
+3395227,Report_3395227.md,Uncategorized,Classic Buffer Overflow,MOVED,tier2-llm,medium
+33986,Report_33986.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+33987,Report_33987.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+3400831,Report_3400831.md,Uncategorized,NULL Pointer Dereference,MOVED,tier2-llm,medium
+341600,Report_341600.md,Uncategorized,Code Injection,MOVED,tier2-llm,medium
+341634,Report_341634.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+3418616,Report_3418616.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+341992,Report_341992.md,Uncategorized,Path Traversal,MOVED,tier1-regex,high
+3423013,Report_3423013.md,Uncategorized,Open Redirect,MOVED,tier1-regex,high
+3424977,Report_3424977.md,Uncategorized,Information Exposure Through Timing Discrepancy,MOVED,tier2-llm,high
+342608,Report_342608.md,Uncategorized,Path Traversal,MOVED,tier1-regex,high
+3426417,Report_3426417.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+3427194,Report_3427194.md,Uncategorized,External Control of File Name or Path,MOVED,tier2-llm,medium
+3427670,Report_3427670.md,Uncategorized,Double Free,MOVED,tier1-regex,high
+3432159,Report_3432159.md,Uncategorized,Path Traversal,MOVED,tier1-regex,high
+3434543,Report_3434543.md,Uncategorized,Use After Free,MOVED,tier1-regex,med
+3442060,Report_3442060.md,Uncategorized,Loop with Unreachable Exit Condition ('Infinite Loop'),MOVED,tier1-regex,high
+344223,Report_344223.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,medium
+344595,Report_344595.md,Uncategorized,Path Traversal,MOVED,tier2-llm,high
+3447021,Report_3447021.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+3456148,Report_3456148.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+3463045,Report_3463045.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,medium
+3468410,Report_3468410.md,Uncategorized,Heap Overflow,MOVED,tier1-regex,high
+3470649,Report_3470649.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier1-regex,high
+3474865,Report_3474865.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+3475472,Report_3475472.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+3479692,Report_3479692.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier1-regex,high
+3480925,Report_3480925.md,Uncategorized,Authentication Bypass,MOVED,tier2-llm,high
+3508854,Report_3508854.md,Uncategorized,Integer Underflow,MOVED,tier1-regex,high
+3510161,Report_3510161.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+35102,Report_35102.md,Uncategorized,Double Free,MOVED,tier1-regex,high
+351376,Report_351376.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+351555,Report_351555.md,Uncategorized,Use of Hard-coded Credentials,MOVED,tier2-llm,high
+3518571,Report_3518571.md,Uncategorized,Command Injection - Generic,MOVED,tier1-regex,high
+3524779,Report_3524779.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier2-llm,high
+353,Report_353.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+3531216,Report_3531216.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+3556769,Report_3556769.md,Uncategorized,Improper Check or Handling of Exceptional Conditions,MOVED,tier2-llm,medium
+3556892,Report_3556892.md,Uncategorized,Cross-Site Scripting (XSS),MOVED,tier2-llm,medium
+3557138,Report_3557138.md,Uncategorized,Code Injection,MOVED,tier2-llm,high
+3558277,Report_3558277.md,Uncategorized,Improper Check or Handling of Exceptional Conditions,MOVED,tier2-llm,high
+356566,Report_356566.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+3577145,Report_3577145.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,high
+358005,Report_358005.md,Uncategorized,Origin Validation Error,MOVED,tier2-llm,medium
+3581815,Report_3581815.md,Uncategorized,Open Redirect,MOVED,tier1-regex,high
+3601655,Report_3601655.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier2-llm,high
+360171,Report_360171.md,Uncategorized,Content Spoofing,MOVED,tier3-vote,voted
+3603300,Report_3603300.md,Uncategorized,Out-of-bounds Read,MOVED,tier2-llm,high
+361054,Report_361054.md,Uncategorized,Phishing,MOVED,tier2-llm,high
+361106,Report_361106.md,Uncategorized,Unverified Password Change,MOVED,tier2-llm,high
+3611825,Report_3611825.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+3612891,Report_3612891.md,Uncategorized,File and Directory Information Exposure,MOVED,tier2-llm,medium
+3619287,Report_3619287.md,Uncategorized,Inclusion of Functionality from Untrusted Control Sphere,MOVED,tier2-llm,medium
+3619288,Report_3619288.md,Uncategorized,Inclusion of Functionality from Untrusted Control Sphere,MOVED,tier2-llm,medium
+362033,Report_362033.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+3620761,Report_3620761.md,Uncategorized,Unchecked Error Condition,MOVED,tier2-llm,medium
+362118,Report_362118.md,Uncategorized,Path Traversal,MOVED,tier2-llm,high
+3625600,Report_3625600.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+36264,Report_36264.md,Uncategorized,Classic Buffer Overflow,MOVED,tier1-regex,high
+363809,Report_363809.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,medium
+3639277,Report_3639277.md,Uncategorized,Improper Certificate Validation,MOVED,tier3-vote,voted
+3642600,Report_3642600.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+3650473,Report_3650473.md,Uncategorized,"Improper Neutralization of Escape, Meta, or Control Sequences",MOVED,tier2-llm,medium
+3650689,Report_3650689.md,Uncategorized,Exposure of Data Element to Wrong Session,MOVED,tier3-vote,voted
+365199,Report_365199.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,medium
+3658049,Report_3658049.md,Uncategorized,Integer Overflow,MOVED,tier3-vote,voted
+366153,Report_366153.md,Uncategorized,Weak Password Recovery Mechanism for Forgotten Password,MOVED,tier3-vote,voted
+3669637,Report_3669637.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+3679660,Report_3679660.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+369063,Report_369063.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+369086,Report_369086.md,Uncategorized,User Interface (UI) Misrepresentation of Critical Information,MOVED,tier2-llm,high
+369185,Report_369185.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+369218,Report_369218.md,Uncategorized,Externally Controlled Reference to a Resource in Another Sphere,MOVED,tier2-llm,medium
+3707747,Report_3707747.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,medium
+3718265,Report_3718265.md,Uncategorized,Concurrent Execution using Shared Resource with Improper Synchronization ('Race Condition'),MOVED,tier2-llm,high
+3725659,Report_3725659.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,high
+3733946,Report_3733946.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,high
+373721,Report_373721.md,Uncategorized,User Interface (UI) Misrepresentation of Critical Information,MOVED,tier2-llm,high
+374969,Report_374969.md,Uncategorized,User Interface (UI) Misrepresentation of Critical Information,MOVED,tier2-llm,medium
+375259,Report_375259.md,Uncategorized,User Interface (UI) Misrepresentation of Critical Information,MOVED,tier2-llm,medium
+375329,Report_375329.md,Uncategorized,Path Traversal,MOVED,tier3-vote,voted
+377206,Report_377206.md,Uncategorized,Download of Code Without Integrity Check,MOVED,tier3-vote,voted
+3773293,Report_3773293.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,medium
+3774977,Report_3774977.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,medium
+377542,Report_377542.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier3-vote,voted
+377565,Report_377565.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+378209,Report_378209.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+378698,Report_378698.md,Uncategorized,Path Traversal,MOVED,tier1-regex,high
+378805,Report_378805.md,Uncategorized,Externally Controlled Reference to a Resource in Another Sphere,MOVED,tier2-llm,medium
+378809,Report_378809.md,Uncategorized,User Interface (UI) Misrepresentation of Critical Information,MOVED,tier2-llm,medium
+378864,Report_378864.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+3804525,Report_3804525.md,Uncategorized,Classic Buffer Overflow,MOVED,tier1-regex,high
+38170,Report_38170.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+385037,Report_385037.md,Uncategorized,Improper Authentication - Generic,MOVED,tier3-vote,voted
+385322,Report_385322.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+389076,Report_389076.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+389108,Report_389108.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier3-vote,voted
+389454,Report_389454.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+390013,Report_390013.md,Uncategorized,Path Traversal,MOVED,tier3-vote,voted
+390181,Report_390181.md,Uncategorized,Cross-site Scripting (XSS) - Reflected,MOVED,tier1-regex,high
+390362,Report_390362.md,Uncategorized,Origin Validation Error,MOVED,tier3-vote,voted
+390386,Report_390386.md,Uncategorized,Cross-site Scripting (XSS) - Reflected,MOVED,tier1-regex,high
+390860,Report_390860.md,Uncategorized,Modification of Assumed-Immutable Data (MAID),MOVED,tier3-vote,voted
+39181,Report_39181.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+3921,Report_3921.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+394253,Report_394253.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+395521,Report_395521.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier1-regex,high
+395729,Report_395729.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier3-vote,voted
+395737,Report_395737.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,medium
+398797,Report_398797.md,Uncategorized,Use of Default Credentials,MOVED,tier2-llm,high
+400826,Report_400826.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,medium
+401483,Report_401483.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+403822,Report_403822.md,Uncategorized,Externally Controlled Reference to a Resource in Another Sphere,MOVED,tier3-vote,voted
+403891,Report_403891.md,Uncategorized,Open Redirect,MOVED,tier3-vote,voted
+410087,Report_410087.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+410187,Report_410187.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+411679,Report_411679.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,medium
+412677,Report_412677.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier3-vote,voted
+415258,Report_415258.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,high
+416040,Report_416040.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+416474,Report_416474.md,Uncategorized,Misconfiguration,MOVED,tier3-vote,voted
+417515,Report_417515.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+418145,Report_418145.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier2-llm,medium
+418151,Report_418151.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier2-llm,medium
+418474,Report_418474.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+42240,Report_42240.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier3-vote,voted
+426147,Report_426147.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,high
+426165,Report_426165.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,high
+429747,Report_429747.md,Uncategorized,Cache Poisoning,MOVED,tier1-regex,high
+431561,Report_431561.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+434116,Report_434116.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+43440,Report_43440.md,Uncategorized,File and Directory Information Exposure,MOVED,tier2-llm,medium
+43443,Report_43443.md,Uncategorized,Incorrect Calculation of Buffer Size,MOVED,tier3-vote,voted
+434670,Report_434670.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+438274,Report_438274.md,Uncategorized,Modification of Assumed-Immutable Data (MAID),MOVED,tier3-vote,voted
+438306,Report_438306.md,Uncategorized,Improper Access Control - Generic,MOVED,tier3-vote,voted
+439098,Report_439098.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+439120,Report_439120.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+439828,Report_439828.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+446271,Report_446271.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+449356,Report_449356.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+449617,Report_449617.md,Uncategorized,Improper Null Termination,MOVED,tier2-llm,medium
+451052,Report_451052.md,Uncategorized,Improper Handling of Exceptional Conditions,MOVED,tier2-llm,medium
+452835,Report_452835.md,Uncategorized,Improper Export of Android Application Components,MOVED,tier3-vote,voted
+459084,Report_459084.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+459502,Report_459502.md,Uncategorized,Reliance on Cookies without Validation and Integrity Checking in a Security Decision,MOVED,tier3-vote,voted
+459532,Report_459532.md,Uncategorized,Improper Neutralization of Formula Elements in a CSV File,MOVED,tier2-llm,high
+46312,Report_46312.md,Uncategorized,Cross-Site Scripting (XSS),MOVED,tier3-vote,voted
+463481,Report_463481.md,Uncategorized,Misconfiguration,MOVED,tier3-vote,voted
+463604,Report_463604.md,Uncategorized,Unrestricted Upload of File with Dangerous Type,MOVED,tier1-regex,high
+4689,Report_4689.md,Uncategorized,Memory Corruption - Generic,MOVED,tier1-regex,med
+4690,Report_4690.md,Uncategorized,Heap Overflow,MOVED,tier1-regex,high
+46952,Report_46952.md,Uncategorized,Improper Handling of Exceptional Conditions,MOVED,tier3-vote,voted
+470637,Report_470637.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,medium
+474688,Report_474688.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+474899,Report_474899.md,Uncategorized,Information Disclosure,MOVED,tier3-vote,voted
+475167,Report_475167.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+477,Report_477.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+482170,Report_482170.md,Uncategorized,Open Redirect,MOVED,tier2-llm,medium
+487,Report_487.md,Uncategorized,Cache Poisoning,MOVED,tier1-regex,high
+487656,Report_487656.md,Uncategorized,Unrestricted Upload of File with Dangerous Type,MOVED,tier2-llm,high
+491753,Report_491753.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+49304,Report_49304.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+49561,Report_49561.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,high
+496113,Report_496113.md,Uncategorized,Classic Buffer Overflow,MOVED,tier2-llm,medium
+498878,Report_498878.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,high
+499,Report_499.md,Uncategorized,Heap Overflow,MOVED,tier1-regex,high
+500,Report_500.md,Uncategorized,Memory Corruption - Generic,MOVED,tier1-regex,med
+501,Report_501.md,Uncategorized,Improper Validation of Certificate with Host Mismatch,MOVED,tier2-llm,medium
+502753,Report_502753.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+503300,Report_503300.md,Uncategorized,Missing Authorization,MOVED,tier2-llm,high
+503804,Report_503804.md,Uncategorized,Information Exposure Through an Error Message,MOVED,tier2-llm,high
+504162,Report_504162.md,Uncategorized,Improper Authorization,MOVED,tier3-vote,voted
+507012,Report_507012.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+508506,Report_508506.md,Uncategorized,Improper Authorization,MOVED,tier3-vote,voted
+51265,Report_51265.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+519044,Report_519044.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+519059,Report_519059.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+519061,Report_519061.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+5204,Report_5204.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+52042,Report_52042.md,Uncategorized,HTTP Response Splitting,MOVED,tier1-regex,high
+5205,Report_5205.md,Uncategorized,Inclusion of Functionality from Untrusted Control Sphere,MOVED,tier3-vote,voted
+522214,Report_522214.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+531146,Report_531146.md,Uncategorized,Information Exposure Through Debug Information,MOVED,tier2-llm,high
+532225,Report_532225.md,Uncategorized,Improper Export of Android Application Components,MOVED,tier2-llm,high
+537670,Report_537670.md,Uncategorized,Improper Export of Android Application Components,MOVED,tier2-llm,high
+53843,Report_53843.md,Uncategorized,HTTP Response Splitting,MOVED,tier1-regex,high
+54094,Report_54094.md,Uncategorized,Man-in-the-Middle,MOVED,tier2-llm,high
+541606,Report_541606.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,medium
+545136,Report_545136.md,Uncategorized,Unrestricted Upload of File with Dangerous Type,MOVED,tier2-llm,medium
+54779,Report_54779.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+548587,Report_548587.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+55017,Report_55017.md,Uncategorized,Integer Overflow,MOVED,tier2-llm,high
+55018,Report_55018.md,Uncategorized,NULL Pointer Dereference,MOVED,tier1-regex,med
+55028,Report_55028.md,Uncategorized,Free of Memory not on the Heap,MOVED,tier3-vote,voted
+55029,Report_55029.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+55030,Report_55030.md,Uncategorized,Type Confusion,MOVED,tier1-regex,high
+55033,Report_55033.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+55064,Report_55064.md,Uncategorized,Improper Export of Android Application Components,MOVED,tier2-llm,high
+5617,Report_5617.md,Uncategorized,Cryptographic Issues - Generic,MOVED,tier2-llm,medium
+561805,Report_561805.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,high
+5654,Report_5654.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+570568,Report_570568.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier1-regex,high
+591002,Report_591002.md,Uncategorized,Information Exposure Through an Error Message,MOVED,tier2-llm,medium
+592200,Report_592200.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier3-vote,voted
+592885,Report_592885.md,Uncategorized,Authentication Bypass,MOVED,tier2-llm,medium
+60429,Report_60429.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,high
+61312,Report_61312.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier1-regex,high
+63158,Report_63158.md,Uncategorized,Open Redirect,MOVED,tier2-llm,medium
+6350,Report_6350.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+6380,Report_6380.md,Uncategorized,Origin Validation Error,MOVED,tier3-vote,voted
+6389,Report_6389.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+639682,Report_639682.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier1-regex,high
+640530,Report_640530.md,Uncategorized,Inclusion of Functionality from Untrusted Control Sphere,MOVED,tier3-vote,voted
+640532,Report_640532.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,medium
+642643,Report_642643.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier2-llm,medium
+64963,Report_64963.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+6504,Report_6504.md,Uncategorized,Session Fixation,MOVED,tier2-llm,high
+653221,Report_653221.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+6574,Report_6574.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+6626,Report_6626.md,Uncategorized,Buffer Over-read,MOVED,tier2-llm,high
+66386,Report_66386.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+66391,Report_66391.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+664038,Report_664038.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+669438,Report_669438.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+66994,Report_66994.md,Uncategorized,User Interface (UI) Misrepresentation of Critical Information,MOVED,tier3-vote,voted
+673723,Report_673723.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+676581,Report_676581.md,Uncategorized,Improper Access Control - Generic,MOVED,tier3-vote,voted
+678487,Report_678487.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+679657,Report_679657.md,Uncategorized,Phishing,MOVED,tier3-vote,voted
+686015,Report_686015.md,Uncategorized,Use of Default Credentials,MOVED,tier2-llm,high
+688546,Report_688546.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier1-regex,high
+692352,Report_692352.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+694931,Report_694931.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,medium
+694988,Report_694988.md,Uncategorized,Improper Resource Shutdown or Release,MOVED,tier2-llm,high
+697959,Report_697959.md,Uncategorized,Unrestricted Upload of File with Dangerous Type,MOVED,tier2-llm,medium
+699200,Report_699200.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+707406,Report_707406.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,high
+7085,Report_7085.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+709537,Report_709537.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+712321,Report_712321.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+713321,Report_713321.md,Uncategorized,Information Exposure Through Timing Discrepancy,MOVED,tier2-llm,medium
+719426,Report_719426.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+7277,Report_7277.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+729064,Report_729064.md,Uncategorized,Business Logic Errors,MOVED,tier3-vote,voted
+72976,Report_72976.md,Uncategorized,"Improper Neutralization of Escape, Meta, or Control Sequences",MOVED,tier3-vote,voted
+731724,Report_731724.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,high
+73234,Report_73234.md,Uncategorized,Out-of-bounds Read,MOVED,tier1-regex,high
+73235,Report_73235.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+73236,Report_73236.md,Uncategorized,NULL Pointer Dereference,MOVED,tier1-regex,high
+73237,Report_73237.md,Uncategorized,Classic Buffer Overflow,MOVED,tier2-llm,high
+73238,Report_73238.md,Uncategorized,Buffer Over-read,MOVED,tier1-regex,high
+73239,Report_73239.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+73240,Report_73240.md,Uncategorized,Heap Overflow,MOVED,tier1-regex,high
+73241,Report_73241.md,Uncategorized,Loop with Unreachable Exit Condition ('Infinite Loop'),MOVED,tier1-regex,high
+73244,Report_73244.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+73245,Report_73245.md,Uncategorized,Type Confusion,MOVED,tier1-regex,high
+73246,Report_73246.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+73247,Report_73247.md,Uncategorized,Type Confusion,MOVED,tier2-llm,high
+73248,Report_73248.md,Uncategorized,Memory Corruption - Generic,MOVED,tier2-llm,medium
+73249,Report_73249.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+73250,Report_73250.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+73251,Report_73251.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+73252,Report_73252.md,Uncategorized,Use After Free,MOVED,tier1-regex,high
+73253,Report_73253.md,Uncategorized,Type Confusion,MOVED,tier2-llm,high
+73255,Report_73255.md,Uncategorized,Memory Corruption - Generic,MOVED,tier1-regex,med
+73256,Report_73256.md,Uncategorized,Double Free,MOVED,tier1-regex,high
+73257,Report_73257.md,Uncategorized,Deserialization of Untrusted Data,MOVED,tier1-regex,high
+73258,Report_73258.md,Uncategorized,Integer Overflow to Buffer Overflow,MOVED,tier2-llm,high
+73259,Report_73259.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+73260,Report_73260.md,Uncategorized,Integer Overflow,MOVED,tier1-regex,high
+737039,Report_737039.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+737169,Report_737169.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+737578,Report_737578.md,Uncategorized,Open Redirect,MOVED,tier2-llm,high
+738565,Report_738565.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,high
+738569,Report_738569.md,Uncategorized,Weak Password Requirements,MOVED,tier2-llm,medium
+74514,Report_74514.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+74518,Report_74518.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier2-llm,high
+753491,Report_753491.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+7680,Report_7680.md,Uncategorized,Cleartext Transmission of Sensitive Information,MOVED,tier2-llm,high
+768327,Report_768327.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier2-llm,medium
+770508,Report_770508.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+772039,Report_772039.md,Uncategorized,Misconfiguration,MOVED,tier3-vote,voted
+772744,Report_772744.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+776461,Report_776461.md,Uncategorized,Information Exposure Through Timing Discrepancy,MOVED,tier3-vote,voted
+777241,Report_777241.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+777274,Report_777274.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,high
+777279,Report_777279.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+777651,Report_777651.md,Uncategorized,HTTP Request Smuggling,MOVED,tier1-regex,high
+778414,Report_778414.md,Uncategorized,Modification of Assumed-Immutable Data (MAID),MOVED,tier3-vote,voted
+7803,Report_7803.md,Uncategorized,Information Disclosure,MOVED,tier3-vote,voted
+78219,Report_78219.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+78253,Report_78253.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+783356,Report_783356.md,Uncategorized,Allocation of Resources Without Limits or Throttling,MOVED,tier2-llm,medium
+7843,Report_7843.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+785577,Report_785577.md,Uncategorized,Insecure Direct Object Reference (IDOR),MOVED,tier2-llm,medium
+790854,Report_790854.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,medium
+791775,Report_791775.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+794395,Report_794395.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier2-llm,high
+7949,Report_7949.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+79552,Report_79552.md,Uncategorized,CRLF Injection,MOVED,tier1-regex,high
+796808,Report_796808.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+796956,Report_796956.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+8017,Report_8017.md,Uncategorized,Improper Restriction of Authentication Attempts,MOVED,tier1-regex,high
+811136,Report_811136.md,Uncategorized,Server-Side Request Forgery (SSRF),MOVED,tier1-regex,high
+812907,Report_812907.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+8184,Report_8184.md,Uncategorized,Misconfiguration,MOVED,tier2-llm,medium
+820146,Report_820146.md,Uncategorized,Using Components with Known Vulnerabilities,MOVED,tier2-llm,medium
+837018,Report_837018.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,high
+837729,Report_837729.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,medium
+838231,Report_838231.md,Uncategorized,Authentication Bypass,MOVED,tier2-llm,high
+838510,Report_838510.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+853410,Report_853410.md,Uncategorized,Information Exposure Through Directory Listing,MOVED,tier2-llm,high
+859136,Report_859136.md,Uncategorized,Improper Input Validation,MOVED,tier2-llm,medium
+859688,Report_859688.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier3-vote,voted
+863551,Report_863551.md,Uncategorized,Externally Controlled Reference to a Resource in Another Sphere,MOVED,tier3-vote,voted
+865115,Report_865115.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,high
+867249,Report_867249.md,Uncategorized,Improper Access Control - Generic,MOVED,tier2-llm,medium
+867513,Report_867513.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+868934,Report_868934.md,Uncategorized,Cross-site Scripting (XSS) - DOM,MOVED,tier1-regex,high
+870001,Report_870001.md,Uncategorized,Improper Privilege Management,MOVED,tier2-llm,medium
+879582,Report_879582.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+880187,Report_880187.md,Uncategorized,Loop with Unreachable Exit Condition ('Infinite Loop'),MOVED,tier1-regex,high
+880730,Report_880730.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,medium
+892904,Report_892904.md,Uncategorized,Improper Authentication - Generic,MOVED,tier2-llm,medium
+894880,Report_894880.md,Uncategorized,Content Spoofing,MOVED,tier3-vote,voted
+896338,Report_896338.md,Uncategorized,Untrusted Search Path,MOVED,tier2-llm,high
+898528,Report_898528.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+90457,Report_90457.md,Uncategorized,Improper Input Validation,MOVED,tier3-vote,voted
+911857,Report_911857.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,medium
+915140,Report_915140.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+915940,Report_915940.md,Uncategorized,Improper Authorization,MOVED,tier2-llm,medium
+918243,Report_918243.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+92353,Report_92353.md,Uncategorized,Improper Neutralization of Formula Elements in a CSV File,MOVED,tier2-llm,high
+92472,Report_92472.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+92607,Report_92607.md,Uncategorized,Content Spoofing,MOVED,tier1-regex,med
+926222,Report_926222.md,Uncategorized,Violation of Secure Design Principles,MOVED,tier2-llm,medium
+92633,Report_92633.md,Uncategorized,Insufficiently Protected Credentials,MOVED,tier2-llm,high
+927338,Report_927338.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+942629,Report_942629.md,Uncategorized,Cache Poisoning,MOVED,tier1-regex,high
+943725,Report_943725.md,Uncategorized,ASI05- Unexpected Code Execution (RCE),MOVED,tier2-llm,high
+943737,Report_943737.md,Uncategorized,Path Traversal,MOVED,tier2-llm,medium
+94925,Report_94925.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,high
+951292,Report_951292.md,Uncategorized,Cross-Site Request Forgery (CSRF),MOVED,tier1-regex,high
+951623,Report_951623.md,Uncategorized,Improper Verification of Cryptographic Signature,MOVED,tier2-llm,medium
+957557,Report_957557.md,Uncategorized,Insufficient Session Expiration,MOVED,tier2-llm,high
+95981,Report_95981.md,Uncategorized,HTTP Response Splitting,MOVED,tier1-regex,high
+961997,Report_961997.md,Uncategorized,Improper Handling of Unexpected Data Type,MOVED,tier2-llm,medium
+962705,Report_962705.md,Uncategorized,Information Disclosure,MOVED,tier2-llm,medium
+962895,Report_962895.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,medium
+965141,Report_965141.md,Uncategorized,UI Redressing (Clickjacking),MOVED,tier1-regex,high
+965510,Report_965510.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,medium
+968690,Report_968690.md,Uncategorized,Cross-site Scripting (XSS) - DOM,MOVED,tier1-regex,high
+971599,Report_971599.md,Uncategorized,Cross-site Scripting (XSS) - Stored,MOVED,tier2-llm,medium
+97292,Report_97292.md,Uncategorized,CRLF Injection,MOVED,tier2-llm,high
+97295,Report_97295.md,Uncategorized,Improper Export of Android Application Components,MOVED,tier2-llm,high
+97377,Report_97377.md,Uncategorized,Content Spoofing,MOVED,tier2-llm,medium
+978125,Report_978125.md,Uncategorized,Cross-site Scripting (XSS) - Generic,MOVED,tier1-regex,high
+980599,Report_980599.md,Uncategorized,Modification of Assumed-Immutable Data (MAID),MOVED,tier3-vote,voted
+985150,Report_985150.md,Uncategorized,Privilege Escalation,MOVED,tier2-llm,high
+989415,Report_989415.md,Uncategorized,Business Logic Errors,MOVED,tier2-llm,high
+990838,Report_990838.md,Uncategorized,Open Redirect,MOVED,tier3-vote,voted
+993582,Report_993582.md,Uncategorized,Uncontrolled Resource Consumption,MOVED,tier2-llm,medium

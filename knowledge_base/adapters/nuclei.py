@@ -20,7 +20,7 @@ from .base import SourceAdapter, SourceRecord
 ADAPTER_VERSION = "nuclei-adapter/1.0"
 
 _THIS = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_DIR = os.path.normpath(os.path.join(_THIS, "..", "..", "Data", "nuclei_classified"))
+DEFAULT_DIR = os.path.normpath(os.path.join(_THIS, "..", "..", "data", "nuclei_classified"))
 
 _RE_TITLE = re.compile(r"^# Nuclei Template:\s*(.*)$", re.M)
 _RE_TID   = re.compile(r"^\*\*Template ID:\*\*\s*(.*)$", re.M)

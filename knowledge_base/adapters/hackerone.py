@@ -25,7 +25,7 @@ ADAPTER_VERSION = "hackerone-adapter/1.0"
 
 # Default layout under D:\FYP\Data\HAckerone\data
 _THIS = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_BASE = os.path.normpath(os.path.join(_THIS, "..", "..", "Data", "HAckerone", "data"))
+DEFAULT_BASE = os.path.normpath(os.path.join(_THIS, "..", "..", "data", "hackerone"))
 
 # --- parsing patterns (the markdown template the fetcher wrote) ---
 _RE_TITLE   = re.compile(r"^# HackerOne Report:\s*(.*)$", re.M)

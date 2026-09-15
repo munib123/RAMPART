@@ -90,10 +90,28 @@ the backend it spawned.
 ### Prereqs (already done in this working copy, re-run if cloning fresh)
 
 ```bash
-python -m venv backend/.venv
+python -m venv backend/.venv          # Python 3.13: apply.py uses read_text(newline=), added in 3.13
 backend\.venv\Scripts\pip install -r backend\requirements.txt
 cd frontend && npm install
 ```
+
+**Knowledge base.** The pipeline code under `knowledge_base/` is in the repo, but the built
+Chroma store (`knowledge_base/out/`, ~600 MB) is git-ignored. A fresh clone has no vectors,
+and the app degrades to ungrounded scans until the store exists. Either copy `out/` from a
+teammate, or rebuild it from the corpora in `data/` - one command per source, run from
+`knowledge_base/` with the backend venv:
+
+```bash
+cd knowledge_base
+..\backend\.venv\Scripts\python.exe -u run_pipeline.py --source hackerone --stages normalize,gate,chunk,embed --backend minilm-onnx --reset
+..\backend\.venv\Scripts\python.exe -u run_pipeline.py --source nuclei    --stages normalize,gate,chunk,embed --backend minilm-onnx --reset
+..\backend\.venv\Scripts\python.exe -u run_pipeline.py --source crossvul  --stages normalize,gate,chunk,embed --backend minilm-onnx --reset
+```
+
+Embedding runs at ~11 chunks/s on CPU (MiniLM-ONNX, no GPU or torch needed), so the full
+build is 30,818 + 11,138 + 29,512 = 71,468 chunks, roughly 1h45m in total. It is safe to
+interrupt: re-running the `embed` stage **without** `--reset` resumes from the chunks already
+stored. Confirm with `GET /api/health`, which lists each collection's vector count.
 
 ---
 
