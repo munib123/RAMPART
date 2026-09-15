@@ -68,6 +68,15 @@ val ALLOWLIST = List("allow", "whitelist", "permitted", "allowed_fields", "safe_
   "editable_fields", "writable_fields", "fields = (", "fields = [", "only(")
 val QTY = List("qty", "quantity", "amount", "count", "total", "price", "subtotal", "balance", "stock")
 
+// Fix 7 (part 1): the module-scope call table is computed ONCE. The July code ran
+// cpg.method.name("<module>").filter(...).call.code.l inside the per-method loop - a full
+// graph traversal plus materialisation per method, quadratic, and the first thing that dies
+// on a 50k-LOC repo. Keyed by filename; values lowercased once.
+val moduleCallsByFile: Map[String, List[String]] =
+  cpg.method.name("<module>").l
+    .map(mm => mm.filename -> mm.call.code.l.map(_.toLowerCase))
+    .groupBy(_._1).map { case (f, xs) => f -> xs.flatMap(_._2) }
+
 // Fix 4: name matchers are full-match regexes. pysrc2cpg names synthetic scopes "<lambda>0",
 // "<comprehension>1", "<module>" - the trailing index digit meant "<.*>" did NOT match
 // "<lambda>0", so lambdas and comprehension bodies were scanned as user methods and could
@@ -96,13 +105,14 @@ cpg.method.isExternal(false).nameNot("<.*>\\d*", "__.*__").foreach { m => method
   val execCode = m.call.name("execute").code.l
   def execHas(kw: String) = execCode.exists(_.toUpperCase.contains(kw))
   // decorator-based auth: pysrc2cpg lowers @login_required(view) to a module-scope wrapping
-  // call, invisible to an in-method scan, so check the module for a decorator wrapping this method.
-  // NB: .filename(s) matches s as a REGEX, and m.filename is an import-root-relative path that
-  // uses the platform separator ("split\jobs.py" on Windows). Feeding that to a regex either
-  // throws (\j = illegal escape) or silently matches nothing (\d = digit class), so compare the
-  // filename as a plain string instead. See the equality filter below - do not reintroduce regex.
-  val moduleCalls = cpg.method.name("<module>").filter(_.filename == file).call.code.l
-    .filter(_.contains(name)).map(_.toLowerCase)
+  // call `view = login_required(def view(...))`, invisible to an in-method scan, so look the
+  // method up in the module table built above.
+  // Fix 7 (part 2): match the lowering EXACTLY as "(def <name>(", not contains(name). With
+  // contains(), `get_note_extra = check_owner(def get_note_extra(...))` credited the shorter,
+  // undecorated sibling get_note with a guard it does not have - a false suppression that
+  // grows with every prefix-sharing view name in a real codebase.
+  val decoAnchor  = "(def " + name.toLowerCase + "("
+  val moduleCalls = moduleCallsByFile.getOrElse(file, Nil).filter(_.contains(decoAnchor))
   val hasAuthz  = guardHas(AUTHZ)     || moduleCalls.exists(c => AUTHZ.exists(c.contains))
   val authnTok  = (AUTHN_ONLY.filter(guardText.contains) ++ AUTHN_ONLY.filter(a => moduleCalls.exists(_.contains(a)))).distinct
   val protectedM = hasAuthz
