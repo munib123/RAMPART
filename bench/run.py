@@ -20,7 +20,7 @@ import json
 import sys
 import time
 
-from bench import paths
+from bench import freeze, paths
 from bench.backends import get_backend
 from bench.match import load_key, score
 from bench.validate_key import validate
@@ -36,6 +36,15 @@ def run(backend_name: str, benchmark: str, scanner: str = "auto", quiet: bool = 
         kw["pack"] = pack
     backend = get_backend(backend_name, **kw)
 
+    # Held-out protocol: a frozen testbed must still match its FREEZE.json (a changed tree is a
+    # different benchmark), and every run of a held-out split is appended to heldout.log so a
+    # second touch is on the record.
+    frozen = freeze.read(benchmark)
+    if frozen is not None:
+        ok, why = freeze.check(benchmark)
+        if not ok:
+            raise SystemExit(f"[freeze] {benchmark}: {why}. Re-freeze in a reviewed commit or restore the tree.")
+
     t0 = time.time()
     cands = backend.locate(str(target))
     elapsed = time.time() - t0
@@ -48,6 +57,9 @@ def run(backend_name: str, benchmark: str, scanner: str = "auto", quiet: bool = 
         "benchmark": benchmark,
         "backend": backend_name,
         "pack_arg": pack,
+        "split": frozen["split"] if frozen else "dev",
+        "tree_sha256": frozen["tree_sha256"] if frozen else None,
+        "frozen_at": frozen["frozen_at"] if frozen else None,
         "verdict_gated": backend.verdict_gated,
         "elapsed_s": round(elapsed, 1),
         "fingerprint": backend.fingerprint(),
@@ -64,6 +76,11 @@ def run(backend_name: str, benchmark: str, scanner: str = "auto", quiet: bool = 
     paths.RUNS.mkdir(parents=True, exist_ok=True)
     out = paths.RUNS / f"{result['run_id']}.json"
     out.write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
+    if frozen and frozen.get("split") == "held_out":
+        sc = result["score"]
+        with open(paths.RUNS / "heldout.log", "a", encoding="utf-8") as fh:
+            fh.write(f"{result['run_id']}  tree={frozen['tree_sha256'][:12]}  backend={backend_name}"
+                     f"  pack={pack or 'auto'}  tp={sc['tp']} fn={sc['fn']} fp={sc['fp']} bait={sc['bait_fp']} tn={sc['tn']}\n")
 
     if not quiet:
         _print(result, out)

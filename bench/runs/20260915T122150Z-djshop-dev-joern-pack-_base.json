@@ -1,0 +1,191 @@
+{
+ "run_id": "20260915T122150Z-djshop-dev-joern-pack-_base",
+ "benchmark": "djshop-dev",
+ "backend": "joern",
+ "pack_arg": "_base",
+ "split": "dev",
+ "tree_sha256": null,
+ "frozen_at": null,
+ "verdict_gated": false,
+ "elapsed_s": 32.2,
+ "fingerprint": {
+  "backend": "joern",
+  "rampart_git_sha": "e7490a53",
+  "joern_version": "4.0.589",
+  "mode": "script",
+  "java_major": 21,
+  "rules_file": "locators.sc",
+  "rules_sha256": "d57bc22371f7254f",
+  "pack": {
+   "requested": "_base",
+   "resolved": "_base",
+   "reason": "requested",
+   "listed": true,
+   "id": "_base",
+   "sha256": "88796c2a63cddc41b434f16519bd206c926d141c219a01a2734855103fba5a7e",
+   "chain": [
+    "_base"
+   ],
+   "authored_from": "hand_written",
+   "unlisted": false,
+   "values": 82,
+   "tag": "_base@88796c2a63cd",
+   "loaded": "_base",
+   "source": "pack"
+  },
+  "diag": {
+   "used": true,
+   "reason": "",
+   "elapsed_ms": 19715,
+   "candidates": 3,
+   "rules_file": "locators.sc",
+   "mode": "script",
+   "target": "D:\\d\\RAMPART\\testbeds\\djshop-dev",
+   "pack": {
+    "requested": "_base",
+    "resolved": "_base",
+    "reason": "requested",
+    "listed": true,
+    "id": "_base",
+    "sha256": "88796c2a63cddc41b434f16519bd206c926d141c219a01a2734855103fba5a7e",
+    "chain": [
+     "_base"
+    ],
+    "authored_from": "hand_written",
+    "unlisted": false,
+    "values": 82,
+    "tag": "_base@88796c2a63cd",
+    "loaded": "_base",
+    "source": "pack"
+   },
+   "methods_seen": 34,
+   "methods_threw": 0,
+   "rule_state": {
+    "joern-idor-missing-ownership": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-mass-assignment": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-unchecked-quantity": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-toctou-check-then-write": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    }
+   }
+  }
+ },
+ "key": {
+  "version": "djshop-dev-key-v1",
+  "rows": 23,
+  "usable": 23,
+  "accepted": 0,
+  "proposed": 23
+ },
+ "score": {
+  "tp": 2,
+  "fn": 10,
+  "fp": 0,
+  "bait_fp": 1,
+  "tn": 10,
+  "cleared": 0,
+  "unresolvable_keys": 0,
+  "reachable_tp": 2,
+  "reachable_fn": 8,
+  "vuln_rows": 12,
+  "safe_rows": 11,
+  "candidates": 3,
+  "reported": 3,
+  "matched_keys": [
+   5,
+   7
+  ],
+  "missed_keys": [
+   1,
+   2,
+   3,
+   4,
+   6,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "recall": 0.1667,
+  "reachable_recall": 0.2,
+  "precision": 0.6667,
+  "f1": 0.2667
+ },
+ "candidates": [
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 69,
+   "end_line": 69,
+   "cwe_id": "CWE-915",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "_base@88796c2a63cd",
+    "slots": "mapping_iter_calls;dyn_write_calls=setattr"
+   },
+   "rel_path": "shop/views.py",
+   "function": "profile_update",
+   "family": "mass-assign",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 5
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 116,
+   "end_line": 116,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "_base@88796c2a63cd",
+    "slots": "qty_terms=qty;price_terms=price"
+   },
+   "rel_path": "shop/views.py",
+   "function": "add_to_cart",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 7
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "D:\\d\\RAMPART\\testbeds\\djshop-dev\\shop\\views.py",
+   "line": 128,
+   "end_line": 128,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "pack": "_base@88796c2a63cd",
+    "slots": "qty_terms=qty;price_terms=price"
+   },
+   "rel_path": "shop/views.py",
+   "function": "add_to_cart_form",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "bait_fp",
+   "matched_key": 107
+  }
+ ]
+}

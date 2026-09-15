@@ -1,0 +1,8 @@
+{
+  "benchmark": "djshop-dev",
+  "split": "dev",
+  "frozen_at": "2026-09-15T12:22:03Z",
+  "tree_sha256": "e824a99673d94b4217037692416d59a250acddf1a80ef09349a9b274bb48fe2c",
+  "files": 15,
+  "note": "P6: frozen before django.json exists; DEV split may be run while iterating"
+}

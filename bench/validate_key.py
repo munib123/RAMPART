@@ -75,6 +75,14 @@ def resolve_row(row: dict, target_root: Path) -> dict:
 
     row["resolved_line"] = hits[want - 1]
     row["resolved_against_sha256"] = hashlib.sha256(data).hexdigest()
+    # the scorer matches candidates to rows by ENCLOSING FUNCTION; a row whose declared
+    # function does not contain its own anchor could never match and must not be scored
+    from bench.match import enclosing_function
+    actual = enclosing_function(str(src), row["resolved_line"])
+    if actual != row.get("enclosing_function"):
+        row.update(status="unresolvable", resolved_line=None, resolved_against_sha256=None,
+                   unresolvable_reason=f"anchor is inside {actual!r}, row says {row.get('enclosing_function')!r}")
+        return row
     row.pop("unresolvable_reason", None)
     # never promote to accepted here; that is the adjudicator's job
     if row.get("status") == "unresolvable":

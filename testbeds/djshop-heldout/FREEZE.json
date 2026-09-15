@@ -1,0 +1,8 @@
+{
+  "benchmark": "djshop-heldout",
+  "split": "held_out",
+  "frozen_at": "2026-09-15T12:22:03Z",
+  "tree_sha256": "9b4f52b3f5f10c08cb64faa2aaeab012ec9c3ca47f21acc3778f2b16cafaafac",
+  "files": 14,
+  "note": "P6: frozen before django.json exists; evaluated ONCE after the pack is authored - see bench/runs/heldout.log"
+}
