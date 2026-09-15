@@ -16,18 +16,31 @@ from embed_store import make_embedder, get_collection  # noqa: E402
 
 _embedder = None
 _collections = None
+_collection_errors: dict = {}
 
 
 def _init():
+    """Lazy: the embedder once; the collections until ALL of them are open. A collection that
+    fails to open (Chroma's sqlite briefly locked by a process that is still exiting, a
+    half-copied out/ directory) is retried on the next call instead of being silently dropped
+    for the life of the process - before this, one transient failure at start-up meant every
+    scan ran ungrounded and /api/health showed an empty list with no reason."""
     global _embedder, _collections
     if _embedder is None:
         _embedder = make_embedder("minilm-onnx")
-        _collections = []
-        for name in config.COLLECTIONS:
-            try:
-                _collections.append(get_collection(name=name, persist_dir=str(config.CHROMA_DIR)))
-            except Exception:
-                pass
+    if _collections is not None and len(_collections) == len(config.COLLECTIONS):
+        return
+    opened = []
+    for name in config.COLLECTIONS:
+        try:
+            opened.append(get_collection(name=name, persist_dir=str(config.CHROMA_DIR)))
+            _collection_errors.pop(name, None)
+        except Exception as e:
+            _collection_errors[name] = f"{type(e).__name__}: {e}"
+            print(f"[rag] collection {name} failed to open ({_collection_errors[name][:120]}); will retry")
+    # keep the aligned (name, collection) pairs only when everything opened; otherwise expose
+    # what did open and try the rest again next time
+    _collections = opened
 
 
 def _tolist(e):
@@ -79,10 +92,15 @@ def retrieve(query_text: str, cwe_id: str = "", k: int = None) -> list[dict]:
 
 def collection_stats() -> list[dict]:
     _init()
+    by_name = {c.name: c for c in (_collections or [])}
     out = []
-    for name, col in zip(config.COLLECTIONS, _collections or []):
+    for name in config.COLLECTIONS:            # every configured collection, in config order
+        col = by_name.get(name)
+        if col is None:
+            out.append({"collection": name, "vectors": None, "error": _collection_errors.get(name, "not opened")})
+            continue
         try:
             out.append({"collection": name, "vectors": col.count()})
-        except Exception:
-            out.append({"collection": name, "vectors": None})
+        except Exception as e:
+            out.append({"collection": name, "vectors": None, "error": f"{type(e).__name__}: {e}"})
     return out
