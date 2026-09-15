@@ -155,10 +155,15 @@ Class folders reuse the names already present in the other two corpora wherever 
 is known there (8,012 of 9,313 reports; 87 of the 138 folders are shared), so retrieval
 sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
 
-> **Not yet embedded:** `config.COLLECTIONS` still lists only the HackerOne and Nuclei
-> Chroma collections. CrossVul reaches retrieval once `knowledge_base/` indexes
-> `data/crossvul_classified/` into a `rampart_crossvul_minilm` collection and that name is
-> added to `backend/app/config.py`.
+> **Embedded and live.** `knowledge_base/adapters/crossvul.py` (`CrossVulAdapter`) reads this
+> corpus through the same `SourceAdapter` contract as HackerOne and Nuclei, and `sources.py`
+> registers it as the `crossvul` source. The pipeline produced 8,810 gated records and 29,512
+> chunks in the `rampart_crossvul_minilm` collection, which `backend/app/config.py` already names.
+> Rebuild with:
+>
+> ```bash
+> python run_pipeline.py --source crossvul --stages normalize,gate,chunk,embed --backend minilm-onnx --reset
+> ```
 
 ---
 
@@ -215,8 +220,9 @@ sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
 - Plans/billing: per-plan scan/fix quotas (Free 10/5, Pro 30/20, Premium 500/200) enforced server-side
   with a `402 {code: plan_limit}` upsell; upgrade is a stub until payment is wired.
 - LLM quota: free-tier limits are per-day per-model; a scan costs ~1 batched call to stay within budget.
-- CrossVul is **on disk but not yet retrievable** - it is a third corpus under `data/`, and it
-  reaches RAG only once `knowledge_base/` embeds it and `config.COLLECTIONS` names the collection.
+- CrossVul is **live in retrieval** via `CrossVulAdapter`; it is the only source that supplies a
+  fix, so it is the only one whose chunks carry `has_fix = true` (HackerOne and Nuclei leave it
+  false). That makes the `has_fix` Chroma metadata filter meaningful for the first time.
 - Later (per the design): more knowledge-base sources and the self-verifying remediation loop.
 
 ---
@@ -256,10 +262,26 @@ special-casing.
 **Verified:** all 9,313 files parse with the expected header, a `**CWE:** CWE-nnn` line, a
 non-empty diff block, and a non-empty vulnerable-code excerpt.
 
-**Still open:** embedding it. `backend/app/config.py` still lists only
-`rampart_hackerone_minilm` + `rampart_nuclei_minilm`; CrossVul becomes retrievable when
-`knowledge_base/` indexes `data/crossvul_classified/` into a `rampart_crossvul_minilm`
-collection and that name is added to `COLLECTIONS`.
+**Closed 2026-09-14 - adapter + embedding.** `knowledge_base/adapters/crossvul.py` implements
+`CrossVulAdapter` against the shared `SourceAdapter` contract; `adapters/__init__.py` exports it and
+`sources.py` registers the `crossvul` source (outdir `out/crossvul`, collections
+`rampart_crossvul_minilm` / `rampart_crossvul`). Three supporting changes were needed:
+
+- *Taxonomy.* 51 of CrossVul's 138 class folders were absent from `adapters/weakness_to_cwe.json`
+  (735 files, 7.9%). Each was resolved from the modal `**CWE:**` line of its own records and added,
+  taking the table from 202 to 253 entries. All 138 folders now map, so retrieval still sees one
+  taxonomy across the three corpora.
+- *Dedupe.* `run_pipeline.py` keyed the near-duplicate signature on `title + description +
+  discussion` only. CrossVul's description is just the CWE name and its title only
+  `<Class> in <language>`, so prose alone collapsed **8,704 of 9,313 records (93.5%)** into 434
+  clusters. The signature now appends `code_blocks`. HackerOne and Nuclei are unaffected: their
+  prose exceeds the 800-token shingle cap in `dedupe.shingles()`, so the appended code is never
+  reached. CrossVul now keeps **8,810 (94.6%)**, dropping 503 genuine duplicates.
+- *has_fix.* `adapters/normalize.py` hardcoded `has_fix=False`. It is now derived as
+  `bool(rec.fix_ref)`. CrossVul sets `fix_ref`, so all 8,810 records carry `has_fix = true`;
+  HackerOne and Nuclei leave `fix_ref` None and are unchanged.
+
+**Result:** 8,810 gated records -> 29,512 chunks (8,810 description + 20,702 code).
 
 ---
 

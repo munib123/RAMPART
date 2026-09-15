@@ -42,6 +42,7 @@ def retrieve(query_text: str, cwe_id: str = "", k: int = None) -> list[dict]:
     qv = _tolist(_embedder.encode([query_text])[0])
     hits = []
     for col in _collections:
+        col_hits = 0   # per-collection, so one full collection cannot starve the others
         for where in ([{"cwe_id": cwe_id}] if cwe_id else []) + [None]:
             try:
                 res = col.query(query_embeddings=[qv], n_results=k, where=where)
@@ -52,6 +53,8 @@ def retrieve(query_text: str, cwe_id: str = "", k: int = None) -> list[dict]:
             dists = res.get("distances", [[]])[0]
             for doc, md, dist in zip(docs, metas, dists):
                 hits.append({
+                    "uid": md.get("uid", ""),
+                    "has_fix": bool(md.get("has_fix", False)),
                     "title": md.get("title", ""),
                     "cwe_id": md.get("cwe_id", ""),
                     "cwe_name": md.get("cwe_name", ""),
@@ -62,12 +65,13 @@ def retrieve(query_text: str, cwe_id: str = "", k: int = None) -> list[dict]:
                     "sim": round(1 - float(dist), 3),
                     "text": (doc or "")[:600],
                 })
-            if where is not None and len(hits) >= k:
-                break  # cwe-filtered gave enough for this collection
+                col_hits += 1
+            if where is not None and col_hits >= k:
+                break  # cwe-filtered gave enough for THIS collection; fallback not needed
     # dedupe by (title, section) keeping best sim, then top-k overall
     best = {}
     for h in hits:
-        key = (h["title"], h["section_type"])
+        key = (h["uid"] or h["title"], h["section_type"])
         if key not in best or h["sim"] > best[key]["sim"]:
             best[key] = h
     return sorted(best.values(), key=lambda h: h["sim"], reverse=True)[:k]
