@@ -16,6 +16,49 @@ from app import config
 _client = None
 _lock = threading.Lock()
 
+# Model failover (see config.GEMINI_FALLBACK_MODELS). Index into _chain(); advanced only on a
+# DAILY quota error, never on a per-minute one, and never rewound - a daily quota does not come
+# back until midnight Pacific.
+_model_idx = 0
+
+
+def _chain() -> list[str]:
+    chain = [config.GEMINI_MODEL] + [m for m in config.GEMINI_FALLBACK_MODELS if m != config.GEMINI_MODEL]
+    return chain
+
+
+def active_model() -> str:
+    """The model calls go to right now (GEMINI_MODEL until its daily quota is gone)."""
+    chain = _chain()
+    return chain[min(_model_idx, len(chain) - 1)]
+
+
+def _daily_quota(e: Exception) -> bool:
+    """A 429 whose quotaId names a per-DAY limit. Waiting a minute will not help."""
+    m = str(e)
+    return "429" in m and "PerDay" in m
+
+
+def _failover(e: Exception, used: str, pinned: bool = False) -> str | None:
+    """On a daily-quota error for the model this call `used`, move the process to the next model
+    in the chain and return it. Returns None when the error is not a daily quota, the caller
+    pinned an explicit model, or the chain is exhausted. Thread-safe: if another thread already
+    moved past `used`, follow it instead of skipping a model."""
+    global _model_idx
+    if pinned or not _daily_quota(e):
+        return None
+    with _lock:
+        chain = _chain()
+        cur = chain[min(_model_idx, len(chain) - 1)]
+        if used != cur:
+            return cur                      # someone else already failed over; use their pick
+        if _model_idx + 1 >= len(chain):
+            return None
+        _model_idx += 1
+        nxt = chain[_model_idx]
+        print(f"[gemini] daily quota exhausted for {cur} - switching to {nxt} for the rest of this process", flush=True)
+        return nxt
+
 
 def available() -> bool:
     return bool(config.GEMINI_API_KEY)
@@ -158,6 +201,8 @@ def _transient(e: Exception) -> bool:
     is retried only as far as the backoff list goes."""
     m = str(e)
     name = type(e).__name__
+    if _daily_quota(e):
+        return False                        # backoff cannot help; fail over or fail fast
     return ("429" in m or "quota" in m.lower() or "ResourceExhausted" in name
             or "503" in m or "UNAVAILABLE" in m or "high demand" in m.lower()
             or "ServerError" in name or "504" in m or "DEADLINE_EXCEEDED" in m)
@@ -167,7 +212,8 @@ def analyze_batch(items: list[dict], scope: dict = None, model: str = None) -> l
     """Verify all findings in as few calls as possible (chunks of LLM_BATCH). One call ≈ one request.
     `model` defaults to config.GEMINI_MODEL; per-plan routing can override later via PLAN_MODEL."""
     import time
-    model = model or config.GEMINI_MODEL
+    requested = model
+    model = model or active_model()
     n = len(items)
     if not available():
         return [{"available": False, "verdict": "Unverified", "confidence": 0, "cwe": it.get("cwe_id", ""),
@@ -207,6 +253,9 @@ def analyze_batch(items: list[dict], scope: dict = None, model: str = None) -> l
                 break
             except Exception as e:
                 last = f"{type(e).__name__}: {str(e)[:150]}"
+                nxt = _failover(e, model, pinned=requested is not None)
+                if nxt:
+                    model = nxt; continue   # daily quota: same attempt budget, next model, no wait
                 if _transient(e) and attempt < 3:
                     time.sleep([5, 12, 24][attempt]); continue
                 if isinstance(e, (json.JSONDecodeError, KeyError, ValueError, AttributeError, TypeError)) and attempt < 1:
@@ -244,7 +293,8 @@ def generate_fix(finding: dict, code: str, exemplars: list[dict] = None, model: 
     if not available():
         return {"available": False, "error": "LLM unavailable. Set GEMINI_API_KEY in .env."}
     import time
-    model = model or config.GEMINI_MODEL
+    requested = model
+    model = model or active_model()
     ensure_configured()
     prompt = _fix_prompt(finding, code, exemplars or [])
     last = ""
@@ -259,6 +309,9 @@ def generate_fix(finding: dict, code: str, exemplars: list[dict] = None, model: 
                                      "summary": (data.get("summary") or "").strip()})
         except Exception as e:
             last = f"{type(e).__name__}: {str(e)[:180]}"
+            nxt = _failover(e, model, pinned=requested is not None)
+            if nxt:
+                model = nxt; continue
             if _transient(e) and attempt < 3:
                 time.sleep([5, 12, 24][attempt]); continue
             if isinstance(e, (json.JSONDecodeError, ValueError)) and attempt < 1:
@@ -279,9 +332,10 @@ def analyze(finding: dict, code: str, exemplars: list[dict]) -> dict:
     backoffs = [5, 12, 24]  # free-tier rate limits (429) recover within a minute
     last = ""
     for attempt in range(len(backoffs) + 1):
+        model = active_model()
         try:
             resp = _client.models.generate_content(
-                model=config.GEMINI_MODEL,
+                model=model,
                 contents=prompt,
                 config={"response_mime_type": "application/json", "temperature": 0},
             )
@@ -290,6 +344,8 @@ def analyze(finding: dict, code: str, exemplars: list[dict]) -> dict:
             return _strip_em_dashes(data)
         except Exception as e:
             last = f"{type(e).__name__}: {str(e)[:180]}"
+            if _failover(e, model):
+                continue
             is_rate = _transient(e)
             if is_rate and attempt < len(backoffs):
                 time.sleep(backoffs[attempt])

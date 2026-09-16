@@ -28,6 +28,14 @@ cd frontend && npm run dev:web                              # UI   http://localh
   is `gemini-2.5-flash` for the demo (flash-lite exhausted its daily free quota on 09-15; quotas
   are per model). With flash the full arm clears the `find_product` bait: shopfast 17 TP / 0 FP /
   F1 0.79 (`171358`), djshop-dev 7 TP / 2 FP / F1 0.67 (`171532`). Runbook: `docs/DEMO.md`.
+  By 23:00 PKT on 09-15 **both** 2.5 models were exhausted (reset = 12:00 PKT), so `gemini.py`
+  now fails over on a DAILY-quota 429 along `GEMINI_FALLBACK_MODELS`
+  (`gemini-3.5-flash,gemini-3.6-flash,gemini-3.1-flash-lite` in `.env`; `/api/health.model` shows
+  the one in use; `tests/test_gemini_failover.py`). `JWT_EXPIRE_MIN=480` in `.env`: a scan run
+  after the token expires is not saved and the report hides Apply / Verify (the UI now says so).
+- **Verify with CPG** lives in two places on CPG-badged findings of a saved scan: under the card
+  (post-apply mode - the file as it is on disk) and inside the fix panel (preview on a scratch
+  copy). `frontend/src/components/VerifyNote.tsx` renders the verdict for both.
 - The **frontend is hard-gated on the DB**: `/setup`, `/scan`, `/history`, `/profile` need a JWT.
   Test account: `uiverify001@example.com` / `Passw0rd!2345`.
 

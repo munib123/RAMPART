@@ -5,6 +5,7 @@ import { esc, langOf } from '@/utils/format';
 import { diffLines, diffReact } from '@/utils/diff';
 import { Icon } from '@/components/Icons';
 import PlanLimitCard from '@/components/PlanLimitCard';
+import VerifyNote from '@/components/VerifyNote';
 import type { DiffLine, Exemplar, Finding, FixState, PlanLimitPayload, VerifyResult } from '@/types';
 
 interface Props {
@@ -258,23 +259,7 @@ export default function FixPanel({ finding, scanId, target, onApplied, onReverte
         </span>
       </div>
       {fx.applied && <div className="applied-note">Applied ✓ — this fix is now in the codebase. Revert any time.</div>}
-      {fx.verify && (
-        <div className={'verify-note ' + (!fx.verify.ok ? 'err' : fx.verify.converged ? 'ok' : 'warn')} data-testid="verify-note">
-          <span className="pill mono cpg sm">{fx.verify.reverify_method === 'pattern' ? 'PATTERN' : 'CPG'}</span>
-          <span>
-            {!fx.verify.ok
-              ? (fx.verify.error || 'Verification failed.')
-              : (fx.verify.converged
-                  ? `Verified${fx.verify.mode === 'preview' ? ' on a scratch copy' : ''}: the locator no longer fires. ${fx.verify.reason || ''}`
-                  : `Not verified: ${fx.verify.reason || 'the locator still fires.'}`)}
-            {fx.verify.ok && fx.verify.reverify_method === 'pattern' ? ' (weaker text check — Joern is not available)' : ''}
-            {fx.verify.ok && typeof fx.verify.elapsed_ms === 'number' ? ` · ${(fx.verify.elapsed_ms / 1000).toFixed(1)}s` : ''}
-          </span>
-          {fx.verify.code === 'auth_required' && (
-            <button className="btn btn-xs" data-noprint onClick={() => { window.location.hash = '#/auth'; }}>Sign in</button>
-          )}
-        </div>
-      )}
+      {fx.verify && <VerifyNote v={fx.verify} />}
       {fx.applyErr && <div className="applyerr">{fx.applyErr}</div>}
       <div className="caveat">{tier === 'Low' ? 'Low confidence: verify manually. ' : ''}AI-suggested fix. Review and test before using.</div>
       {fx.summary && <div className="whatchanged"><b>What changed.</b> {fx.summary}</div>}

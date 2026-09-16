@@ -4,11 +4,18 @@ import { Icon } from '@/components/Icons';
 import Collapsible from '@/components/Collapsible';
 import FixPanel from '@/components/FixPanel';
 import { ExemplarCard } from '@/components/ExemplarCard';
+import VerifyNote from '@/components/VerifyNote';
+import { verifyFix } from '@/api/history';
+import { announce } from '@/api/client';
 import { cpgProvenance, cpgRuleName, isCpg } from '@/utils/joern';
-import type { Finding } from '@/types';
+import type { Finding, VerifyResult } from '@/types';
 
 export default function FindingCard({ f, scanId, target, onApplied, onReverted }: { f: Finding; scanId?: string; target?: string; onApplied?: () => void; onReverted?: () => void }) {
   const [fixOpen, setFixOpen] = useState(false);
+  // P8: re-verify THIS finding against the file as it is on disk right now (no LLM fix
+  // needed - a fix made by hand in an editor counts). Preview-on-a-copy lives in the fix panel.
+  const [verifying, setVerifying] = useState(false);
+  const [verify, setVerify] = useState<VerifyResult | null>(null);
   const v = f.verdict || {};
   const vName = v.verdict || 'Unverified';
   const exs = f.exemplars || [];
@@ -31,6 +38,26 @@ export default function FindingCard({ f, scanId, target, onApplied, onReverted }
   const ruleShort = String(f.rule_id || '').split('.').pop();
   const canFix = !!(v.available && f.slice && f.slice.code);
   const cpg = isCpg(f);
+  const canVerifyLive = cpg && !!scanId && !!target && !!f.path && !!f.slice?.name && !!f.rule_id;
+
+  const onVerifyLive = async () => {
+    if (!canVerifyLive) return;
+    setVerifying(true); setVerify(null);
+    try {
+      const r = await verifyFix({
+        scan_id: scanId as string,
+        path: f.path as string,
+        function: (f.meta?.class ? f.meta.class + '.' : '') + (f.slice?.name as string),
+        rule_id: f.rule_id as string,
+      });
+      setVerify(r);
+      announce(r.ok ? (r.converged ? 'Re-verified: the locator no longer fires' : `Not verified: ${r.reason || 'the locator still fires'}`) : (r.error || 'Verification failed'));
+    } catch (e) {
+      setVerify({ ok: false, error: (e as Error).message || 'Verification failed' });
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   return (
     <article className={'card finding' + (cpg ? ' is-cpg' : '')} data-tool={f.tool || ''}>
@@ -45,13 +72,21 @@ export default function FindingCard({ f, scanId, target, onApplied, onReverted }
       <div className="fmsg">{f.message}</div>
       <div className="vrow"><span className={'pill ' + vClassOf(vName)}>{vName}</span>{conf}</div>
       {(v.explanation || fixNote) && <div className="explain">{v.explanation || ''}{fixNote}</div>}
-      {canFix && (
+      {(canFix || canVerifyLive) && (
         <div className="fixwrap" data-noprint>
-          {!fixOpen && (
+          {canFix && !fixOpen && (
             <button className="btn fix-trigger" onClick={() => setFixOpen(true)}>
               <Icon id="ic-sparkles" /> Suggest a fix
             </button>
           )}
+          {canVerifyLive && (
+            <button className="btn verifybtn" onClick={onVerifyLive} disabled={verifying}
+              title="Rebuild the code property graph on this file as it is now and check whether the locator still fires - use it after fixing the code yourself">
+              {verifying ? 'Verifying with CPG…' : 'Verify with CPG'}
+            </button>
+          )}
+          {cpg && !scanId && <span className="scope-empty">Verify with CPG needs a saved scan - sign in and scan again.</span>}
+          {verify && <VerifyNote v={verify} />}
           {fixOpen && <FixPanel finding={f} scanId={scanId} target={target} onApplied={onApplied} onReverted={onReverted} />}
         </div>
       )}

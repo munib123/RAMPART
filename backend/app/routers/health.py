@@ -20,7 +20,7 @@ def health():
     return {
         "ok": True,
         "llm_enabled": gemini.available(),
-        "model": config.GEMINI_MODEL if gemini.available() else None,
+        "model": gemini.active_model() if gemini.available() else None,
         "scanner": active,
         "scanners": {
             "semgrep": {"available": sg_ok, "note": sg_why},

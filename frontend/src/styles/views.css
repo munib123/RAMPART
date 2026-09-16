@@ -444,7 +444,13 @@
 .explain .fixnote b { color: var(--neutral-700); }
 
 /* ============ suggest a fix ============ */
-.fixwrap { margin-top: 12px; }
+.fixwrap { margin-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.fixwrap > .verify-note, .fixwrap > .fixpanel, .fixwrap > .fixwrap { flex-basis: 100%; }
+/* P8: the standalone "Verify with CPG" button on CPG finding cards - re-checks the file as it is on disk */
+.verifybtn { border-color: var(--cpg-border); color: var(--cpg); background: var(--cpg-subtle); }
+.verifybtn:hover:not(:disabled) { background: var(--cpg-border); }
+.verifybtn:disabled { opacity: .7; cursor: progress; }
+.unsaved-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .fix-trigger svg { stroke: var(--brand); }
 
 .fixpanel.fixloading {

@@ -15,6 +15,10 @@ except Exception:
 # --- LLM (Gemini) ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash-lite").strip()
+# Free-tier daily quotas are PER MODEL. When GEMINI_MODEL's daily quota is exhausted the process
+# fails over to the next model here, in order, for the rest of its life (logged, shown in
+# /api/health as "model"). Comma-separated; empty = no failover.
+GEMINI_FALLBACK_MODELS = [m.strip() for m in os.environ.get("GEMINI_FALLBACK_MODELS", "").split(",") if m.strip()]
 
 # --- Knowledge base (the RAG we built) ---
 KB_DIR = FYP / "knowledge_base"

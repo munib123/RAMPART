@@ -17,8 +17,9 @@ browser or a third terminal:
 ```
 curl http://127.0.0.1:8000/api/health
 ```
-You want: `"db_enabled": true`, `"llm_enabled": true`, `"model": "gemini-2.5-flash"`,
-`scanners.joern.server.ready: true`, and three collections totalling **71,468** vectors.
+You want: `"db_enabled": true`, `"llm_enabled": true`, `"model": "gemini-2.5-flash"` (or one of
+the fallbacks - see the quota row in section 3), `scanners.joern.server.ready: true`, and three
+collections totalling **71,468** vectors.
 If `collections` is empty or a count is missing, call `/api/health` once more - the first
 call after start-up can hit Chroma before it is ready and the backend now retries.
 
@@ -77,7 +78,7 @@ the LLM"** and the `+ CPG` pill. Then:
 2. Find `db.py:13 find_product` - CPG badge, **False positive 90**.
    > "Same rule fired here. Products are public, so there is no ownership to check. Joern
    > cannot know that; the LLM can. Joern locates, the LLM proves - this is the design working."
-3. On `get_order`, click **Suggest a fix** → the diff. Then **Verify with CPG**.
+3. On `get_order`, click **Suggest a fix** → the diff. Then **Verify with CPG** (inside the panel).
    ~15-20 s. The verdict line: *"Verified on a scratch copy: the locator no longer fires.
    guard now present (method:permissiondenied…)"*.
    > "That is not a text match. We applied the fix to a copy, rebuilt the graph, and asked
@@ -85,7 +86,8 @@ the LLM"** and the `+ CPG` pill. Then:
    (If the generated fix is unusual and does not converge, the verdict says why - *"the locator
    still fires"* - which is also a fine thing to show. Regenerate and try once more.)
 4. Optionally **Apply fix** (writes the file; a snapshot makes **Revert** possible), then
-   **Re-verify with CPG** on the live tree, then **Revert changes**. Only do this on the
+   **Verify with CPG** on the card itself (the button under every CPG finding re-checks the file
+   as it is on disk - it also works after fixing the code by hand in an editor), then **Revert changes**. Only do this on the
    testbed, never on a real project during the demo.
 
 ### Screen 5 - History (30 s)
@@ -114,13 +116,16 @@ The write-ups: `docs/JOERN.md` (every number cites a run), `docs/THESIS_JOERN.md
 
 | symptom | cause | do |
 |---|---|---|
-| Verdicts all read **Error** | Gemini quota (`429`) or a `503` blip | The backend now retries 503s. For `429`: switch `GEMINI_MODEL` in `.env` to another 2.5 model (quotas are per model - `flash-lite` was exhausted on 09-15, `flash` had quota) and restart the backend. The scan, grounding and CPG findings are unaffected either way. |
+| Verdicts all read **Error** | Gemini quota (`429`) or a `503` blip | The backend retries 503s and per-minute 429s. A **daily** quota (per model, resets 12:00 PKT) now fails over by itself along `GEMINI_FALLBACK_MODELS` in `.env` (`gemini-3.5-flash`, `gemini-3.6-flash`, `gemini-3.1-flash-lite`); `/api/health` `model` shows which one is in use and the backend log says `[gemini] daily quota exhausted for X - switching to Y`. On 09-15 both 2.5 models were exhausted by 23:00 PKT and the fix step ran on `gemini-3.5-flash`. **If the meeting is before noon, expect the fallback model** - the scan, grounding and CPG findings are unaffected either way. |
+| **Verify with CPG** says *"the locator still fires"* on a fix that looks right | the fix expresses ownership in a form the vocabulary pack does not list (on 09-15: `g.user['id']` with single quotes; the pack had only `g.user["id"]`) | that is the honest answer - the graph did not see a guard it recognises. Say so, then: add the idiom to the pack (`flask-sqlite3.json`, `authz_guard`), `validate --freeze`, no restart needed (packs load per scan), verify again. The single-quote twins are in the pack since 09-16. |
 | Setup note says **"CPG starting"** | the sidecar takes ~25 s after the backend starts | wait; the note flips on its own. A scan started now still runs the CPG in script mode (slower, same results). |
 | **"CPG not installed"** | `tools/` missing on this machine | `cd backend && .venv\Scripts\python.exe -m app.services.joern.runtime --install` (Windows x64; downloads a 46 MB JRE and the 1.7 GB joern-cli, sha512-verified) |
 | Port 8000 busy | an old backend still running | `netstat -ano \| findstr :8000` → `taskkill /T /F /PID <pid>`, or set `RAMPART_PORT` |
 | Sign-in fails | `.env` `DATABASE_URL` / `JWT_SECRET` | check `/api/health` shows `db_enabled: true`; the demo account is in Supabase |
 | Scan takes > 3 min | semgrep `--config auto` fetches rules over the network | use **Bandit** for the demo scan |
 | `/api/health` collections empty | Chroma not ready at first call | call it again; fixed to retry on 09-15 |
+| No **Apply** / **Verify with CPG** on the report; a yellow *"This scan was not saved"* banner | the sign-in token had expired when the scan ran (`JWT_EXPIRE_MIN`, now 480 min in `.env`) | sign in again and re-scan. The buttons need a *saved* scan (a `scan_id`). |
+| No **Verify with CPG** button at all | the finding is a bandit/semgrep one - only findings with the violet **CPG** badge can be re-verified by the graph | scan `testbeds\shopfast`; the button sits under every CPG card (checks the file as it is on disk) and inside the fix panel after **Suggest a fix** (checks the proposed fix on a scratch copy) |
 
 ## 4. What to say the MVP can do (one breath each)
 

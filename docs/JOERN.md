@@ -93,7 +93,7 @@ id **looks like** in a framework is a JSON pack the Scala reads with `ujson` aft
 | pack | values | authored from | digest |
 |---|---|---|---|
 | `_base` | 83 | the July/August Scala vals, verbatim | `ef5ac270285a` |
-| `flask-sqlite3` | 167 | Flask / Flask-Login / Flask-SQLAlchemy / WTForms / sqlite3 docs, hand-written | `2b4dde8c2e83` |
+| `flask-sqlite3` | 169 | Flask / Flask-Login / Flask-SQLAlchemy / WTForms / sqlite3 docs, hand-written | `433e82b50aa9` (was `2b4dde8c2e83` before 2026-09-16: two single-quote twins of the `g.user["id"]` / `session["user_id"]` scoped-query tokens, added after a generated fix used `g.user['id']` and did not converge; guard text is matched as source text and pysrc2cpg keeps the author's quotes. shopfast joern arm unchanged at 4 TP + bait, probe 5/5, run `20260916T063414Z`) |
 | `django` | 202 | Django 5.1 + DRF docs, drafted by a walled-off agent under the held-out protocol (§7), reviewed, not tuned | `b5df755be580` (today's, with the four P7 slots); the held-out run scored `b38082f8d2b6`, the pack as it was before P7 |
 
 `JOERN_PACK=auto` picks the pack from `requirements.txt` / imports. `--pack _base` on any

@@ -4,6 +4,7 @@ import SummaryCard from '@/components/SummaryCard';
 import FindingCard from '@/components/FindingCard';
 import PlanLimitCard from '@/components/PlanLimitCard';
 import { announce } from '@/api/client';
+import { useAuth } from '@/context/AuthContext';
 import { revertFix } from '@/api/history';
 import { Icon } from '@/components/Icons';
 import type { PlanLimitPayload, ScanReport } from '@/types';
@@ -11,6 +12,7 @@ import type { PlanLimitPayload, ScanReport } from '@/types';
 export default function Report() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { token } = useAuth();
   const state = (location.state || {}) as { report?: ScanReport; path?: string };
   const report = state.report;
   const path = state.path || report?.target || '';
@@ -54,6 +56,9 @@ export default function Report() {
   }
 
   const findings = report.findings || [];
+  // Signed in, but the scan came back without a scan_id: the token had expired when the scan
+  // ran, so it was not saved and Apply / Verify are unavailable. Say so instead of hiding them.
+  const unsaved = !!token && report.ok && !report.scan_id && !report.code;
 
   // Plan-limit passthrough from POST /api/scan (402) -> upsell card, not an error dump.
   if (report.code === 'plan_limit') {
@@ -91,6 +96,13 @@ export default function Report() {
         ) : (
           <>
             <SummaryCard r={report} />
+            {unsaved && (
+              <div className="card warn-banner unsaved-banner" data-noprint>
+                <b>This scan was not saved</b> - your session had expired when it ran, so <b>Suggest a fix</b> works but
+                <b> Apply</b>, <b>Revert</b> and <b>Verify with CPG</b> are unavailable for it.
+                <button className="btn btn-xs" onClick={() => navigate('/auth')}>Sign in again</button> and re-scan.
+              </div>
+            )}
             {applied && report.scan_id && report.target && (
               <div className="card applied-banner" data-noprint>
                 <div><b>Fix applied to the codebase.</b> A snapshot of <span className="mono">{path}</span> was kept before the change.</div>

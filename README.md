@@ -154,9 +154,13 @@ Without a key the app still runs: you get findings and the retrieved real-world 
 only the LLM verdict is marked "Unverified".
 
 **Model / quota:** the default is `gemini-2.5-flash-lite` (settable via `GEMINI_MODEL`). Free-tier
-limits are **per-day, per-model**. All findings are verified in **one batched call per scan**
-(`gemini.analyze_batch`), so a scan costs ~1 request. Rotate models or enable billing to lift the
-daily cap.
+limits are **per-day, per-model** and reset at midnight Pacific (12:00 PKT). All findings are
+verified in **one batched call per scan** (`gemini.analyze_batch`), so a scan costs ~1 request.
+`GEMINI_FALLBACK_MODELS` (comma-separated) is the failover chain: when the active model's *daily*
+quota is exhausted (a 429 whose `quotaId` says `PerDay`) the process moves to the next model
+immediately and stays there - no 41 s of useless backoff - and `/api/health` reports the model
+actually in use. A per-*minute* 429 still backs off on the same model. Enable billing to lift the
+daily cap altogether.
 
 ---
 
@@ -235,7 +239,10 @@ class defining `has_object_permission`; a form's `min_value` in `forms.py` bound
 view multiplies; every finding carries a route-reachability flag (`yes` / `no`, or `unknown`
 when the pack's route markers do not describe the target). And after a fix, **Verify with
 CPG** rebuilds the graph on the patched code and says whether the locator still fires - a
-comment that claims "atomic" does not pass, a real `select_for_update()` does. The verify
+comment that claims "atomic" does not pass, a real `select_for_update()` does. The button is
+in two places, both only on findings with the **CPG** badge of a *saved* scan (signed in, token
+not expired - `JWT_EXPIRE_MIN`): under the card, checking the file as it is on disk (works after
+a fix made by hand too), and inside the fix panel, checking the proposed fix on a scratch copy. The verify
 inputs (file, method, class) are validated as a relative `.py` path and identifiers and
 Scala-escaped before rendering, and `/api/fix/apply`, `/revert` and `/verify` refuse any path
 outside the scan's own target.
