@@ -1,0 +1,2 @@
+backend\.venv\Scripts\python.exe backend\run_server.py        # terminal 1
+cd frontend && npm run dev:web                                # terminal 2

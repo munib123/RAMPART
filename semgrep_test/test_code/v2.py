@@ -69,8 +69,8 @@ def run_system_ping_vulnerable(host):
     """
     # Semgrep flags this because shell=True combined with a dynamic string 
     # allows command chaining (e.g., "127.0.0.1; cat /etc/passwd")
-    command = f"ping -c 1 {host}"
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    command = ["ping", "-c", "1", host]
+    result = subprocess.run(command, shell=False, capture_output=True, text=True)
     return result.stdout
 
 
