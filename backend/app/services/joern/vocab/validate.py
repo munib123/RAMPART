@@ -3,7 +3,7 @@ Vocabulary packs: load, validate, compose, hash, resolve. Pure stdlib, no JVM.
 
 A pack is the DATA half of a locator rule: the token lists that say what an ownership check,
 a lock, an allow-list or an object id look like in a given framework. The Scala in
-rules/locators.sc is frozen and hashed; only the pack varies per target. schema.json is the
+rules/*.sc is frozen and hashed; only the pack varies per target. schema.json is the
 grammar and this module enforces it - every rule below is a security control (TDD 8.8, T-10):
 
   * every slot declares its sink and the sink's character class is enforced per value, so a

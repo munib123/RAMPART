@@ -186,9 +186,16 @@ backend\.venv\Scripts\python -m pip install semgrep
 
 Bandit and Semgrep are pattern matchers; they cannot see "this route reads an order by id and
 never checks who owns it". The Joern phase builds a Code Property Graph of the target and runs
-four hand-written CPGQL rules (`backend/app/services/joern/rules/locators.sc`) for the bug
-classes SAST is blind to: **IDOR** (CWE-639), **mass assignment** (CWE-915), **unchecked
-quantity** (CWE-840) and **TOCTOU** (CWE-362). Joern *locates*; the Gemini verdict *proves*.
+twelve hand-written CPGQL rules (`backend/app/services/joern/rules/*.sc`, one program in
+twelve files) for the bug classes SAST is blind to:
+- **Something absent:** **IDOR** (CWE-639), **mass assignment** (CWE-915), **unchecked
+  quantity** (CWE-840) and **TOCTOU** (CWE-362).
+- **A value's path** (rules v2): an **ignored credential check** (CWE-287), a **hard-coded
+  credential** compared through `config.X` (CWE-798), **SSRF** (CWE-918) and **path traversal**
+  (CWE-22) with request input one caller away, and **CORS `*`**, **cleartext HTTP**, **XXE parser
+  flags** and **debug mode** (CWE-942/319/611/489) set through constants in another module.
+
+Joern *locates*; the Gemini verdict *proves*.
 Its candidates are additive - the scanner findings are untouched - and get a reserved share of
 the LLM budget (`JOERN_LLM_QUOTA`).
 
@@ -220,7 +227,7 @@ installed) before you scan, and a signed-in scan stores `findings.tool` and `sca
 history and the `tool_stats` research view can separate what Joern located from what the LLM
 proved.
 
-**Vocabulary is data, not code.** The Scala holds the four rule *shapes*; what an ownership
+**Vocabulary is data, not code.** The Scala holds the rule *shapes*; what an ownership
 check, a lock, an allow-list or an object id *looks like* in a given framework comes from a JSON
 vocabulary pack under `backend/app/services/joern/vocab/packs/` (`_base.json` = the built-in
 lists, `flask-sqlite3.json` = the Flask reference pack; `django.json` follows the held-out Django
@@ -302,7 +309,7 @@ sees one taxonomy rather than three. The rest fall back to the MITRE CWE name.
 | Part | File | Notes |
 |---|---|---|
 | Scanner (pluggable) | `backend/app/services/scanner.py` | `auto` = semgrep (multi-language, native venv) when runnable, else bandit (python). Same normalized `Finding` shape either way. |
-| CPG logic-bug locator | `backend/app/services/joern/` | `runtime.py` self-installs JRE 21 + joern-cli under `tools/`; `server.py` keeps one `joern --server` sidecar; `scan.py` runs `rules/locators.sc` (IDOR, mass assignment, unchecked quantity, TOCTOU) and returns candidates + per-rule diag; `vocab/` = schema-validated vocabulary packs the rules read as data |
+| CPG logic-bug locator | `backend/app/services/joern/` | `runtime.py` self-installs JRE 21 + joern-cli under `tools/`; `server.py` keeps one `joern --server` sidecar; `scan.py` runs `rules/*.sc` (access control, business logic, authentication, untrusted input, insecure config: twelve rules) and returns candidates + per-rule diag; `vocab/` = schema-validated vocabulary packs the rules read as data |
 | Code-slice extract | `backend/app/services/extract.py` | containing function (Python AST) or a line window |
 | RAG | `backend/app/services/rag.py` | queries `rampart_hackerone_minilm` + `rampart_nuclei_minilm` Chroma collections, CWE-filtered |
 | LLM verify | `backend/app/services/gemini.py` | Gemini, grounded in exemplars; key from `.env` only. Batch API for ~1 request per scan |

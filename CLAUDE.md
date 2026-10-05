@@ -162,22 +162,45 @@ the collection (`embed_store.existing_ids`). Rate ~11 chunks/s on CPU (MiniLM-ON
   `/verify` refuse paths outside the owned scan target; server-mode scans are serialised with a
   lock (the sidecar is one REPL); script-mode timeouts kill the JVM tree; pack values may not be
   whitespace-only or contain double spaces; deeply nested JSON packs are refused without raising.
-  Rule hashes are LF-normalised (`bench/backends/__init__.py`) - `locators.sc` is 487 lines
-  (291 non-blank non-comment), sha `11befcda9b9cf6bd`; earlier CRLF-computed hashes in old logs
-  no longer apply, quote the run artifact's `rules_sha256`. Post-fix regression: shopfast 4/0/1
+  Rule hashes are LF-normalised - the single-file `locators.sc` (487 lines) was
+  `11befcda9b9cf6bd`; since rules v2 (below) `scan.rules_sha256()` hashes every `rules/*.sc` file;
+  earlier CRLF-computed hashes in old logs no longer apply, quote the run artifact's `rules_sha256`. Post-fix regression: shopfast 4/0/1
   (`150728`), probe 5/0/0 (`150819`), djshop-dev `_base` 2/0/1, flask 3/0/1, django 5/0/0
   (`150912`, `151005`, `151058`). The shopfast `full` arm (`084600`) ran bandit + joern, not semgrep.
-  Tests: 181 backend pass (1 skipped: POSIX chmod on Windows) + 1 JVM exit-gate test, 16 bench
-  (test_joern 20, test_vocab 23, test_reverify 20, test_runtime 15, test_fix_paths 10,
-  test_persistence 5, plus the older health/apply tests).
+  Tests (2026-10-05, Linux, Joern installed): 212 backend pass incl. the JVM tests
+  (`test_reverify` exit gate, `test_rules_flow`), 17 bench.
   Installer: per-platform Joern asset (`joern-cli-{windows-x86_64,linux-x86_64,linux-arm64,
   macos-x86_64,macos-arm64}.zip`) + matching Adoptium JRE, `.sha512` verified, one-line failure
-  reason + manual fallback (drop zip + `.sha512` into `tools/`); only Windows x64 exercised end to
-  end, Linux/macOS unit-tested only.
+  reason + manual fallback (drop zip + `.sha512` into `tools/`); Windows x64 and (2026-10-05) Linux
+  x86_64 exercised end to end, macOS / linux-arm64 unit-tested only.
   Open: extract.py gives module-level findings
   a slice that reaches into the next function. A second process on the same machine cannot bind
   8091 and silently runs script mode - check `joern.mode` before quoting timings.
   Install on a fresh clone: `python -m app.services.joern.runtime --install`.
+  **Rules v2 (2026-10-05).** `locators.sc` is now ONE program in twelve files, `rules/00_prelude …
+  90_finish.sc`, concatenated in name order (`scan.rules_source()`), sha `643ba2888183758e`.
+  Families: 40 access control, 45 business logic, 50 authentication, 55 untrusted input,
+  60 insecure config; `35_flow.sc` holds the shared value-flow tables (`resolveConst` across
+  modules, `originOf` def-use, `callerArgs` one hop, `valueUsed`). Rules run via `perItem`.
+  A new rule = section + `RULES` entry in 00_prelude + `scan._TITLES`; tests fail until all three
+  agree. Eight new rules: ignored-auth-result (287), hardcoded-credential-compare (798),
+  ssrf-request-url (918), path-traversal (22), cors-wildcard (942, unconditional writes only),
+  cleartext-transport (319), xxe-parser (611), debug-exposed (489). The config ones report the
+  DEFINITION line (config.py) and name the sink. Schema v3: +3 sinks (`call_path`,
+  `origin_text`, `kwarg_flow`), +10 slots, all filled in `_base`. Digests: `_base caf7008bd4f7`,
+  flask `f2117bd54752`, django `8ba7f75feead`. The four old rules give identical candidates on
+  every DEV run. shopfast joern 4 → 11 TP (adds #10 #11 #12 #19 #20 #21 #26; six of those no
+  engine found before). The 1 "FP" is #17, labelled CWE-798 vs the key's CWE-1188. New
+  `testbeds/probe-flow` (10/10, 12/12 twins quiet). djshop-dev unchanged. Context phase 3.3 s →
+  1.3 s on 82 k lines. Held-out NOT run. Config-flow findings answer Verify with `not_supported`.
+  `bench/freeze.py` now sorts OS-independently (Linux read both Django splits as changed).
+  Log: `bench/runs/2026-10-05-rules-v2.md`.
+  **Open:** commit `b33ecd57` edited `testbeds/shopfast/{db,orders}.py`, fixing keys #2 and #22
+  in the ground truth: #22's anchor no longer resolves (`validate_key`: 1 unresolvable) and #2 is
+  no longer vulnerable, so shopfast scores on that tree are not comparable to any logged run, and
+  `bench/tests/test_match.py::test_enclosing_function_def_line_and_body_line_agree` fails (its
+  line numbers shifted; it fails on HEAD `b33ecd57` without rules v2 too).
+  Rules v2 was measured on the restored files (not committed). Revert those two files.
 
 ## Data residency
 Three corpora under `data/` (HackerOne 12k, Nuclei 5.3k, CrossVul 9.3k) are tracked. The

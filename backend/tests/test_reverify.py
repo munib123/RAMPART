@@ -115,6 +115,36 @@ def test_pattern_fallback_when_joern_unavailable(tmp_path, monkeypatch):
     assert "pattern fallback" in r["reason"]
 
 
+def test_every_guard_mapping_names_a_real_rule():
+    """_RULE_GUARD / _RULE_SLOTS are keyed by rule id; a typo would silently fall back to
+    'review by hand'. Every key must be a rule the program runs."""
+    from app.services.joern import scan as joern_scan
+    assert set(rv._RULE_GUARD) <= set(joern_scan._TITLES)
+    assert set(rv._RULE_SLOTS) <= set(rv._RULE_GUARD)
+    for rule in ("joern-ignored-auth-result", "joern-hardcoded-credential-compare",
+                 "joern-ssrf-request-url", "joern-path-traversal"):
+        assert rule in rv._RULE_GUARD, rule
+
+
+def test_ignored_auth_result_converges_when_the_result_is_used():
+    """The fix for a discarded check adds no guard token: it USES the value. The reverify block
+    then counts no discarded check left in the method - the sink-gone path."""
+    rule = "joern-ignored-auth-result"
+    rvb = {"found": True, "methods": [{"guards": {}, "sinks": {"auth_discarded": 0}}]}
+    d = rv.decide(rule, [{"rule_id": rule}], [], rvb, [])
+    assert d["converged"] and d["sink_present"] is False and "sink is gone" in d["reason"]
+    rvb_bad = {"found": True, "methods": [{"guards": {}, "sinks": {"auth_discarded": 1}}]}
+    d2 = rv.decide(rule, [{"rule_id": rule}], [{"rule_id": rule}], rvb_bad, [])
+    assert not d2["converged"] and d2["locator_refires"]
+
+
+def test_ssrf_converges_on_a_url_guard():
+    rule = "joern-ssrf-request-url"
+    rvb = {"found": True, "methods": [{"guards": {"url": ["method:urlparse("]}, "sinks": {"http_calls": 1}}]}
+    d = rv.decide(rule, [{"rule_id": rule}], [], rvb, [])
+    assert d["converged"] and d["guard_evidence"] == ["method:urlparse("]
+
+
 # ---- the real thing (needs the Joern runtime; ~2-3 min in script mode) ------------------
 
 def _joern_available() -> bool:
@@ -215,3 +245,11 @@ def test_pattern_fallback_ignores_docstrings_and_comments(tmp_path, monkeypatch)
     r2 = rv.verify(str(tmp_path), str(tmp_path / "views.py"), "get_order", IDOR,
                    fixed_code=honest, start_line=1, end_line=2, pack="_base")
     assert r2["converged"] and "text:is_owner" in r2["guard_evidence"]
+
+
+def test_config_flow_rules_say_verify_is_not_supported(tmp_path):
+    """A config-flow finding sits on a module-level definition (method "<module>"); the answer
+    must be a clear not_supported, not an identifier-validation error."""
+    (tmp_path / "settings.py").write_text('DEBUG = True\n', encoding="utf-8")
+    r = rv.verify(str(tmp_path), str(tmp_path / "settings.py"), "<module>", "joern-debug-exposed")
+    assert not r["ok"] and r["code"] == "not_supported" and "re-scan" in r["error"]

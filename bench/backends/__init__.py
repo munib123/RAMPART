@@ -20,21 +20,11 @@ benchmark is the no_vocab_pack ablation with everything else frozen.
 """
 from __future__ import annotations
 
-import hashlib
 import subprocess
 from abc import ABC, abstractmethod
-from pathlib import Path
 
 from bench import paths                      # noqa: F401  (puts backend/ on sys.path)
 from bench.match import Candidate
-
-
-def _sha256_file(p: Path) -> str:
-    """Content hash with line endings normalised to LF, so the hash quoted in a run artifact is
-    the same on a CRLF (Windows autocrlf) and an LF checkout of the same commit."""
-    if not p.is_file():
-        return ""
-    return hashlib.sha256(p.read_bytes().replace(b"\r\n", b"\n")).hexdigest()[:16]
 
 
 def _git_dirty() -> bool:
@@ -154,8 +144,9 @@ class JoernBackend(LocatorBackend):
                 "joern_version": info.joern_version,
                 "mode": getattr(self, "_diag", {}).get("mode"),
                 "java_major": info.java_major,
-                "rules_file": joern_scan.RULES.name,
-                "rules_sha256": _sha256_file(joern_scan.RULES),
+                "rules_file": joern_scan.RULES_DIR.name,
+                "rules_files": [f.name for f in joern_scan.rule_files()],
+                "rules_sha256": joern_scan.rules_sha256(),
                 "pack": getattr(self, "_diag", {}).get("pack"),
                 "diag": getattr(self, "_diag", {})}
 
@@ -196,7 +187,7 @@ class FullBackend(LocatorBackend):
         from app.services.joern import scan as joern_scan
         fp = {**super().fingerprint(), "scanner": self.scanner, "scope": self.scope,
               "gemini_model": config.GEMINI_MODEL, "llm_enabled": bool(config.GEMINI_API_KEY),
-              "rules_sha256": _sha256_file(joern_scan.RULES),
+              "rules_sha256": joern_scan.rules_sha256(),
               "collections": list(config.COLLECTIONS), "rag_k": config.RAG_K,
               "llm_batch": config.LLM_BATCH, "max_llm_findings": config.MAX_LLM_FINDINGS,
               "joern_llm_quota": getattr(config, "JOERN_LLM_QUOTA", None),

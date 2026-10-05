@@ -6,6 +6,7 @@ enabled() gate. Run from backend/:
 """
 from __future__ import annotations
 
+import re
 import sys
 import time
 from pathlib import Path
@@ -18,18 +19,59 @@ from app.services.joern import scan as joern_scan          # noqa: E402
 from app.services.joern import server as joern_server      # noqa: E402
 
 
-# ---- rules file sectioning ------------------------------------------------------------
+# ---- rules program: files and sectioning ------------------------------------------------
 
-REQUIRED_KINDS = ["prelude", "import", "vocab", "context", "rule", "rule", "rule", "rule", "reverify", "finish"]
+N_RULES = len(joern_scan._TITLES)
+REQUIRED_KINDS = ["prelude", "import", "vocab", "context", "flow"] + ["rule"] * N_RULES + ["reverify", "finish"]
 
 
-def test_rules_file_sections_in_order():
+def test_rules_program_sections_in_order():
     """Server mode sends one /query-sync per section; the order and the set are the contract."""
-    secs = joern_scan._sections(joern_scan.RULES.read_text(encoding="utf-8"))
+    secs = joern_scan._sections(joern_scan.rules_source())
     assert [k for k, _, _ in secs] == REQUIRED_KINDS
     rule_names = [n for k, n, _ in secs if k == "rule"]
     assert rule_names == list(joern_scan._TITLES), "rule sections must match the title table"
     assert all(body.strip() for _, _, body in secs), "no empty section"
+
+
+def test_rule_registry_matches_the_sections():
+    """finish reports a state for every id in the Scala RULES list; a rule missing from it would
+    never be reported as not_run / compile_error, so the list and the sections must agree."""
+    import re
+    src = joern_scan.rules_source()
+    body = src[src.index("val RULES = List("):]
+    body = body[:body.index(")\n")]
+    assert re.findall(r'"(joern-[a-z-]+)"', body) == list(joern_scan._TITLES)
+    for rule in joern_scan._TITLES:                        # each rule section registers itself
+        assert src.count(f'perItem("{rule}")') + src.count(f'reportKwargs("{rule}"') == 1, rule
+
+
+def test_rule_files_are_ordered_and_each_holds_sections():
+    files = joern_scan.rule_files()
+    names = [f.name for f in files]
+    assert names == sorted(names) and len(names) >= 8
+    assert all(re.match(r"^\d\d_[a-z_]+\.sc$", n) for n in names), names
+    for f in files:                                        # a file never starts mid-section
+        text = f.read_text(encoding="utf-8")
+        assert joern_scan._SECTION.search(text), f"{f.name} has no // @@ section"
+        first = joern_scan._SECTION.search(text).start()
+        assert all(ln.startswith("//") or not ln.strip() for ln in text[:first].splitlines()), f.name
+
+
+def test_rules_sha256_covers_every_file(tmp_path, monkeypatch):
+    for name, body in (("00_a.sc", "// @@ prelude\nval a = 1\n"), ("10_b.sc", "// @@ finish\nval b = 2\n")):
+        (tmp_path / name).write_text(body, encoding="utf-8")
+    monkeypatch.setattr(joern_scan, "RULES_DIR", tmp_path)
+    h1 = joern_scan.rules_sha256()
+    (tmp_path / "10_b.sc").write_bytes(b"// @@ finish\r\nval b = 2\r\n")       # CRLF is not content
+    assert joern_scan.rules_sha256() == h1
+    (tmp_path / "10_b.sc").write_text("// @@ finish\nval b = 3\n", encoding="utf-8")
+    assert joern_scan.rules_sha256() != h1
+    (tmp_path / "10_b.sc").rename(tmp_path / "20_b.sc")
+    h2 = joern_scan.rules_sha256()
+    (tmp_path / "20_b.sc").write_text("// @@ finish\nval b = 3\n", encoding="utf-8")
+    assert joern_scan.rules_sha256() == h2 and h2 != h1
+    assert joern_scan.rules_source() == "// @@ prelude\nval a = 1\n\n// @@ finish\nval b = 3\n"   # file order, LF
 
 
 def test_sections_only_split_on_exact_marker():
