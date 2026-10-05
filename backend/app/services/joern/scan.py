@@ -7,21 +7,21 @@ no > 0 guard, no lock) that only makes sense across a whole function. Those are 
 pattern scanner but visible in a Code Property Graph.
 
 This module runs Joern's Python frontend (pysrc2cpg) over the target, executes the locator
-rules in rules/locators.sc, and returns candidates in the same normalized `Finding` shape the
-other scanners emit. Joern only LOCATES; the candidates flow through the identical
+rules in rules/*.sc (one program, concatenated in file-name order), and returns candidates in
+the same normalized `Finding` shape the other scanners emit. Joern only LOCATES; the candidates flow through the identical
 extract -> RAG-ground -> Gemini-verify pipeline, where the LLM confirms or rejects each one.
 
 Contract with the pipeline: this phase is ADDITIVE and NEVER RAISES. On any failure it returns
 no findings plus a diag dict that says why, so a dead CPG phase is visible rather than silent.
 
 Two execution modes (P3):
-  server   the sidecar in server.py is up: the rules file is split on its `// @@` markers and
+  server   the sidecar in server.py is up: the rules program is split on its `// @@` markers and
            each section is one /query-sync request. The JVM start is paid once per backend
            process; a compile error in one rule costs that rule only.
   script   one `joern --script` per scan. The fallback whenever the server is not ready.
 Both produce the same findings.tsv + diag.json and go through the same _collect().
 
-Vocabulary packs (P5): the rules file holds the four rule SHAPES; the token lists (what an
+Vocabulary packs (P5): the rules hold rule SHAPES only; the token lists (what an
 ownership check, a lock, an allow-list or an object id looks like) come from a JSON pack under
 vocab/packs/, chosen per target (JOERN_PACK=auto detects flask / django from the target). The
 pack is validated against vocab/schema.json here, in Python, before anything reaches the JVM;
@@ -30,6 +30,7 @@ hashed, the pack is hashed separately, and both hashes travel with every finding
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -47,7 +48,28 @@ from app.services.joern import runtime, server
 from app.services.joern.vocab import validate as vocab
 
 HERE = Path(__file__).resolve().parent
-RULES = HERE / "rules" / "locators.sc"
+RULES_DIR = HERE / "rules"
+
+
+def rule_files() -> list[Path]:
+    """The rules program, in execution order: rules/*.sc sorted by file name (the numeric
+    prefixes are the order). A section may only depend on sections in earlier files."""
+    return sorted(RULES_DIR.glob("*.sc"), key=lambda p: p.name)
+
+
+def rules_source() -> str:
+    """The whole rules program as one text: every file, in order, LF line endings."""
+    return "\n".join(p.read_text(encoding="utf-8").replace("\r\n", "\n").rstrip("\n") + "\n"
+                     for p in rule_files())
+
+
+def rules_sha256() -> str:
+    """Fingerprint of the rules program (16 hex chars): every file name and its LF-normalised
+    content, so renaming, reordering or editing any file changes it."""
+    h = hashlib.sha256()
+    for p in rule_files():
+        h.update(p.name.encode("utf-8") + b"\0" + p.read_bytes().replace(b"\r\n", b"\n") + b"\0")
+    return h.hexdigest()[:16]
 
 _SEV = {"critical": "critical", "high": "high", "medium": "medium", "low": "low"}
 
@@ -57,12 +79,20 @@ _TITLES = {
     "joern-mass-assignment": "Mass assignment",
     "joern-unchecked-quantity": "Unchecked quantity (business logic)",
     "joern-toctou-check-then-write": "Race condition (TOCTOU)",
+    "joern-ignored-auth-result": "Authentication check result ignored",
+    "joern-hardcoded-credential-compare": "Hard-coded credential comparison",
+    "joern-ssrf-request-url": "Server-side request forgery (SSRF)",
+    "joern-path-traversal": "Path traversal",
+    "joern-cors-wildcard": "CORS allows any origin",
+    "joern-cleartext-transport": "Cleartext HTTP transport",
+    "joern-xxe-parser": "XML external entities (XXE) enabled",
+    "joern-debug-exposed": "Debug mode enabled",
 }
 
 # markers for the lines that actually explain a failure, inside Joern's very long JVM output
 _ERR_MARKERS = ("Exception", "Error", "error:", "Caused by:", "Failed", "failed")
 
-# `// @@ <kind> [<name>]` section markers in the rules file
+# `// @@ <kind> [<name>]` section markers in the rules program
 _SECTION = re.compile(r"^// @@ (\S+)(?: (\S+))?[ \t]*$", re.M)
 
 
@@ -180,7 +210,7 @@ def _parse_tsv(text: str, input_dir: str) -> list[Finding]:
 # --------------------------------------------------------------------------- #
 
 def _sections(rendered: str) -> list[tuple[str, str, str]]:
-    """Split the rendered rules file on `// @@ <kind> [<name>]` -> [(kind, name, code)]."""
+    """Split the rendered rules program on `// @@ <kind> [<name>]` -> [(kind, name, code)]."""
     marks = list(_SECTION.finditer(rendered))
     out = []
     for i, m in enumerate(marks):
@@ -189,7 +219,7 @@ def _sections(rendered: str) -> list[tuple[str, str, str]]:
     return out
 
 
-# Every placeholder in locators.sc sits inside a Scala string literal. Anything substituted
+# Every placeholder in the rules sits inside a Scala string literal. Anything substituted
 # into one MUST be escaped as a Scala string literal, or a value containing a quote ends the
 # literal and the rest is compiled as code by the JVM (a path with a `"` on POSIX, or the
 # request-controlled file/method names of a re-verification). Escaping is the floor;
@@ -238,7 +268,7 @@ def _render(input_dir: str, out_file: Path, diag_file: Path, proj: str,
             raise ValueError(why)
     if not re.fullmatch(r"[A-Za-z0-9_]{1,64}", proj):
         raise ValueError(f"project name is not an identifier: {proj!r}")
-    return (RULES.read_text(encoding="utf-8")
+    return (rules_source()
             .replace("__INPUT_DIR__", fwd(input_dir))
             .replace("__OUT_FILE__", fwd(out_file))
             .replace("__DIAG_FILE__", fwd(diag_file))
@@ -295,6 +325,9 @@ def _collect(out_file: Path, diag_file: Path, input_dir: str, diag: dict,
             d = json.loads(diag_file.read_text(encoding="utf-8"))
             rule_state = d.get("rule_state", {})
             diag.update(methods_seen=d.get("methods_seen"), methods_threw=d.get("methods_threw"))
+            if d.get("table_errors"):                    # a shared flow table threw (35_flow)
+                diag["table_errors"] = d["table_errors"]
+                print(f"[joern]     flow tables failed: {d['table_errors']}")
             if "pack_loaded" in d:                       # what the JVM actually read (P5)
                 diag.setdefault("pack", {}).update(loaded=d.get("pack_loaded"), source=d.get("pack_source"))
         except Exception as e:                        # a bad diag must not hide good findings
@@ -332,7 +365,7 @@ def _run_script(info, script: Path, tmp: Path, out_file: Path, diag: dict) -> Op
             pass
         raise
     proc.stdout, proc.stderr = stdout, stderr           # shape _error_summary expects below
-    # A crashed script and a genuine "nothing found" must not look alike. locators.sc ALWAYS
+    # A crashed script and a genuine "nothing found" must not look alike. The rules ALWAYS
     # writes findings.tsv (empty when clean) and exits 0, so a missing file or a non-zero exit
     # means the locators never ran: the target is UNSCANNED, not clean.
     if proc.returncode != 0 or not out_file.exists():
@@ -365,14 +398,14 @@ def _run_server(srv, rendered: str, proj: str, out_file: Path,
                 compile_errors: dict) -> Optional[str]:
     """Server mode: one /query-sync per section. A RULE section that fails to evaluate is
     recorded in compile_errors and skipped; a transport failure on ANY section, or an evaluation
-    failure on prelude/import/vocab/context/finish, aborts (the caller falls back to script
+    failure on prelude/import/vocab/context/flow/finish, aborts (the caller falls back to script
     mode). Returns an error string, or None on success."""
     t_full = config.JOERN_TIMEOUT                       # import and context are the heavy ones
     t_rule = max(60, config.JOERN_TIMEOUT // 3)
     with _server_lock:
         try:
             for kind, name, code in _sections(rendered):
-                ok, out, err = srv.query(code, timeout=t_full if kind in ("import", "context") else t_rule)
+                ok, out, err = srv.query(code, timeout=t_full if kind in ("import", "context", "flow") else t_rule)
                 if ok:
                     continue
                 tail = " | ".join((err or out or "").strip().splitlines()[-3:])[:300]
@@ -407,7 +440,7 @@ def scan(path: str, pack: str | None = None,
     (relative .py path, identifiers) and Scala-escaped before they reach the rules."""
     t0 = time.time()
     diag: dict = {"used": False, "reason": "", "elapsed_ms": 0, "candidates": 0,
-                  "rules_file": RULES.name, "mode": "script"}
+                  "rules_file": RULES_DIR.name, "rules_sha256": rules_sha256(), "mode": "script"}
     proj = "rampart_" + uuid.uuid4().hex[:12]
     tmp: Optional[Path] = None
     compile_errors: dict = {}

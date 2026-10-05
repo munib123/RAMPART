@@ -1,10 +1,10 @@
 {
   "pack_id": "django",
-  "schema_version": 2,
+  "schema_version": 3,
   "authored_from": "framework_docs",
   "extends": "_base",
   "transcript": "django.transcript.json",
-  "description": "Django 5.1 + Django REST Framework vocabulary, drafted under the held-out protocol from the official docs only (no testbed read). Adds to _base; never removes. Covers the ORM's single-object reads and shortcuts, the request.user ownership idioms and DRF object-permission hooks, request.POST / request.data as mass-assignment sources with ModelForm / serializer validation as the allow-list, F() for check-then-write, min_value as the numeric bound, and the ORM's write methods. P7 (2026-09-15, after the held-out run): four class-scope/route slots added from the DRF permissions, generic-views and routers docs; no existing value changed.",
+  "description": "Django 5.1 + Django REST Framework vocabulary, drafted under the held-out protocol from the official docs only (no testbed read). Adds to _base; never removes. Covers the ORM's single-object reads and shortcuts, the request.user ownership idioms and DRF object-permission hooks, request.POST / request.data as mass-assignment sources with ModelForm / serializer validation as the allow-list, F() for check-then-write, min_value as the numeric bound, and the ORM's write methods. P7 (2026-09-15, after the held-out run): four class-scope/route slots added from the DRF permissions, generic-views and routers docs; no existing value changed. 2026-10 (schema v3, after the held-out run, held-out NOT re-run): request_sources from the request-response and DRF requests docs; no existing value changed.",
   "sources": ["https://docs.djangoproject.com/en/5.1/topics/http/shortcuts/  (get_object_or_404, aget_object_or_404)", "https://docs.djangoproject.com/en/5.1/ref/models/querysets/  (first/last/earliest/latest + async a*, create/update/delete/bulk_*)", "https://docs.djangoproject.com/en/5.1/ref/models/instances/  (save(update_fields=), asave, adelete)", "https://docs.djangoproject.com/en/5.1/ref/models/expressions/  (F() race-condition section, RawSQL)", "https://docs.djangoproject.com/en/5.1/topics/db/transactions/  (transaction.atomic)", "https://docs.djangoproject.com/en/5.1/topics/db/sql/  (Manager.raw, cursor.execute)", "https://docs.djangoproject.com/en/5.1/topics/auth/default/  (permission_required, user_passes_test, has_perm, is_staff, is_superuser)", "https://docs.djangoproject.com/en/5.1/ref/request-response/  (request.POST/GET/body, QueryDict.dict/lists)", "https://docs.djangoproject.com/en/5.1/topics/forms/modelforms/  (Meta.fields, is_valid, save, modelform_factory)", "https://docs.djangoproject.com/en/5.1/ref/forms/fields/  (min_value -> MinValueValidator)", "https://docs.djangoproject.com/en/5.1/ref/models/fields/  (PositiveIntegerField family)", "https://www.django-rest-framework.org/api-guide/permissions/  (check_object_permissions, has_object_permission, IsAdminUser, DjangoObjectPermissions)", "https://www.django-rest-framework.org/api-guide/generic-views/  (get_object, get_serializer, perform_create/update/destroy)", "https://www.django-rest-framework.org/api-guide/views/  (@permission_classes, @authentication_classes, check_permissions)", "https://www.django-rest-framework.org/api-guide/requests/  (request.data, request.query_params, request.auth)", "https://www.django-rest-framework.org/api-guide/serializers/  (validated_data, is_valid, Meta.fields, read_only_fields)", "https://www.django-rest-framework.org/api-guide/filtering/  (get_queryset filtered on self.request.user)"],
   "slots": {
     "authz_guard": {
@@ -97,6 +97,11 @@
       "sink": "signal_text",
       "values": ["path(\"", "re_path(\"", ".register(\"", ".as_view("],
       "note": "P7. urls.py path()/re_path() name the view; router.register() and .as_view() name the class, so every method of it is reachable."
+    },
+    "request_sources": {
+      "sink": "origin_text",
+      "values": ["request.get", "request.post", "request.files", "request.cookies", "request.meta", "request.body", "request.headers", "request.data", "request.query_params"],
+      "note": "2026-10. HttpRequest.GET/POST/FILES/COOKIES/META/body/headers (ref/request-response) and DRF Request.data/query_params (api-guide/requests), lower-cased: origin text is matched lower-cased. request.get also covers request.GET.get(...)."
     }
   }
 }

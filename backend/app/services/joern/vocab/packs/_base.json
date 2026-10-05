@@ -1,8 +1,8 @@
 {
   "pack_id": "_base",
-  "schema_version": 2,
+  "schema_version": 3,
   "authored_from": "hand_written",
-  "description": "Exactly the token lists rules/locators.sc carried as Scala vals through P2 (July rules + eight August fixes). Framework-neutral. Every other pack extends this one and can only add. Running with --pack _base IS the no_vocab_pack ablation arm.",
+  "description": "The token lists the rules were measured with: for the four P2 rules exactly what rules/locators.sc carried as Scala vals (July rules + eight August fixes); since 2026-10 also the framework-neutral values of the call-anchored rules in rules/50-60. Framework-neutral. Every other pack extends this one and can only add. Running with --pack _base IS the no_vocab_pack ablation arm.",
   "slots": {
     "authz_guard": {
       "sink": "guard_text",
@@ -96,6 +96,53 @@
       "sink": "signal_text",
       "values": [".route("],
       "note": "P7. Framework-neutral: a decorator call containing .route( registers the wrapped function."
+    },
+    "request_sources": {
+      "sink": "origin_text",
+      "values": ["request.args", "request.form", "request.values", "request.json", "request.get_json", "request.data", "request.files", "request.cookies", "request.headers"],
+      "note": "2026-10. The WSGI-style request attributes (Flask/Werkzeug, and request.data in DRF). Framework packs add their own spellings (Django request.GET/POST/META/body)."
+    },
+    "http_client_calls": {
+      "sink": "call_path",
+      "values": ["requests.get", "requests.post", "requests.put", "requests.patch", "requests.delete", "requests.head", "requests.options", "requests.request", "urllib.request.urlopen", "urlopen", "httpx.get", "httpx.post", "httpx.put", "httpx.patch", "httpx.delete", "httpx.head", "httpx.request", "httpx.stream"]
+    },
+    "url_guard": {
+      "sink": "guard_text",
+      "values": ["urlparse(", "urlsplit(", "netloc", "allowed_host", "allowed_domain", "trusted_host", "is_safe_url", "url_has_allowed_host_and_scheme"]
+    },
+    "file_sink_calls": {
+      "sink": "call_path",
+      "values": ["open", "io.open", "codecs.open", "send_file", "os.remove", "os.unlink", "os.rmdir", "shutil.rmtree", "shutil.copy", "shutil.copyfile", "shutil.move"],
+      "note": "send_from_directory is NOT a sink: it is the safe API (it joins with safe_join)."
+    },
+    "path_guard": {
+      "sink": "guard_text",
+      "values": ["secure_filename", "safe_join", "basename(", "commonpath(", "is_relative_to(", "startswith("],
+      "note": "realpath/abspath/normpath alone are not guards: they canonicalise, they do not contain. The containment test is the startswith/commonpath that follows them."
+    },
+    "auth_check_calls": {
+      "sink": "call_name",
+      "values": ["check_password_hash", "check_password", "verify_password", "checkpw", "compare_digest", "authenticate", "check_credentials", "verify_credentials"],
+      "note": "Only checks that RETURN their verdict. Checks that raise on failure (DRF check_object_permissions, perform_authentication) are correct to call as a statement and must never be listed."
+    },
+    "auth_check_terms": {
+      "sink": "token",
+      "values": ["login", "password", "credential", "authenticat"],
+      "note": "A project function counts as a check only when its name has one of these AND it returns None/False on one path and a computed value on another (the Scala tests the returns)."
+    },
+    "credential_terms": {
+      "sink": "token",
+      "values": ["password", "passwd", "pwd", "passphrase", "secret", "api_key", "apikey"]
+    },
+    "xxe_kwargs": {
+      "sink": "kwarg_flow",
+      "values": ["xmlparser:resolve_entities=true", "xmlparser:no_network=false", "xmlparser:load_dtd=true", "xmlparser:huge_tree=true", "xmlpullparser:resolve_entities=true", "xmlpullparser:no_network=false", "iterparse:resolve_entities=true", "iterparse:load_dtd=true"],
+      "note": "lxml.etree parser keywords (https://lxml.de/api/lxml.etree.XMLParser-class.html)."
+    },
+    "debug_kwargs": {
+      "sink": "kwarg_flow",
+      "values": ["run:debug=true", "run_simple:use_debugger=true", "run_simple:use_evalex=true"],
+      "note": "Flask app.run(debug=...) and Werkzeug run_simple(use_debugger/use_evalex=...). Known false positive: asyncio.run(debug=True)."
     }
   }
 }

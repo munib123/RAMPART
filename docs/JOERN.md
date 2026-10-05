@@ -6,7 +6,9 @@ framework knowledge, and the LLM as the *prover*.
 
 This is the September 2026 rewrite of the August document. Every number below comes from a
 run artifact under `bench/runs/` (run ids in brackets); the August §8 was hand-traced and is
-superseded. Phase logs: `bench/runs/2026-09-15-*.md`. Plan and status: `docs/JOERN_PLAN.md`.
+superseded. Phase logs: `bench/runs/2026-09-15-*.md`; rules v2 (the split into `rules/*.sc` and
+the eight call-anchored rules): `bench/runs/2026-10-05-rules-v2.md`. Plan and status:
+`docs/JOERN_PLAN.md`.
 
 ---
 
@@ -26,6 +28,24 @@ Measured, not asserted: on `testbeds/shopfast` bandit finds 12 of 26 bugs (25 pl
 13, and **neither finds any of the four above** [`083330`, `083415`]. On both Django splits the
 pattern arms find 0 of the 8 / 9 SAST-blind rows [`122402`, `122417`, `125014`, `125031`]. The
 engines are disjoint; their union on shopfast is 19 of 26.
+
+A second class is invisible to them for a different reason: the bug is **in how a value flows**,
+not in any one line. The value passes through a parameter, a local, or a constant in another
+module. Since 2026-10 eight call-anchored rules cover it (§5.1):
+
+| Bug | What a pattern cannot see | CWE | rule |
+|---|---|---|---|
+| Ignored credential check | the check's return value is never used | CWE-287 | `joern-ignored-auth-result` |
+| Hard-coded credential | the compared value is `config.NAME`, a literal in another file | CWE-798 | `joern-hardcoded-credential-compare` |
+| SSRF | the URL is a parameter whose caller passes `request.form[...]` | CWE-918 | `joern-ssrf-request-url` |
+| Path traversal | the same, into `open` / `send_file` | CWE-22 | `joern-path-traversal` |
+| CORS wildcard | the header value is a constant `"*"` defined elsewhere | CWE-942 | `joern-cors-wildcard` |
+| Cleartext transport | the client URL is an `http://` constant defined elsewhere | CWE-319 | `joern-cleartext-transport` |
+| XXE | the parser keyword resolves to an unsafe setting | CWE-611 | `joern-xxe-parser` |
+| Debug server | `run(debug=config.DEBUG)` with `DEBUG = True` | CWE-489 | `joern-debug-exposed` |
+
+On shopfast, six of the bugs these find (#10, #11, #12, #19, #21, #26) were missed by bandit,
+semgrep and the `full` arm alike [`171841`].
 
 ## 2. The contract: Joern **locates**, the LLM **proves**
 
@@ -56,8 +76,8 @@ F1 0.79 [`171358`]. The verdict tier is model-sensitive; both runs are kept.
 |---|---|
 | `runtime.py` | finds or **installs** a portable Temurin JRE 21 and joern-cli 4.0.589 under `tools/` — no admin, nothing on PATH. `python -m app.services.joern.runtime --install`. Picks the per-platform release asset (`joern-cli-{windows-x86_64,linux-x86_64,linux-arm64,macos-x86_64,macos-arm64}.zip`) and the matching Adoptium JRE, verifies the zip against the published `.sha512`, and on failure prints a one-line reason plus the manual fallback (drop the asset zip and its `.sha512` into `tools/`) instead of a traceback. Only Windows x64 has been exercised end to end; the Linux/macOS paths are unit-tested only |
 | `server.py` | one `joern --server` **sidecar per backend process** (127.0.0.1:8091, random per-process Basic-auth password, tree-killed on shutdown). Started by the FastAPI lifespan; `/api/health` shows `scanners.joern.server` |
-| `scan.py` | renders `rules/locators.sc`, picks and validates the vocabulary pack, runs the rules (one `/query-sync` per `// @@` section in server mode; one `joern --script` as the fallback), parses the TSV, returns `(findings, diag)` |
-| `rules/locators.sc` | the four rule **shapes** — 487 lines (291 non-blank, non-comment) of hand-written, hashed Scala; zero framework vocabulary. The hash is LF-normalised (`bench/backends/__init__.py`) and recorded as `rules_sha256` in every run artifact; today's is `11befcda9b9cf6bd` |
+| `scan.py` | renders the rules program (`rules/*.sc`, concatenated in file-name order), picks and validates the vocabulary pack, runs the rules (one `/query-sync` per `// @@` section in server mode; one `joern --script` as the fallback), parses the TSV, returns `(findings, diag)` |
+| `rules/*.sc` | the rule **shapes**: one program in twelve files, 956 lines (627 non-blank, non-comment) of hand-written, hashed Scala, with zero framework vocabulary. `00_prelude` (helpers, the `RULES` registry, `perItem`), `10_import`, `20_vocab`, `30_context` (per-method `Ctx`, class scope, routes), `35_flow` (constants across files, def-use, caller arguments), `40_access_control`, `45_business_logic`, `50_authentication`, `55_untrusted_input`, `60_insecure_config`, `80_reverify`, `90_finish`. `scan.rules_sha256()` hashes every file name + LF-normalised content and is recorded as `rules_sha256` in every run artifact. Today's is `643ba2888183758e`; the single-file `locators.sc` it replaced was `11befcda9b9cf6bd` |
 | `vocab/` | `schema.json`, `validate.py`, `packs/{_base,flask-sqlite3,django}.json` + `digests.json` |
 | `reverify.py` | O3: rebuild the CPG on patched code and ask whether the locator still fires. The target method is class-qualified (`Class.method`); `file`, `method` and `class` are validated as a relative `.py` path / identifiers and Scala-escaped before they reach the rule |
 
@@ -78,10 +98,12 @@ guard in scope". What an authorization guard, a lock, an allow-list, an ORM read
 id **looks like** in a framework is a JSON pack the Scala reads with `ujson` after
 `importCode`:
 
-- **22 slots, 7 sinks**, each sink with its own character class (`call_name` → `nameExact`
+- **32 slots, 10 sinks** (schema v3), each sink with its own character class (`call_name` → `nameExact`
   only; `guard_text` → `String.contains` on the method's calls + identifiers, never its
   literals). No regex sink, no Scala. A test greps the Scala to prove no regex-taking accessor
-  ever sees a pack value.
+  ever sees a pack value. Schema v3 added `call_path` (a dotted call path, matched by
+  `startsWith(v + "(")`), `origin_text` (where a value came from, `contains`) and `kwarg_flow`
+  (`call:keyword=value` after constant resolution, `==` only).
 - **Caps and cross-slot rules**: 16 KB, 64 values per slot; no authz token may sit inside an
   authn token; count and money terms disjoint; text sinks lower-case. A pack that breaks any
   rule is **discarded whole** and the scan runs on `_base`, saying so in `diag.pack.fallback`.
@@ -92,9 +114,9 @@ id **looks like** in a framework is a JSON pack the Scala reads with `ujson` aft
 
 | pack | values | authored from | digest |
 |---|---|---|---|
-| `_base` | 83 | the July/August Scala vals, verbatim | `ef5ac270285a` |
-| `flask-sqlite3` | 169 | Flask / Flask-Login / Flask-SQLAlchemy / WTForms / sqlite3 docs, hand-written | `433e82b50aa9` (was `2b4dde8c2e83` before 2026-09-16: two single-quote twins of the `g.user["id"]` / `session["user_id"]` scoped-query tokens, added after a generated fix used `g.user['id']` and did not converge; guard text is matched as source text and pysrc2cpg keeps the author's quotes. shopfast joern arm unchanged at 4 TP + bait, probe 5/5, run `20260916T063414Z`) |
-| `django` | 202 | Django 5.1 + DRF docs, drafted by a walled-off agent under the held-out protocol (§7), reviewed, not tuned | `b5df755be580` (today's, with the four P7 slots); the held-out run scored `b38082f8d2b6`, the pack as it was before P7 |
+| `_base` | 165 | the July/August Scala vals, verbatim, plus (schema v3) framework-neutral values for the eight call-anchored rules: stdlib, requests, httpx, lxml, Werkzeug, common auth helpers | `caf7008bd4f7` (was `ef5ac270285a` before v3) |
+| `flask-sqlite3` | 251 | Flask / Flask-Login / Flask-SQLAlchemy / WTForms / sqlite3 docs, hand-written | `f2117bd54752` (v3: the schema version and the inherited `_base` values; no value of its own changed. Before that `433e82b50aa9`, and before that `2b4dde8c2e83` before 2026-09-16: two single-quote twins of the `g.user["id"]` / `session["user_id"]` scoped-query tokens, added after a generated fix used `g.user['id']` and did not converge; guard text is matched as source text and pysrc2cpg keeps the author's quotes. shopfast joern arm unchanged at 4 TP + bait, probe 5/5, run `20260916T063414Z`) |
+| `django` | 289 | Django 5.1 + DRF docs, drafted by a walled-off agent under the held-out protocol (§7), reviewed, not tuned | `8ba7f75feead` (today's: v3 adds `request_sources` from the request-response and DRF requests docs); `b5df755be580` with the four P7 slots; the held-out run scored `b38082f8d2b6`, the pack as it was before P7 |
 
 `JOERN_PACK=auto` picks the pack from `requirements.txt` / imports. `--pack _base` on any
 benchmark is the *no-vocabulary* ablation arm.
@@ -131,6 +153,34 @@ were added in P7, and only those, after running the probes nobody had run:
 Effect on the Django DEV split with the Django pack: 5 TP / 2 FP / 2 bait → **5 TP / 0 FP /
 0 bait** [`131151`]; shopfast, probe and the other packs unchanged
 [`2026-09-15-p7-graph.md`].
+
+### 5.1 Value flow (rules v2, 2026-10)
+
+The four rules above ask one method one question. The eight in `rules/50-60` start from a
+**call** and ask where its value comes from. All of them read four shared tables in `35_flow.sc`,
+each built once per scan:
+
+- `resolveConst`: what an expression evaluates to when it is a literal, a module constant of its
+  file, or `module.NAME` of another project module. A name assigned twice with different
+  values, or ever assigned something computed, is not a constant.
+- `originOf`: local def-use, up to three assignments deep, and the parameters a value reaches.
+- `callerArgs`: for a parameter, the argument each caller passes. This is one hop of the
+  name-based call graph, used to *name* request input as the source, never to suppress.
+- `valueUsed`: whether a call's value is consumed. pysrc2cpg lowers chained calls into
+  expression blocks (`tmp0 = request.args; tmp0.get(...)`), so "the parent is a block" is not
+  "discarded". The last expression of an expression block is the block's value.
+
+Value-flow findings about configuration are reported where the value is **defined**
+(`config.py:29`), with the sink named in the message, because that is the line a fix changes.
+SSRF and path traversal report the sink. A sanitiser counts anywhere on the value's path: in the
+sink's method, or in the origin text a caller contributed.
+
+Two design choices:
+- A CORS wildcard is reported only when written **unconditionally**. starlette's own middleware
+  writes `"*"` under `if allow_all_origins:`, a configured policy, and fired the first version.
+- The hard-coded-credential rule never echoes the value, only its length.
+
+Results: §7. Testbed: `testbeds/probe-flow` (one vulnerable function and one fixed twin per rule).
 
 ## 6. The eight correctness fixes (P2), each measured
 
@@ -207,6 +257,23 @@ twin left alone.
 | `flask-sqlite3` | 3 / 0 / 1 | 3 / 0 / 1 | `131447` |
 | `django` | 5 / 2 FP / 2 bait | **5 / 0 / 0** | `131151` |
 
+### Rules v2 (2026-10-05, rules `643ba2888183758e`) [`2026-10-05-rules-v2.md`]
+
+The four original rules give identical candidates (rule, file, line, slots, route, class) before
+and after the split on every DEV benchmark and pack. The new rules:
+
+| benchmark | pack | TP / FN / FP / bait / TN | run |
+|---|---|---|---|
+| shopfast | `_base` | **11** / 15 / 1 / 1 / 1 (was 4 / 22 / 0 / 1 / 1) | `171841` |
+| probe-flow (new) | `_base` | **10 / 0 / 0 / 0 / 12** | `171940` |
+| djshop-dev | `_base` / `flask-sqlite3` / `django` | unchanged (2/0/1, 3/0/1, 5/0/0): no new candidate | `172024`, `172046`, `172109` |
+
+The shopfast FP is bug #17 (`is_admin_login`) labelled CWE-798 by the rule and CWE-1188 by the
+key. That puts it in a different scoring family, so it counts as one FP and #17 stays an FN.
+The key was not edited. The context phase on an 82 k-line codebase (fastapi + starlette + httpx +
+pydantic) went from 3.3 s to 1.3 s, with the eight new rules and their tables adding about
+0.4 s; the CPG build (~30 s) dominates either way. `djshop-heldout` was not run.
+
 ### Regression after the 2026-09-15 review fixes (rules `11befcda9b9cf6bd`, LF-normalised)
 
 | benchmark | pack | TP / FP / bait | route flags | run |
@@ -275,6 +342,17 @@ pack included), and the `tool_stats` view.
 - **Gemini varies.** Two of three identical scans on 2026-09-15 returned `503` / `429` for a
   batch. The `full` arm was run once on shopfast and not at all on the Django splits.
 - **No multi-language.** `importCode.python` only.
+- **Value flow is bounded.** `originOf` follows three local assignments; `callerArgs` follows one
+  caller up, by name. Request input that crosses two function boundaries, or passes through a
+  container (`cfg["url"]`), an attribute (`self.url`) or a framework hook, is not traced. The SSRF
+  and path-traversal rules stay quiet rather than guess.
+- **Constant resolution is module-level only.** `config.X` resolves when `X = <literal>` at
+  module scope of a project module named `config`. It does not resolve through class
+  attributes, `os.environ` defaults, settings objects (`settings.X` in Django is a
+  `LazySettings`; it resolves only because the module is also named `settings`), or `from
+  config import X` aliases bound under another name.
+- **The kwarg rules match the call's name, not its receiver.** `debug_kwargs` contains
+  `run:debug=true`, so `asyncio.run(main(), debug=True)` would be reported as a debug server.
 - **Security boundaries, as of the 2026-09-15 review.** Re-verification inputs (`file`,
   `method`, `class`) are validated as a relative `.py` path and identifiers, and every
   placeholder is Scala-escaped before it is rendered into the rule; `/api/fix/apply`, `/revert`
@@ -286,9 +364,16 @@ pack included), and the `tool_stats` view.
 
 ## 11. Adding a rule, a pack, or a framework
 
-- **A rule**: one `// @@ rule <name>` section in `locators.sc` — `ctxs.foreach { c =>
-  guarded(name) { if (signal && !guard) add(...) } }` — and a title in `scan._TITLES`. It gets
-  isolation, provenance columns, the UI badge and re-verification for free.
+- **A rule**: one `// @@ rule <name>` section in the `rules/NN_family.sc` file of its family,
+  written as `perItem(name)(items) { item => if (signal && !guard) add(...) }`. `items` is `ctxs`
+  for a per-method rule, or a sink list from `35_flow` (`callsAt(SLOT)`, `callsByLowerName`)
+  for a call-anchored one. Then add its id to `RULES` in `00_prelude.sc` and a title in
+  `scan._TITLES`; `test_joern.py` fails until all three agree. It gets isolation, provenance
+  columns and the UI badge for free. Re-verification needs a row in `reverify._RULE_GUARD`
+  naming its guard family and its sink counts in `80_reverify.sc`.
+- **Shared machinery** (a table or helper more than one rule reads) goes in `35_flow.sc`, built
+  with `table(name, empty) { ... }`. In server mode a rule section that fails to compile takes
+  its own definitions down with it.
 - **A pack**: extend `_base`, one value per documented idiom, run
   `python -m app.services.joern.vocab.validate --freeze`. Never edit a pack after reading a
   held-out failure list and re-run that split.

@@ -35,9 +35,13 @@ def tree_sha256(root: Path) -> tuple[str, int]:
     """sha256 over sorted (relative path, bytes) of every file except FREEZE.json."""
     h = hashlib.sha256()
     n = 0
-    files = sorted(p for p in root.rglob("*")
-                   if p.is_file() and p.name != FREEZE
-                   and not any(part in _SKIP_DIRS for part in p.relative_to(root).parts))
+    # Order by one OS-independent key. sorted(Path) is case-insensitive on Windows and
+    # case-sensitive on POSIX, so the same tree hashed differently per OS. The key reproduces the
+    # Windows order every committed FREEZE.json was computed with.
+    files = sorted((p for p in root.rglob("*")
+                    if p.is_file() and p.name != FREEZE
+                    and not any(part in _SKIP_DIRS for part in p.relative_to(root).parts)),
+                   key=lambda p: "\\".join(p.relative_to(root).parts).lower())
     for p in files:
         rel = p.relative_to(root).as_posix()
         data = p.read_bytes().replace(b"\r\n", b"\n")       # line endings are not content

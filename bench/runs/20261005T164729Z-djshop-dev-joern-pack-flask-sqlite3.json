@@ -1,0 +1,227 @@
+{
+ "run_id": "20261005T164729Z-djshop-dev-joern-pack-flask-sqlite3",
+ "benchmark": "djshop-dev",
+ "backend": "joern",
+ "pack_arg": "flask-sqlite3",
+ "split": "dev",
+ "tree_sha256": "e824a99673d94b4217037692416d59a250acddf1a80ef09349a9b274bb48fe2c",
+ "frozen_at": "2026-09-15T12:22:03Z",
+ "verdict_gated": false,
+ "elapsed_s": 18.9,
+ "fingerprint": {
+  "backend": "joern",
+  "rampart_git_sha": "b33ecd57",
+  "rampart_git_dirty": true,
+  "joern_version": "4.0.589",
+  "mode": "server",
+  "java_major": 21,
+  "rules_file": "locators.sc",
+  "rules_sha256": "11befcda9b9cf6bd",
+  "pack": {
+   "requested": "flask-sqlite3",
+   "resolved": "flask-sqlite3",
+   "reason": "requested",
+   "listed": true,
+   "id": "flask-sqlite3",
+   "sha256": "433e82b50aa9e0c72d2d5491a86b67a7801df7f40bf46010f152b15f14558c93",
+   "chain": [
+    "_base",
+    "flask-sqlite3"
+   ],
+   "authored_from": "framework_docs",
+   "unlisted": false,
+   "values": 169,
+   "tag": "flask-sqlite3@433e82b50aa9",
+   "loaded": "flask-sqlite3",
+   "source": "pack"
+  },
+  "diag": {
+   "used": true,
+   "reason": "",
+   "elapsed_ms": 10102,
+   "candidates": 4,
+   "rules_file": "locators.sc",
+   "mode": "server",
+   "target": "/home/user/RAMPART/testbeds/djshop-dev",
+   "pack": {
+    "requested": "flask-sqlite3",
+    "resolved": "flask-sqlite3",
+    "reason": "requested",
+    "listed": true,
+    "id": "flask-sqlite3",
+    "sha256": "433e82b50aa9e0c72d2d5491a86b67a7801df7f40bf46010f152b15f14558c93",
+    "chain": [
+     "_base",
+     "flask-sqlite3"
+    ],
+    "authored_from": "framework_docs",
+    "unlisted": false,
+    "values": 169,
+    "tag": "flask-sqlite3@433e82b50aa9",
+    "loaded": "flask-sqlite3",
+    "source": "pack"
+   },
+   "methods_seen": 26,
+   "methods_threw": 0,
+   "rule_state": {
+    "joern-idor-missing-ownership": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-mass-assignment": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-unchecked-quantity": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-toctou-check-then-write": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    }
+   }
+  }
+ },
+ "key": {
+  "version": "djshop-dev-key-v1",
+  "rows": 23,
+  "usable": 23,
+  "accepted": 0,
+  "proposed": 23
+ },
+ "score": {
+  "tp": 3,
+  "fn": 9,
+  "fp": 0,
+  "bait_fp": 1,
+  "tn": 10,
+  "cleared": 0,
+  "unresolvable_keys": 0,
+  "reachable_tp": 3,
+  "reachable_fn": 7,
+  "vuln_rows": 12,
+  "safe_rows": 11,
+  "candidates": 4,
+  "reported": 4,
+  "matched_keys": [
+   5,
+   6,
+   7
+  ],
+  "missed_keys": [
+   1,
+   2,
+   3,
+   4,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "recall": 0.25,
+  "reachable_recall": 0.3,
+  "precision": 0.75,
+  "f1": 0.375
+ },
+ "route_agreement": {
+  "compared": 0,
+  "agree": 0,
+  "unknown": 4
+ },
+ "candidates": [
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "/home/user/RAMPART/testbeds/djshop-dev/shop/views.py",
+   "line": 69,
+   "end_line": 69,
+   "cwe_id": "CWE-915",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "profile_update",
+    "pack": "flask-sqlite3@433e82b50aa9",
+    "slots": "mapping_iter_calls;dyn_write_calls=setattr",
+    "route": "unknown"
+   },
+   "rel_path": "shop/views.py",
+   "function": "profile_update",
+   "family": "mass-assign",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 5
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-mass-assignment",
+   "path": "/home/user/RAMPART/testbeds/djshop-dev/shop/views.py",
+   "line": 92,
+   "end_line": 92,
+   "cwe_id": "CWE-915",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "address_update",
+    "pack": "flask-sqlite3@433e82b50aa9",
+    "slots": "mass_assign_signal=**request;dyn_write_calls=update",
+    "route": "unknown"
+   },
+   "rel_path": "shop/views.py",
+   "function": "address_update",
+   "family": "mass-assign",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 6
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "/home/user/RAMPART/testbeds/djshop-dev/shop/views.py",
+   "line": 116,
+   "end_line": 116,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "add_to_cart",
+    "pack": "flask-sqlite3@433e82b50aa9",
+    "slots": "qty_terms=qty;price_terms=price",
+    "route": "unknown"
+   },
+   "rel_path": "shop/views.py",
+   "function": "add_to_cart",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 7
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-unchecked-quantity",
+   "path": "/home/user/RAMPART/testbeds/djshop-dev/shop/views.py",
+   "line": 128,
+   "end_line": 128,
+   "cwe_id": "CWE-840",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "add_to_cart_form",
+    "pack": "flask-sqlite3@433e82b50aa9",
+    "slots": "qty_terms=qty;price_terms=price",
+    "route": "unknown"
+   },
+   "rel_path": "shop/views.py",
+   "function": "add_to_cart_form",
+   "family": "logic-bound",
+   "reported": true,
+   "outcome": "bait_fp",
+   "matched_key": 107
+  }
+ ]
+}

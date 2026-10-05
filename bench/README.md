@@ -9,6 +9,7 @@ bench/
   keys/
     shopfast.key.jsonl     the answer key: 26 bugs over 29 locations + 2 safe (bait) rows
     probe.key.jsonl        one row per P2 rule fix (5 vuln + 2 safe counterparts)
+    probe-flow.key.jsonl   one row per call-anchored rule (rules v2): 10 vuln + 12 safe twins/baits
     djshop-dev.key.jsonl   Django, DEV split: 12 vuln + 11 safe "fixed twin" rows
     djshop-heldout.key.jsonl  Django, HELD-OUT split: 15 vuln + 14 safe; evaluated once
     cwe_families.json      CWE id -> family; scoring matches on family, not exact id
@@ -122,8 +123,9 @@ backend\.venv\Scripts\python.exe -m bench.freeze --check                  # froz
 ```
 backend\.venv\Scripts\python.exe -m bench.run --backend null    --benchmark shopfast    # must be 0 TP
 backend\.venv\Scripts\python.exe -m bench.run --backend bandit  --benchmark shopfast    # 12 TP
-backend\.venv\Scripts\python.exe -m bench.run --backend joern   --benchmark shopfast    # 4 TP + 1 bait
+backend\.venv\Scripts\python.exe -m bench.run --backend joern   --benchmark shopfast    # 11 TP + 1 bait + 1 FP (#17 labelled CWE-798)
 backend\.venv\Scripts\python.exe -m bench.run --backend joern   --benchmark probe       # 5 TP, 2 TN
+backend\.venv\Scripts\python.exe -m bench.run --backend joern   --benchmark probe-flow  # 10 TP, 12 TN
 backend\.venv\Scripts\python.exe -m bench.run --backend joern   --benchmark djshop-dev --pack _base    # 2 TP
 backend\.venv\Scripts\python.exe -m bench.run --backend joern   --benchmark djshop-dev --pack django   # 5 TP, 0 FP
 backend\.venv\Scripts\python.exe -m bench.run --backend full    --benchmark shopfast --scanner semgrep # needs GEMINI_API_KEY
@@ -133,8 +135,8 @@ Each run prints TP/FN/FP/bait/TN and writes `runs/<stamp>-<benchmark>-<arm>.json
 candidate, its outcome, the matched key row, and the vocabulary entries that fired it.
 
 **Break a rule on purpose and watch the harness catch it** (the point of the whole thing):
-edit `backend/app/services/joern/rules/locators.sc`, e.g. add `"login_required"` back into
-the authz guard by putting it in `_base.json`'s `authz_guard` - the validator refuses it
+edit a rule in `backend/app/services/joern/rules/*.sc` or a pack value, e.g. add
+`"login_required"` back into the authz guard by putting it in `_base.json`'s `authz_guard` - the validator refuses it
 (authz inside authn); force it and `probe` drops from 5 TP to 4. Revert, re-freeze digests.
 
 **The remediation loop (O3): does the fix remove the exploitable path?**

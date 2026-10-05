@@ -1,7 +1,7 @@
 # probe - one function per locator-rule fix
 
 A minimal target where each function is constructed so that exactly ONE of the eight P2
-correctness fixes to `rules/locators.sc` changes its outcome. shopfast cannot show these (it has
+correctness fixes to the rules (then `rules/locators.sc`, now `rules/*.sc`) changes its outcome. shopfast cannot show these (it has
 no decorators, no `abort(404)`, no docstring that happens to contain "lock"), so on shopfast every
 fix is a no-op by construction and only proves non-regression. Here each fix has a number.
 

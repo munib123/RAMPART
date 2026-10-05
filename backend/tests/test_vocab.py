@@ -22,7 +22,7 @@ def _base() -> dict:
 
 
 def _child(**slots) -> dict:
-    return {"pack_id": "t", "schema_version": 2, "authored_from": "hand_written",
+    return {"pack_id": "t", "schema_version": v.schema()["schema_version"], "authored_from": "hand_written",
             "extends": "_base", "slots": slots}
 
 
@@ -78,6 +78,21 @@ def test_base_is_exactly_the_pre_p5_lists():
     ("sql_read_kw", "exec_sql_kw", "select", "must be upper-case"),
     ("id_param_suffix", "param_suffix", "_ID", "must be lower-case"),
     ("id_param_exact", "param_exact", "1id", "does not match param_exact class"),
+    # schema v3 sinks: a call path is dotted identifiers only - never a paren, glob or space
+    ("http_client_calls", "call_path", "requests.get(", "does not match call_path class"),
+    ("http_client_calls", "call_path", "requests.*", "does not match call_path class"),
+    ("http_client_calls", "call_path", "Requests.get", "must be lower-case"),
+    ("http_client_calls", "call_path", "requests..get", "does not match call_path class"),
+    ("file_sink_calls", "call_path", "op", "shorter than 3"),
+    ("request_sources", "origin_text", "Request.GET", "must be lower-case"),
+    ("request_sources", "origin_text", "req$", "forbidden character"),
+    # a keyword flow is call:keyword=value; anything else could never be produced by the Scala
+    ("debug_kwargs", "kwarg_flow", "run(debug=true)", "does not match kwarg_flow class"),
+    ("debug_kwargs", "kwarg_flow", "debug=true", "does not match kwarg_flow class"),
+    ("debug_kwargs", "kwarg_flow", "run:debug=True", "must be lower-case"),
+    ("xxe_kwargs", "kwarg_flow", "xmlparser:resolve_entities= true", "does not match kwarg_flow class"),
+    ("credential_terms", "token", "pass word", "does not match token class"),
+    ("auth_check_calls", "call_name", "auth.check", "does not match call_name class"),
 ])
 def test_value_rejected(tmp_path, slot, sink, value, msg):
     eff, info = v.load(str(_write(tmp_path, _child(**{slot: {"sink": sink, "values": [value]}}))), allow_unlisted=True)
@@ -271,12 +286,27 @@ def test_render_substitutes_pack_placeholders(tmp_path):
     assert "_base.json" in r
 
 
+def test_base_fills_every_v3_slot():
+    """_base is the no_vocab_pack arm: every call-anchored rule must be able to fire with it."""
+    b, _ = v.load("_base")
+    for name, body in v.schema()["slots"].items():
+        if name in ("scoped_read_calls", "queryset_hooks", "object_permission_hooks"):
+            continue                                        # P7 class-scope slots: framework packs fill them
+        assert b["slots"][name]["values"], f"_base leaves {name} empty"
+    assert "send_from_directory" not in b["slots"]["file_sink_calls"]["values"]   # the safe API
+    assert not {"check_object_permissions", "perform_authentication"} & set(b["slots"]["auth_check_calls"]["values"])
+
+
 def test_rules_file_has_no_hardcoded_vocabulary():
     """The Scala holds rule SHAPES only. Every token list must come from a slot()."""
-    src = joern_scan.RULES.read_text(encoding="utf-8")
+    src = joern_scan.rules_source()
     for tok in ('"is_owner"', '"login_required"', '"fetchone"', '"request.form"', '"whitelist"',
-                '"select_for_update"', '"quantity"', 'nameExact("execute")', 'nameExact("setattr")'):
-        assert tok not in src, f"hard-coded vocabulary in locators.sc: {tok}"
+                '"select_for_update"', '"quantity"', 'nameExact("execute")', 'nameExact("setattr")',
+                # schema v3 vocabulary lives in packs too
+                '"requests.get"', '"requests"', '"urlopen"', '"open"', '"send_file"', '"secure_filename"',
+                '"urlparse"', '"check_password_hash"', '"authenticate"', '"password"', '"resolve_entities"',
+                '"xmlparser"', '"debug"', '"request.args"'):
+        assert tok not in src, f"hard-coded vocabulary in the rules: {tok}"
     for name in v.schema()["slots"]:
         assert f'slot("{name}")' in src, f"slot {name} never read by the Scala"
     # no regex-taking accessor anywhere: .name( / .code( / .filename( treat their argument as a

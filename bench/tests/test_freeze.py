@@ -38,3 +38,18 @@ def test_django_splits_are_frozen_and_labelled():
         rows = [json.loads(l) for l in open(paths.key_file(bench), encoding="utf-8") if l.strip()]
         assert rows and all(r["split"] == split for r in rows)
         assert any(r["label"] == "safe" and r.get("twin_of") for r in rows), "fixed twins must be safe rows"
+
+
+def test_freeze_hash_is_the_same_on_every_os(tmp_path):
+    """sorted(Path) is case-insensitive on Windows and case-sensitive on POSIX, so the same tree
+    once hashed differently per OS (README.md sorts before shop/ on Linux, after it on Windows).
+    The order key is fixed: Windows order, case-folded, backslash-joined - the order every
+    committed FREEZE.json was computed with."""
+    import hashlib
+    (tmp_path / "shop").mkdir()
+    for rel in ("README.md", "shop/views.py", "manage.py", "Zeta.txt"):
+        (tmp_path / rel).write_text(rel, encoding="utf-8")
+    h = hashlib.sha256()
+    for rel in ("manage.py", "README.md", "shop/views.py", "Zeta.txt"):     # case-folded order
+        h.update(rel.encode() + b"\0" + hashlib.sha256(rel.encode()).digest())
+    assert freeze.tree_sha256(tmp_path) == (h.hexdigest(), 4)

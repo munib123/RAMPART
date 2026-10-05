@@ -1,0 +1,408 @@
+{
+ "run_id": "20261005T172001Z-probe-flow-joern-pack-flask-sqlite3",
+ "benchmark": "probe-flow",
+ "backend": "joern",
+ "pack_arg": "flask-sqlite3",
+ "split": "dev",
+ "tree_sha256": null,
+ "frozen_at": null,
+ "verdict_gated": false,
+ "elapsed_s": 20.5,
+ "fingerprint": {
+  "backend": "joern",
+  "rampart_git_sha": "b33ecd57",
+  "rampart_git_dirty": true,
+  "joern_version": "4.0.589",
+  "mode": "server",
+  "java_major": 21,
+  "rules_file": "rules",
+  "rules_files": [
+   "00_prelude.sc",
+   "10_import.sc",
+   "20_vocab.sc",
+   "30_context.sc",
+   "35_flow.sc",
+   "40_access_control.sc",
+   "45_business_logic.sc",
+   "50_authentication.sc",
+   "55_untrusted_input.sc",
+   "60_insecure_config.sc",
+   "80_reverify.sc",
+   "90_finish.sc"
+  ],
+  "rules_sha256": "643ba2888183758e",
+  "pack": {
+   "requested": "flask-sqlite3",
+   "resolved": "flask-sqlite3",
+   "reason": "requested",
+   "listed": true,
+   "id": "flask-sqlite3",
+   "sha256": "f2117bd54752126b36d48e6bc4b4dfc137874203a645886d3dac3a6f66a1d24a",
+   "chain": [
+    "_base",
+    "flask-sqlite3"
+   ],
+   "authored_from": "framework_docs",
+   "unlisted": false,
+   "values": 251,
+   "tag": "flask-sqlite3@f2117bd54752",
+   "loaded": "flask-sqlite3",
+   "source": "pack"
+  },
+  "diag": {
+   "used": true,
+   "reason": "",
+   "elapsed_ms": 10638,
+   "candidates": 10,
+   "rules_file": "rules",
+   "rules_sha256": "643ba2888183758e",
+   "mode": "server",
+   "target": "/home/user/RAMPART/testbeds/probe-flow",
+   "pack": {
+    "requested": "flask-sqlite3",
+    "resolved": "flask-sqlite3",
+    "reason": "requested",
+    "listed": true,
+    "id": "flask-sqlite3",
+    "sha256": "f2117bd54752126b36d48e6bc4b4dfc137874203a645886d3dac3a6f66a1d24a",
+    "chain": [
+     "_base",
+     "flask-sqlite3"
+    ],
+    "authored_from": "framework_docs",
+    "unlisted": false,
+    "values": 251,
+    "tag": "flask-sqlite3@f2117bd54752",
+    "loaded": "flask-sqlite3",
+    "source": "pack"
+   },
+   "methods_seen": 28,
+   "methods_threw": 0,
+   "rule_state": {
+    "joern-idor-missing-ownership": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-mass-assignment": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-unchecked-quantity": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-toctou-check-then-write": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-ignored-auth-result": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-hardcoded-credential-compare": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-ssrf-request-url": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-path-traversal": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-cors-wildcard": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-cleartext-transport": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-xxe-parser": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    },
+    "joern-debug-exposed": {
+     "state": "ok",
+     "errors": 0,
+     "first_error": ""
+    }
+   }
+  }
+ },
+ "key": {
+  "version": "probe-flow-key-v1",
+  "rows": 22,
+  "usable": 22,
+  "accepted": 0,
+  "proposed": 22
+ },
+ "score": {
+  "tp": 10,
+  "fn": 0,
+  "fp": 0,
+  "bait_fp": 0,
+  "tn": 12,
+  "cleared": 0,
+  "unresolvable_keys": 0,
+  "reachable_tp": 7,
+  "reachable_fn": 0,
+  "vuln_rows": 10,
+  "safe_rows": 12,
+  "candidates": 10,
+  "reported": 10,
+  "matched_keys": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10
+  ],
+  "missed_keys": [],
+  "recall": 1.0,
+  "reachable_recall": 1.0,
+  "precision": 1.0,
+  "f1": 1.0
+ },
+ "route_agreement": {
+  "compared": 7,
+  "agree": 7,
+  "unknown": 0
+ },
+ "candidates": [
+  {
+   "tool": "joern",
+   "rule_id": "joern-ignored-auth-result",
+   "path": "/home/user/RAMPART/testbeds/probe-flow/app.py",
+   "line": 35,
+   "end_line": 35,
+   "cwe_id": "CWE-287",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "login",
+    "pack": "flask-sqlite3@f2117bd54752",
+    "slots": "auth_check_terms=login;returns_none_or_value",
+    "route": "yes"
+   },
+   "rel_path": "app.py",
+   "function": "login",
+   "family": "authn",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 1
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-ignored-auth-result",
+   "path": "/home/user/RAMPART/testbeds/probe-flow/auth.py",
+   "line": 21,
+   "end_line": 21,
+   "cwe_id": "CWE-287",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "change_email",
+    "pack": "flask-sqlite3@f2117bd54752",
+    "slots": "auth_check_calls=check_password_hash",
+    "route": "no"
+   },
+   "rel_path": "auth.py",
+   "function": "change_email",
+   "family": "authn",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 2
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-hardcoded-credential-compare",
+   "path": "/home/user/RAMPART/testbeds/probe-flow/auth.py",
+   "line": 33,
+   "end_line": 33,
+   "cwe_id": "CWE-798",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "is_support_login",
+    "pack": "flask-sqlite3@f2117bd54752",
+    "slots": "credential_terms=password;module_constant",
+    "route": "no"
+   },
+   "rel_path": "auth.py",
+   "function": "is_support_login",
+   "family": "secrets",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 3
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-ssrf-request-url",
+   "path": "/home/user/RAMPART/testbeds/probe-flow/app.py",
+   "line": 59,
+   "end_line": 59,
+   "cwe_id": "CWE-918",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "preview",
+    "pack": "flask-sqlite3@f2117bd54752",
+    "slots": "http_client_calls=requests.get;request_sources=request.args",
+    "route": "yes"
+   },
+   "rel_path": "app.py",
+   "function": "preview",
+   "family": "ssrf",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 5
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-ssrf-request-url",
+   "path": "/home/user/RAMPART/testbeds/probe-flow/client.py",
+   "line": 25,
+   "end_line": 25,
+   "cwe_id": "CWE-918",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "notify",
+    "pack": "flask-sqlite3@f2117bd54752",
+    "slots": "http_client_calls=requests.post;request_sources=request.form",
+    "route": "yes"
+   },
+   "rel_path": "client.py",
+   "function": "notify",
+   "family": "ssrf",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 4
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-path-traversal",
+   "path": "/home/user/RAMPART/testbeds/probe-flow/files.py",
+   "line": 11,
+   "end_line": 11,
+   "cwe_id": "CWE-22",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "read_export",
+    "pack": "flask-sqlite3@f2117bd54752",
+    "slots": "file_sink_calls=open;request_sources=request.args",
+    "route": "yes"
+   },
+   "rel_path": "files.py",
+   "function": "read_export",
+   "family": "path-traversal",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 6
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-cors-wildcard",
+   "path": "/home/user/RAMPART/testbeds/probe-flow/settings.py",
+   "line": 4,
+   "end_line": 4,
+   "cwe_id": "CWE-942",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "<module>",
+    "pack": "flask-sqlite3@f2117bd54752",
+    "slots": "module_constant=CORS_ORIGIN"
+   },
+   "rel_path": "settings.py",
+   "function": "<module>",
+   "family": "cors",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 9
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-cleartext-transport",
+   "path": "/home/user/RAMPART/testbeds/probe-flow/settings.py",
+   "line": 3,
+   "end_line": 3,
+   "cwe_id": "CWE-319",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "<module>",
+    "pack": "flask-sqlite3@f2117bd54752",
+    "slots": "http_client_calls=requests.post;module_constant=GATEWAY_URL"
+   },
+   "rel_path": "settings.py",
+   "function": "<module>",
+   "family": "cleartext",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 8
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-xxe-parser",
+   "path": "/home/user/RAMPART/testbeds/probe-flow/feeds.py",
+   "line": 6,
+   "end_line": 6,
+   "cwe_id": "CWE-611",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "parse_partner_feed",
+    "pack": "flask-sqlite3@f2117bd54752",
+    "slots": "xxe_kwargs=xmlparser:resolve_entities=true",
+    "route": "no"
+   },
+   "rel_path": "feeds.py",
+   "function": "parse_partner_feed",
+   "family": "xxe",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 7
+  },
+  {
+   "tool": "joern",
+   "rule_id": "joern-debug-exposed",
+   "path": "/home/user/RAMPART/testbeds/probe-flow/settings.py",
+   "line": 2,
+   "end_line": 2,
+   "cwe_id": "CWE-489",
+   "verdict": null,
+   "confidence": null,
+   "meta": {
+    "method": "<module>",
+    "pack": "flask-sqlite3@f2117bd54752",
+    "slots": "debug_kwargs=run:debug=true"
+   },
+   "rel_path": "settings.py",
+   "function": "<module>",
+   "family": "debug-config",
+   "reported": true,
+   "outcome": "tp",
+   "matched_key": 10
+  }
+ ]
+}

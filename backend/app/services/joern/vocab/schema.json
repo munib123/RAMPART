@@ -1,6 +1,7 @@
 {
-  "$comment": "RAMPART vocabulary-pack grammar (P5, docs/JOERN_PLAN.md; TDD 8.8 / decision D7). A pack is DATA the hand-written Scala in rules/locators.sc reads with ujson after importCode. The LLM may author a pack offline from framework documentation; it never writes Scala and never runs on the detection path. Every slot declares the SINK its values flow into, and the validator enforces a different character class per sink, so a value meant for String.contains can never reach a name accessor (which treats its argument as a regex) and no value can reach Scala as code. There is no regex sink and no raw-Scala escape hatch. A pack that breaks any rule is discarded whole and the scan falls back to _base.",
-  "schema_version": 2,
+  "$comment": "RAMPART vocabulary-pack grammar (P5, docs/JOERN_PLAN.md; TDD 8.8 / decision D7). A pack is DATA the hand-written Scala in rules/*.sc reads with ujson after importCode. The LLM may author a pack offline from framework documentation; it never writes Scala and never runs on the detection path. Every slot declares the SINK its values flow into, and the validator enforces a different character class per sink, so a value meant for String.contains can never reach a name accessor (which treats its argument as a regex) and no value can reach Scala as code. There is no regex sink and no raw-Scala escape hatch. A pack that breaks any rule is discarded whole and the scan falls back to _base.",
+  "schema_version": 3,
+  "$comment_v3": "2026-10: three sinks (call_path, origin_text, kwarg_flow) and ten slots for the call-anchored rules in rules/50-60. Every new slot is read by the Scala with slot(); kwarg_flow values reach == only, call_path values reach startsWith only. _base fills every new slot with framework-neutral values (Python stdlib, requests, httpx, lxml, Werkzeug, Django/Flask auth helpers).",
   "limits": {
     "max_pack_bytes": 16384,
     "max_values_per_slot": 64,
@@ -51,6 +52,25 @@
       "min_len": 3,
       "case": "lower",
       "forbidden_chars": "\\`$"
+    },
+    "call_path": {
+      "matched_by": "lower-cased call code startsWith v + '(' - a qualified call path such as requests.get or urllib.request.urlopen; the last segment is also the call's own name",
+      "pattern": "^[a-z_][a-z0-9_]{1,40}(\\.[a-z_][a-z0-9_]{0,40}){0,4}$",
+      "min_len": 3,
+      "case": "lower"
+    },
+    "origin_text": {
+      "matched_by": "where a value comes from: the lower-cased code of the expression and of the local assignments it reads (up to 3 deep), and of the argument a caller passes for a parameter it reaches; contains v",
+      "pattern": "^[ !-#%-\\[\\]-_a-~]{3,48}$",
+      "min_len": 3,
+      "case": "lower",
+      "forbidden_chars": "\\`$"
+    },
+    "kwarg_flow": {
+      "matched_by": "\"<call name>:<keyword>=<value>\", lower-cased, where value is the keyword argument RESOLVED through literals and module constants (also across files: config.DEBUG); compared with ==",
+      "pattern": "^[a-z_][a-z0-9_]{1,40}:[a-z_][a-z0-9_]{0,40}=[a-z0-9_.*-]{1,40}$",
+      "min_len": 5,
+      "case": "lower"
     }
   },
   "slots": {
@@ -212,6 +232,78 @@
         "route_reachable"
       ],
       "meaning": "P7: a module-level call whose code contains one of these registers a route; the names it references (and their classes, and what they call) are route-reachable. Reported per finding, never gates a rule"
+    },
+    "request_sources": {
+      "sink": "origin_text",
+      "used_by": [
+        "joern-ssrf-request-url",
+        "joern-path-traversal"
+      ],
+      "meaning": "request input: a value whose origin text contains one of these came from the client"
+    },
+    "http_client_calls": {
+      "sink": "call_path",
+      "used_by": [
+        "joern-ssrf-request-url",
+        "joern-cleartext-transport"
+      ],
+      "meaning": "an outbound HTTP request; its URL is argument 1 (argument 2 for *.request) or the url= keyword"
+    },
+    "url_guard": {
+      "sink": "guard_text",
+      "used_by": [
+        "joern-ssrf-request-url"
+      ],
+      "meaning": "a host / scheme allow-list on an outbound URL; present in the sink's method or on the value's origin path, it suppresses SSRF"
+    },
+    "file_sink_calls": {
+      "sink": "call_path",
+      "used_by": [
+        "joern-path-traversal"
+      ],
+      "meaning": "a file read, write or delete; its path is argument 1"
+    },
+    "path_guard": {
+      "sink": "guard_text",
+      "used_by": [
+        "joern-path-traversal"
+      ],
+      "meaning": "a filename sanitiser or a containment check; present in the sink's method or on the value's origin path, it suppresses path traversal"
+    },
+    "auth_check_calls": {
+      "sink": "call_name",
+      "used_by": [
+        "joern-ignored-auth-result"
+      ],
+      "meaning": "a LIBRARY credential check whose return value says whether it passed (it does not raise); discarding that value is the bug. Checks that raise on failure must not be listed"
+    },
+    "auth_check_terms": {
+      "sink": "token",
+      "used_by": [
+        "joern-ignored-auth-result"
+      ],
+      "meaning": "a PROJECT function whose name contains one of these AND that returns None/False on one path and a computed value on another is treated as a credential check"
+    },
+    "credential_terms": {
+      "sink": "token",
+      "used_by": [
+        "joern-hardcoded-credential-compare"
+      ],
+      "meaning": "an operand that holds a credential; compared (==, !=) against a value that resolves to a non-empty string literal, it is a hard-coded credential"
+    },
+    "xxe_kwargs": {
+      "sink": "kwarg_flow",
+      "used_by": [
+        "joern-xxe-parser"
+      ],
+      "meaning": "an XML parser keyword setting that enables external entities, network access or DTD loading"
+    },
+    "debug_kwargs": {
+      "sink": "kwarg_flow",
+      "used_by": [
+        "joern-debug-exposed"
+      ],
+      "meaning": "an application-server keyword setting that turns on the interactive debugger"
     }
   },
   "cross_slot_rules": [

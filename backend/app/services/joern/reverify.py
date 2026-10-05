@@ -49,12 +49,20 @@ _RULE_GUARD = {
     "joern-mass-assignment": ("allowlist", ("dyn_writes", "exec_writes")),
     "joern-unchecked-quantity": ("positive", ("mult",)),
     "joern-toctou-check-then-write": ("lock", ("ctl_writes",)),
+    # call-anchored rules (rules/50-55): the fix either adds a guard on the value's path or
+    # removes the unsafe call shape (the result is now tested, the literal is gone)
+    "joern-ignored-auth-result": ("", ("auth_discarded",)),
+    "joern-hardcoded-credential-compare": ("", ("cred_compares",)),
+    "joern-ssrf-request-url": ("url", ("http_calls",)),
+    "joern-path-traversal": ("path", ("file_calls",)),
 }
 _RULE_SLOTS = {   # pack slots for the pattern fallback
     "joern-idor-missing-ownership": ["authz_guard"],
     "joern-mass-assignment": ["allowlist_guard"],
     "joern-unchecked-quantity": ["positive_guard"],
     "joern-toctou-check-then-write": ["lock_guard"],
+    "joern-ssrf-request-url": ["url_guard"],
+    "joern-path-traversal": ["path_guard"],
 }
 
 
@@ -243,6 +251,12 @@ def verify(target: str, path: str, function: str, rule_id: str, *,
     cls, method = _split_function(function)
     if rel is None:
         return {"ok": False, "error": f"{path} is not inside the scanned target {target}"}
+    if rule_id.startswith("joern-") and rule_id not in _RULE_GUARD:
+        # the config-flow rules (rules/60) report a value's DEFINITION, often module-level;
+        # there is no method whose guards and sinks could be compared before and after
+        return {"ok": False, "code": "not_supported",
+                "error": f"Verify with CPG covers per-method rules; {rule_id} reports where a value is "
+                         "defined - re-scan after the fix to confirm it is gone"}
     if not method:
         return {"ok": False, "error": "function name is required"}
     # These three strings are substituted into Scala source. _render() escapes them, but a
@@ -373,7 +387,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--target", required=True, help="the scanned root (a directory, or one .py file)")
     ap.add_argument("--file", required=True, help="the file the finding is in")
     ap.add_argument("--function", required=True, help="func or Class.method")
-    ap.add_argument("--rule", required=True, help="joern-idor-missing-ownership | joern-mass-assignment | joern-unchecked-quantity | joern-toctou-check-then-write")
+    ap.add_argument("--rule", required=True, help="a joern-* rule id, e.g. joern-idor-missing-ownership (see scan._TITLES)")
     ap.add_argument("--fix", help="file with the fixed function; omit for post-apply mode")
     ap.add_argument("--before", help="post-apply mode: the pre-fix tree (a .fix_snapshots/<id>/tree) for the regression diff")
     ap.add_argument("--pack", help="vocabulary pack (default: JOERN_PACK / auto)")

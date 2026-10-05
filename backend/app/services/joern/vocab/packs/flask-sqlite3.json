@@ -1,6 +1,6 @@
 {
   "pack_id": "flask-sqlite3",
-  "schema_version": 2,
+  "schema_version": 3,
   "authored_from": "framework_docs",
   "extends": "_base",
   "description": "The hand-written reference pack: Flask + Flask-Login + Flask-SQLAlchemy + WTForms + sqlite3 vocabulary, from their documentation. Adds to _base; never removes. Selected automatically when the target imports flask or lists it in requirements.txt. 2026-09-15: scoped-query tokens added after the O3 rehearsal (the LLM's canonical Flask fix binds g.user.id into the WHERE clause).",
