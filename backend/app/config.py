@@ -37,6 +37,20 @@ DEFAULT_SCANNER = "auto"        # semgrep (multi-language) when runnable, else b
 SEMGREP_CONFIG = "auto"         # semgrep ruleset (auto = fetch registry rules)
 DEFAULT_TARGET = str(FYP / "semgrep_test" / "test_code")
 
+# --- Performance: local caches, scan queue, profiling (S3) ---
+# Raw scanner + Joern output is cached here, keyed by a tree fingerprint (24 h TTL).
+# The directory is git-ignored and safe to delete at any time.
+_cache_env = os.environ.get("RAMPART_CACHE_DIR", "").strip()
+CACHE_DIR = Path(_cache_env) if _cache_env else (FYP / "backend" / ".cache")
+if not CACHE_DIR.is_absolute():
+    CACHE_DIR = FYP / CACHE_DIR
+SCAN_CACHE = os.environ.get("RAMPART_SCAN_CACHE", "on").strip().lower() not in ("off", "0", "false", "no")
+# Chroma and the single Joern sidecar are shared process state, so scans are single-flight by
+# default. A queued request waits up to SCAN_QUEUE_TIMEOUT seconds, then gets 429 scan_busy.
+SCAN_CONCURRENCY = max(1, int(os.environ.get("RAMPART_SCAN_CONCURRENCY", "1").strip() or 1))
+SCAN_QUEUE_TIMEOUT = float(os.environ.get("RAMPART_SCAN_QUEUE_TIMEOUT", "300").strip() or 300)
+PROFILE = os.environ.get("RAMPART_PROFILE", "0").strip().lower() in ("1", "true", "yes", "on")
+
 # --- Joern / CPG phase (the SAST-blind logic-bug locator; Python targets) ---
 # Pure-JVM, runs natively on Windows. The runtime (portable JRE 21 + joern-cli) is installed
 # under tools/ by `python -m app.services.joern.runtime --install`; nothing is hard-coded to a

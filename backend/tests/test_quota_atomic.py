@@ -114,7 +114,7 @@ def test_concurrent_scans_cannot_both_take_the_last_slot(monkeypatch):
     async def persist(_uid, _report):
         return "scan-1"
 
-    def run(path, scanner, scope):
+    def run(path, scanner, scope, fresh=False):
         time.sleep(0.05)                  # keep the winner inside the critical section
         return {"ok": True, "target": path, "scanner": "bandit", "counts": {}, "findings": []}
 

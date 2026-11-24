@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
+import weakref
 
 from fastapi import APIRouter, Header
 from fastapi.responses import JSONResponse
@@ -17,6 +19,22 @@ from app.services import pipeline
 from app.core import security
 
 router = APIRouter(tags=["scan"])
+
+# One scan at a time by default: Chroma and the single Joern sidecar are shared process state,
+# so concurrent scans would contend for them. A module-level Semaphore would bind to the first
+# event loop (breaking test clients/reloads), so the gate is created per running loop.
+_gates = weakref.WeakKeyDictionary()
+_gates_lock = threading.Lock()
+
+
+def _scan_gate() -> asyncio.Semaphore:
+    loop = asyncio.get_running_loop()
+    with _gates_lock:
+        gate = _gates.get(loop)
+        if gate is None:
+            gate = asyncio.Semaphore(max(1, config.SCAN_CONCURRENCY))
+            _gates[loop] = gate
+        return gate
 
 
 def _limits(user: dict) -> dict:
@@ -65,47 +83,67 @@ async def _refund_scan(user_id: str) -> None:
 
 
 @router.post("/api/scan")
-async def scan(req: ScanReq, authorization: str | None = Header(default=None)):
+async def scan(req: ScanReq, fresh: int = 0, authorization: str | None = Header(default=None)):
     path = (req.path or config.DEFAULT_TARGET).strip()
     user = await _lookup_user(authorization)
 
-    # Quota guard BEFORE spending scan/LLM time. The slot is reserved atomically here and is
-    # refunded below if the scan or its persistence fails.
-    reserved = False
-    if user is not None:
-        if await _reserve_scan(user) is None:
-            limits = _limits(user)
-            return JSONResponse(status_code=402, content={
-                "ok": False, "code": "plan_limit", "kind": "scan",
-                "plan": user.get("plan") or "free",
-                "used": user.get("scans_used") or 0, "limit": limits["scans"],
-            })
-        reserved = True
-
+    # Single-flight gate: one scan at a time by default. A request that waits longer than the
+    # queue timeout gets a clear 429 instead of contending for Chroma/Joern with another scan.
+    gate = _scan_gate()
+    acquired = False
     try:
-        report = await asyncio.to_thread(pipeline.run_scan, path, req.scanner, req.scope)
-    except Exception as e:
-        if reserved:
-            await _refund_scan(user["id"])
-        return JSONResponse(status_code=500, content={"ok": False, "error": f"{type(e).__name__}: {e}"})
-
-    if not report.get("ok"):
-        if reserved:
-            await _refund_scan(user["id"])
-        return report
-
-    # Persist for an authenticated user (best-effort; never blocks the report). The slot was
-    # already charged by the reservation, so this no longer increments scans_used.
-    if user is not None:
         try:
-            scan_id = await _persist_scan(user["id"], report)
-            report["scan_id"] = scan_id
-        except Exception:
-            import traceback
-            traceback.print_exc()
+            await asyncio.wait_for(gate.acquire(), timeout=config.SCAN_QUEUE_TIMEOUT or None)
+            acquired = True
+        except asyncio.TimeoutError:
+            return JSONResponse(status_code=429, content={
+                "ok": False, "code": "scan_busy",
+                "error": "another scan is already running; try again shortly",
+                "retry_after_s": 5,
+            })
+
+        # Quota guard BEFORE spending scan/LLM time. The slot is reserved atomically here and
+        # is refunded below if the scan or its persistence fails.
+        reserved = False
+        if user is not None:
+            if await _reserve_scan(user) is None:
+                limits = _limits(user)
+                return JSONResponse(status_code=402, content={
+                    "ok": False, "code": "plan_limit", "kind": "scan",
+                    "plan": user.get("plan") or "free",
+                    "used": user.get("scans_used") or 0, "limit": limits["scans"],
+                })
+            reserved = True
+
+        try:
+            report = await asyncio.to_thread(
+                pipeline.run_scan, path, req.scanner, req.scope, bool(fresh))
+        except Exception as e:
             if reserved:
                 await _refund_scan(user["id"])
-    return report
+            return JSONResponse(status_code=500,
+                                content={"ok": False, "error": f"{type(e).__name__}: {e}"})
+
+        if not report.get("ok"):
+            if reserved:
+                await _refund_scan(user["id"])
+            return report
+
+        # Persist for an authenticated user (best-effort; never blocks the report). The slot
+        # was already charged by the reservation, so this no longer increments scans_used.
+        if user is not None:
+            try:
+                scan_id = await _persist_scan(user["id"], report)
+                report["scan_id"] = scan_id
+            except Exception:
+                import traceback
+                traceback.print_exc()
+                if reserved:
+                    await _refund_scan(user["id"])
+        return report
+    finally:
+        if acquired:
+            gate.release()
 
 
 async def _persist_scan(owner_id: str, report: dict) -> str:
