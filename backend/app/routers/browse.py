@@ -1,6 +1,7 @@
 """GET /api/browse - native folder picker (PowerShell dialog) returning the chosen absolute path."""
 from __future__ import annotations
 
+import os
 import subprocess
 
 from fastapi import APIRouter
@@ -14,6 +15,8 @@ def browse():
     The dialog is owned by a small on-screen TOPMOST window so it appears in front of the
     browser (a 1x1 form centred on the primary screen keeps it invisible while anchoring
     the dialog on-screen)."""
+    if os.name != "nt":
+        return {"path": "", "error": "folder picker is Windows-only; type a path instead"}
     ps = r"""
 Add-Type -AssemblyName System.Windows.Forms | Out-Null
 [System.Windows.Forms.Application]::EnableVisualStyles()

@@ -10,11 +10,12 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 import app.db as db
 from app import config
 from app.core.deps import current_user, optional_user
+from app.core.errors import error_payload
 from app.schemas.scan import ApplyFixReq, FixReq, RevertReq, VerifyFixReq
 from app.services import apply as apply_svc
 from app.services import gemini
@@ -70,7 +71,7 @@ async def _refund_fix(user: dict) -> None:
 
 
 @router.post("/api/fix")
-async def fix(req: FixReq, user=Depends(optional_user)):
+async def fix(req: FixReq, request: Request = None, user=Depends(optional_user)):
     if user is None:
         return _AUTH_PAYLOAD
     if not db.enabled():
@@ -107,7 +108,7 @@ async def fix(req: FixReq, user=Depends(optional_user)):
     except Exception as e:
         if charged:
             await _refund_fix(user)
-        return {"available": False, "error": f"{type(e).__name__}: {e}"}
+        return error_payload(request, e, "fix generation failed")
 
 
 async def _owns_scan(scan_id: str, user_id: str) -> tuple[str | None, dict | None]:

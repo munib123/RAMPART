@@ -5,7 +5,7 @@ import os
 import time
 
 from app import config
-from app.services import rag, gemini, scan_cache
+from app.services import rag, gemini, scan_cache, target_policy
 from app.services.scanner import Finding, get_scanner
 from app.services.joern import scan as joern_scan
 from app.services.extract import SliceCache, extract_slice
@@ -49,8 +49,10 @@ def _run_scan(path: str, scanner_name: str, scope: dict, cache: SliceCache,
     t_start = time.perf_counter()
     t0 = time.time()
     timings = {"scan": 0.0, "joern": 0.0, "extract": 0.0, "rag": 0.0, "rank": 0.0, "total": 0.0}
-    if not os.path.exists(path):
-        return {"ok": False, "error": f"path does not exist: {path}"}
+    # Local API safety: refuse roots/system trees/large targets BEFORE any subprocess starts.
+    allowed, why = target_policy.check(path)
+    if not allowed:
+        return {"ok": False, "error": why}
 
     scanner = get_scanner(scanner_name)
     scanner_name = scanner.name          # resolve "auto" to what actually runs

@@ -36,6 +36,11 @@ MAX_LLM_FINDINGS = 60    # verify at most this many (highest severity first); re
 DEFAULT_SCANNER = "auto"        # semgrep (multi-language) when runnable, else bandit (python)
 SEMGREP_CONFIG = "auto"         # semgrep ruleset (auto = fetch registry rules)
 DEFAULT_TARGET = str(FYP / "semgrep_test" / "test_code")
+# Resource bounds for the scanner subprocesses (S5). Env-overridable; no detection change.
+SEMGREP_JOBS = max(1, int(os.environ.get("SEMGREP_JOBS", str(max(1, min(4, os.cpu_count() or 1)))).strip() or 1))
+SEMGREP_RULE_TIMEOUT = max(1, int(os.environ.get("SEMGREP_RULE_TIMEOUT", "30").strip() or 30))
+SEMGREP_MAX_TARGET_BYTES = max(1, int(os.environ.get("SEMGREP_MAX_TARGET_BYTES", "1000000").strip() or 1000000))
+BANDIT_TIMEOUT = max(1, int(os.environ.get("BANDIT_TIMEOUT", "600").strip() or 600))
 
 # --- Performance: local caches, scan queue, profiling (S3) ---
 # Raw scanner + Joern output is cached here, keyed by a tree fingerprint (24 h TTL).
@@ -87,6 +92,32 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 JWT_SECRET = os.environ.get("JWT_SECRET", "").strip()
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_MIN = int(os.environ.get("JWT_EXPIRE_MIN", "30").strip() or 30)
+if not JWT_SECRET:
+    print("[config] WARNING: JWT_SECRET is not set - sign-in will fail. "
+          "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(48))\"")
+elif len(JWT_SECRET) < 32:
+    print(f"[config] WARNING: JWT_SECRET is only {len(JWT_SECRET)} characters; use at least 32.")
+
+# --- Local API safety (S5) ---
+# The UI is a browser dev server (:5173) or the Tauri webview. Only these origins may call the
+# local API; set CORS_ORIGINS (comma-separated) for a custom dev port, or RAMPART_CORS_ALL=1 to
+# restore the old "*" behaviour. `allow_origins=["*"]` lets any web page trigger local scans.
+_DEFAULT_CORS_ORIGINS = [
+    "http://localhost:5173", "http://127.0.0.1:5173",
+    "http://localhost:4173", "http://127.0.0.1:4173",   # `vite preview`
+    "tauri://localhost", "http://tauri.localhost", "https://tauri.localhost",
+]
+_cors_env = os.environ.get("CORS_ORIGINS", "").strip()
+CORS_ORIGINS = (
+    [o.strip() for o in _cors_env.split(",") if o.strip()]
+    if _cors_env else _DEFAULT_CORS_ORIGINS
+)
+CORS_ALL = os.environ.get("RAMPART_CORS_ALL", "0").strip().lower() in ("1", "true", "yes", "on")
+MAX_BODY_BYTES = max(1024, int(os.environ.get("RAMPART_MAX_BODY_BYTES", "5242880").strip() or 5242880))
+REQUIRE_AUTH_SCAN = os.environ.get("RAMPART_REQUIRE_AUTH_SCAN", "0").strip().lower() in ("1", "true", "yes", "on")
+AUTH_RATE = os.environ.get("RAMPART_AUTH_RATE", "5/min,30/hour").strip() or "5/min,30/hour"
+# Target allow-policy: refuse drive roots and OS/system trees. Explicit opt-in for advanced use.
+ALLOW_SYSTEM_TARGETS = os.environ.get("RAMPART_ALLOW_SYSTEM_TARGETS", "0").strip().lower() in ("1", "true", "yes", "on")
 
 # --- Plans / billing (single source of truth) ---
 # Quotas are cumulative per-plan totals on the users row (no monthly job). A "fix" charges

@@ -4,16 +4,17 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 import app.db as db
 from app.core.deps import current_user
+from app.core.errors import internal_error
 
 router = APIRouter(prefix="/api", tags=["scans"])
 
 
 @router.post("/scans")
-async def create_scan(payload: dict, user=Depends(current_user)):
+async def create_scan(payload: dict, request: Request = None, user=Depends(current_user)):
     """Persist a completed scan + its findings for the authenticated user."""
     if not db.enabled():
         raise HTTPException(status_code=503, detail="Database not configured (set DATABASE_URL).")
@@ -41,59 +42,63 @@ async def create_scan(payload: dict, user=Depends(current_user)):
                 )
         return {"scan_id": scan_id}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"failed to persist scan: {e}")
+        return internal_error(request, e, "failed to persist scan")
 
 
 @router.get("/scans")
 async def list_scans(
+    request: Request = None,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     user=Depends(current_user),
 ):
     if not db.enabled():
         raise HTTPException(status_code=503, detail="Database not configured (set DATABASE_URL).")
-    return await db.fetch_all(
-        "select id::text, target, scanner, status, counts, verdict_summary, scope, joern, created_at "
-        "from scans where owner_id=$1 order by created_at desc limit $2 offset $3",
-        user["id"], limit, offset,
-    )
+    try:
+        return await db.fetch_all(
+            "select id::text, target, scanner, status, counts, verdict_summary, scope, joern, created_at "
+            "from scans where owner_id=$1 order by created_at desc limit $2 offset $3",
+            user["id"], limit, offset,
+        )
+    except Exception as e:
+        return internal_error(request, e, "could not load scan history")
 
 
 @router.get("/scans/{id}")
-async def get_scan(id: str, user=Depends(current_user)):
+async def get_scan(id: str, request: Request = None, user=Depends(current_user)):
     try:
         return await db.fetch_row(
             "select id, target, scanner, status, counts, verdict_summary, scope, joern, created_at "
             "from scans where id=$1 and owner_id=$2", id, user["id"])
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"db error: {e}")
+        return internal_error(request, e, "could not load the scan")
 
 
 @router.get("/research/overview")
-async def research_overview(user=Depends(current_user)):
+async def research_overview(request: Request = None, user=Depends(current_user)):
     try:
         return await db.fetch_all(
             "select cwe_id, severity, verdict, n, avg_conf from cwe_stats order by n desc")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"db error: {e}")
+        return internal_error(request, e, "could not load research data")
 
 
 @router.get("/research/tools")
-async def research_tools(user=Depends(current_user)):
+async def research_tools(request: Request = None, user=Depends(current_user)):
     """Findings per engine x verdict (tool_stats view): what Joern located vs what the LLM proved."""
     try:
         return await db.fetch_all(
             "select tool, verdict, n, avg_conf from tool_stats order by tool, n desc")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"db error: {e}")
+        return internal_error(request, e, "could not load research data")
 
 
 @router.get("/research/codebase")
-async def research_codebase(user=Depends(current_user)):
+async def research_codebase(request: Request = None, user=Depends(current_user)):
     """Categorize codebase types x vulnerabilities from saved scans (scope must be set)."""
     try:
         return await db.fetch_all(
             "select platform, scanner, cwe_id, severity, verdict, n, avg_conf "
             "from code_stats order by n desc")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"db error: {e}")
+        return internal_error(request, e, "could not load research data")

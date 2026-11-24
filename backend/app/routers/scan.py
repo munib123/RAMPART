@@ -9,7 +9,7 @@ import json
 import threading
 import weakref
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 
 from app import config
@@ -17,6 +17,7 @@ from app import db
 from app.schemas.scan import ScanReq
 from app.services import pipeline
 from app.core import security
+from app.core.errors import internal_error, log_exception
 
 router = APIRouter(tags=["scan"])
 
@@ -83,9 +84,17 @@ async def _refund_scan(user_id: str) -> None:
 
 
 @router.post("/api/scan")
-async def scan(req: ScanReq, fresh: int = 0, authorization: str | None = Header(default=None)):
+async def scan(req: ScanReq, request: Request = None, fresh: int = 0,
+               authorization: str | None = Header(default=None)):
     path = (req.path or config.DEFAULT_TARGET).strip()
     user = await _lookup_user(authorization)
+
+    # Local API safety: an anonymous scan is expensive local work, so an operator can require
+    # a signed-in user (default off, preserving the current behaviour).
+    if user is None and config.REQUIRE_AUTH_SCAN:
+        return JSONResponse(status_code=401, content={
+            "ok": False, "code": "auth_required", "error": "sign in to run a scan",
+        })
 
     # Single-flight gate: one scan at a time by default. A request that waits longer than the
     # queue timeout gets a clear 429 instead of contending for Chroma/Joern with another scan.
@@ -121,8 +130,7 @@ async def scan(req: ScanReq, fresh: int = 0, authorization: str | None = Header(
         except Exception as e:
             if reserved:
                 await _refund_scan(user["id"])
-            return JSONResponse(status_code=500,
-                                content={"ok": False, "error": f"{type(e).__name__}: {e}"})
+            return internal_error(request, e, "scan failed")
 
         if not report.get("ok"):
             if reserved:
@@ -135,9 +143,8 @@ async def scan(req: ScanReq, fresh: int = 0, authorization: str | None = Header(
             try:
                 scan_id = await _persist_scan(user["id"], report)
                 report["scan_id"] = scan_id
-            except Exception:
-                import traceback
-                traceback.print_exc()
+            except Exception as e:
+                log_exception(request, e, "scan persistence failed")
                 if reserved:
                     await _refund_scan(user["id"])
         return report
