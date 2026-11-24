@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 import app.db as db
 from app.core.deps import current_user
@@ -17,37 +17,45 @@ async def create_scan(payload: dict, user=Depends(current_user)):
     """Persist a completed scan + its findings for the authenticated user."""
     if not db.enabled():
         raise HTTPException(status_code=503, detail="Database not configured (set DATABASE_URL).")
+    rows = [
+        (f.get("cwe_id"), f.get("severity"), f.get("verdict"), f.get("confidence"),
+         f.get("rule_id"), json.dumps(f.get("exemplar_urls", [])), f.get("tool") or "unknown")
+        for f in payload.get("findings", [])
+    ]
     try:
-        scan_id = await db.fetch_val(
-            """insert into scans (owner_id, target, scanner, status, counts, verdict_summary, scope, joern)
-               values ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,$8::jsonb) returning id::text""",
-            user["id"], payload.get("target", ""), payload.get("scanner", ""),
-            payload.get("status", "done"), json.dumps(payload.get("counts", {})),
-            json.dumps(payload.get("verdict_summary", {})), json.dumps(payload.get("scope", {})),
-            json.dumps(payload.get("joern") or {}),
-        )
-        for f in payload.get("findings", []):
-            await db.execute(
-                """insert into findings
-                   (scan_id, cwe_id, severity, verdict, confidence, rule_id, exemplar_urls, tool)
-                   values ($1,$2,$3,$4,$5,$6,$7::jsonb,$8)""",
-                scan_id, f.get("cwe_id"), f.get("severity"), f.get("verdict"),
-                f.get("confidence"), f.get("rule_id"),
-                json.dumps(f.get("exemplar_urls", [])), f.get("tool") or "unknown",
+        async with db.transaction() as conn:
+            scan_id = await conn.fetchval(
+                """insert into scans (owner_id, target, scanner, status, counts, verdict_summary, scope, joern)
+                   values ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,$8::jsonb) returning id::text""",
+                user["id"], payload.get("target", ""), payload.get("scanner", ""),
+                payload.get("status", "done"), json.dumps(payload.get("counts", {})),
+                json.dumps(payload.get("verdict_summary", {})), json.dumps(payload.get("scope", {})),
+                json.dumps(payload.get("joern") or {}),
             )
+            if rows:
+                await conn.executemany(
+                    """insert into findings
+                       (scan_id, cwe_id, severity, verdict, confidence, rule_id, exemplar_urls, tool)
+                       values ($1,$2,$3,$4,$5,$6,$7::jsonb,$8)""",
+                    [(scan_id, *row) for row in rows],
+                )
         return {"scan_id": scan_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"failed to persist scan: {e}")
 
 
 @router.get("/scans")
-async def list_scans(user=Depends(current_user)):
+async def list_scans(
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    user=Depends(current_user),
+):
     if not db.enabled():
         raise HTTPException(status_code=503, detail="Database not configured (set DATABASE_URL).")
     return await db.fetch_all(
         "select id::text, target, scanner, status, counts, verdict_summary, scope, joern, created_at "
-        "from scans where owner_id=$1 order by created_at desc",
-        user["id"],
+        "from scans where owner_id=$1 order by created_at desc limit $2 offset $3",
+        user["id"], limit, offset,
     )
 
 

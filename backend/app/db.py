@@ -4,6 +4,7 @@ unset (the app still runs; persistence endpoints return a clear error)."""
 from __future__ import annotations
 
 import asyncio
+from contextlib import asynccontextmanager
 
 from app import config
 
@@ -63,6 +64,25 @@ async def execute(query: str, *args):
     pool = await get_pool()
     async with pool.acquire() as conn:
         return await conn.execute(query, *args)
+
+
+@asynccontextmanager
+async def transaction():
+    """One pooled connection inside one transaction. Yields the asyncpg connection so a
+    multi-statement write (scan row + its findings) commits atomically without handing the
+    pool around. Use conn.fetchval/conn.executemany inside."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            yield conn
+
+
+async def execute_many(query: str, args_list):
+    """EXECUTEMANY one batch on one pooled connection (asyncpg does not support it on the
+    pool directly). One round trip for the whole batch, not one per row."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        return await conn.executemany(query, args_list)
 
 
 async def close():
