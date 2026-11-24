@@ -1,0 +1,119 @@
+{
+  "generated_at": "2026-11-24T15:57:31+00:00",
+  "git_commit": "cc98c299",
+  "python": "3.13.2",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "config": {
+    "scanner": "bandit",
+    "joern": "off",
+    "llm": "off (GEMINI_API_KEY cleared)",
+    "db": "off (DATABASE_URL cleared)"
+  },
+  "health": {
+    "cold_ms": 14321.84,
+    "cold_status_code": 200,
+    "warm_samples_ms": [
+      5.11,
+      6.1,
+      4.84,
+      4.18,
+      6.14
+    ],
+    "warm_p50_ms": 5.11,
+    "warm_p95_ms": 6.14,
+    "warm_max_ms": 6.14,
+    "cold_body": {
+      "ok": true,
+      "llm_enabled": false,
+      "model": null,
+      "scanner": "semgrep",
+      "scanners": {
+        "semgrep": {
+          "available": true,
+          "note": ""
+        },
+        "bandit": {
+          "available": true,
+          "note": "python-only"
+        },
+        "joern": {
+          "available": false,
+          "enabled": "off",
+          "note": "java at C:\\Program Files\\Common Files\\Oracle\\Java\\bin\\java.exe did not report a version; joern-cli not found at G:\\FYP\\RAMPART\\tools\\joern-cli",
+          "server": {
+            "mode": "off",
+            "running": false
+          }
+        }
+      },
+      "default_target": "G:\\FYP\\RAMPART\\semgrep_test\\test_code",
+      "db_enabled": false,
+      "collections": [
+        {
+          "collection": "rampart_hackerone_minilm",
+          "vectors": 30818
+        },
+        {
+          "collection": "rampart_nuclei_minilm",
+          "vectors": 11138
+        },
+        {
+          "collection": "rampart_crossvul_minilm",
+          "vectors": 0
+        }
+      ]
+    }
+  },
+  "scans": [
+    {
+      "target": "semgrep_test/test_code",
+      "path": "G:\\FYP\\RAMPART\\semgrep_test\\test_code",
+      "status_code": 200,
+      "elapsed_ms": 7842.2,
+      "ok": true,
+      "scanner": "bandit",
+      "counts": {
+        "total": 8,
+        "high": 1,
+        "medium": 2,
+        "low": 5
+      },
+      "error": null,
+      "llm": {
+        "enabled": false,
+        "model": null
+      },
+      "joern": {
+        "used": false,
+        "reason": "JOERN_ENABLED=off",
+        "elapsed_ms": 0,
+        "candidates": 0
+      }
+    },
+    {
+      "target": "testbeds/shopfast",
+      "path": "G:\\FYP\\RAMPART\\testbeds\\shopfast",
+      "status_code": 200,
+      "elapsed_ms": 11535.0,
+      "ok": true,
+      "scanner": "bandit",
+      "counts": {
+        "total": 17,
+        "high": 3,
+        "medium": 7,
+        "low": 7
+      },
+      "error": null,
+      "llm": {
+        "enabled": false,
+        "model": null
+      },
+      "joern": {
+        "used": false,
+        "reason": "JOERN_ENABLED=off",
+        "elapsed_ms": 0,
+        "candidates": 0
+      }
+    }
+  ]
+}

@@ -8,7 +8,7 @@ from app import config
 from app.services import rag, gemini
 from app.services.scanner import get_scanner
 from app.services.joern import scan as joern_scan
-from app.services.extract import extract_slice
+from app.services.extract import SliceCache, extract_slice
 
 
 def _dedupe(findings: list) -> list:
@@ -28,6 +28,16 @@ _VERDICT_W = {"Confirmed": 4, "Likely": 3, "Informational": 2, "Unverified": 1,
 
 
 def run_scan(path: str, scanner_name: str = None, scope: dict = None) -> dict:
+    """Run one scan. The slice cache lives for exactly this scan and is cleared in `finally`,
+    so an edited file can never be served from a previous run."""
+    cache = SliceCache()
+    try:
+        return _run_scan(path, scanner_name, scope, cache)
+    finally:
+        cache.clear()
+
+
+def _run_scan(path: str, scanner_name: str, scope: dict, cache: SliceCache) -> dict:
     scanner_name = scanner_name or config.DEFAULT_SCANNER
     path = os.path.abspath(path or config.DEFAULT_TARGET)
     t0 = time.time()
@@ -54,11 +64,12 @@ def run_scan(path: str, scanner_name: str = None, scope: dict = None) -> dict:
         if joern_raw:
             findings_raw = list(findings_raw) + joern_raw
 
-    # Phase 1 - extract slices (cheap file reads) for every finding.
+    # Phase 1 - extract slices (cheap file reads) for every finding. The per-scan cache means a
+    # file with N findings is read and AST-parsed once, not N times.
     prepared = []
     for f in findings_raw:
         d = f.to_dict()
-        slice_ = extract_slice(d["path"], d["line"])
+        slice_ = extract_slice(d["path"], d["line"], cache)
         prepared.append({**d, "slice": slice_, "exemplars": []})
     prepared = _dedupe(prepared)
 
@@ -70,12 +81,11 @@ def run_scan(path: str, scanner_name: str = None, scope: dict = None) -> dict:
     to_verify = cpg[:q] + rest[:config.MAX_LLM_FINDINGS - q]
     skipped = cpg[q:] + rest[config.MAX_LLM_FINDINGS - q:]
 
-    # Phase 2 - RAG grounding, only for the findings that get verified. Embedding + Chroma
-    # queries are the slow part (sequential; embedder/Chroma are not thread-safe), and on a
-    # large codebase grounding hundreds of unverified findings stalled the whole scan.
-    for x in to_verify:
-        query = f"{x['message']} {x['slice']['code']}".strip()
-        x["exemplars"] = rag.retrieve(query, cwe_id=x["cwe_id"])
+    # Phase 2 - RAG grounding, only for the findings that get verified. One batched call dedupes
+    # repeated (message, CWE) queries and embeds every unique one in a single encode().
+    queries = [(f"{x['message']} {x['slice']['code']}".strip(), x["cwe_id"]) for x in to_verify]
+    for x, exemplars in zip(to_verify, rag.retrieve_many(queries)):
+        x["exemplars"] = exemplars
 
     verdicts = gemini.analyze_batch(to_verify, scope)
     for x, v in zip(to_verify, verdicts):

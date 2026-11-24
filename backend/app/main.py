@@ -5,6 +5,7 @@ This server does NOT serve HTML/CSS/JS - it only handles JSON requests.
 """
 from __future__ import annotations
 
+import threading
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -21,8 +22,21 @@ from app.routers import profile as profile_router
 from app.routers import billing as billing_router
 
 
+def _warm_rag() -> None:
+    """Load the ONNX embedder + Chroma collections in the background so the first scan does
+    not pay the 10-30 s cold load. Best-effort: never raises, never blocks startup."""
+    try:
+        from app.services import rag
+        rag.warm()
+    except Exception as e:
+        print(f"[rag] warm-up skipped: {type(e).__name__}: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Warm the RAG embedder/collections off the event loop. A daemon thread keeps startup
+    # instant even when ONNX is slow; a failed load is retried on the first real request.
+    threading.Thread(target=_warm_rag, name="rag-warm", daemon=True).start()
     # P3: start the Joern CPGQL server sidecar once per backend process (if the runtime is
     # installed and JOERN_ENABLED/JOERN_SERVER allow). Non-blocking - the first scan uses
     # script mode if the JVM is not up yet, later scans use the server. Never raises.
