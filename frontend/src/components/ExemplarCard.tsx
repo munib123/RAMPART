@@ -1,7 +1,8 @@
+import { memo } from 'react';
 import { esc } from '@/utils/format';
 import type { Exemplar } from '@/types';
 
-export function ExemplarCard({ e }: { e: Exemplar }) {
+function ExemplarCardBase({ e }: { e: Exemplar }) {
   const src = String(e.source || '').toLowerCase();
   const sim = typeof e.sim === 'number' ? e.sim.toFixed(2) : e.sim;
   const url = safeUrlLocal(e.url || '');
@@ -31,3 +32,5 @@ function urlIsSafe(u: string): string {
 function safeUrlLocal(u: string): string {
   return u ? urlIsSafe(u) : '';
 }
+
+export const ExemplarCard = memo(ExemplarCardBase);

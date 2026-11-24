@@ -1,9 +1,10 @@
+import { memo } from 'react';
 import { esc, SEV_BAR_COLORS } from '@/utils/format';
 import { scopeLabels } from '@/utils/scope';
 import { cpgSummary } from '@/utils/joern';
 import type { ScanReport } from '@/types';
 
-export default function SummaryCard({ r }: { r: ScanReport }) {
+function SummaryCard({ r }: { r: ScanReport }) {
   const findings = r.findings || [];
   const c = r.counts || {};
   const total = c.total ?? findings.length;
@@ -93,3 +94,5 @@ export default function SummaryCard({ r }: { r: ScanReport }) {
     </div>
   );
 }
+
+export default memo(SummaryCard);

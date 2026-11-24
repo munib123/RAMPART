@@ -1,4 +1,4 @@
-import { API, authHeaders } from '@/api/client';
+import { authHeaders, request } from '@/api/client';
 import type { PlanInfo, PlanRow } from '@/types';
 
 export interface ProfileResponse {
@@ -7,47 +7,31 @@ export interface ProfileResponse {
 }
 
 export async function loadProfile(): Promise<ProfileResponse> {
-  const r = await fetch(API + '/api/profile', { headers: authHeaders() });
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
-  return (await r.json()) as ProfileResponse;
+  return request<ProfileResponse>('/api/profile', { headers: authHeaders() });
 }
 
 export async function updateName(name: string): Promise<ProfileResponse> {
-  const r = await fetch(API + '/api/profile', {
+  return request<ProfileResponse>('/api/profile', {
     method: 'PUT',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ name }),
-  });
-  if (!r.ok) {
-    const j = await r.json().catch(() => ({}));
-    throw new Error((j && j.detail) || `Request failed (${r.status})`);
-  }
-  return (await r.json()) as ProfileResponse;
+  }, { timeoutMs: 20_000, retries: 0 });
 }
 
 export async function changePassword(old_password: string, new_password: string): Promise<{ ok: boolean }> {
-  const r = await fetch(API + '/api/auth/change-password', {
+  return request<{ ok: boolean }>('/api/auth/change-password', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ old_password, new_password }),
-  });
-  if (!r.ok) {
-    const j = await r.json().catch(() => ({}));
-    throw new Error((j && j.detail) || `Request failed (${r.status})`);
-  }
-  return (await r.json()) as { ok: boolean };
+  }, { timeoutMs: 20_000, retries: 0 });
 }
 
 export async function billingInfo(): Promise<PlanInfo> {
-  const r = await fetch(API + '/api/billing', { headers: authHeaders() });
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
-  return (await r.json()) as PlanInfo;
+  return request<PlanInfo>('/api/billing', { headers: authHeaders() });
 }
 
 export async function loadPlans(): Promise<PlanRow[]> {
-  const r = await fetch(API + '/api/billing/plans');
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
-  const j = (await r.json()) as { plans?: PlanRow[] };
+  const j = await request<{ plans?: PlanRow[] }>('/api/billing/plans');
   return j.plans || [];
 }
 
@@ -59,14 +43,9 @@ export interface UpgradeResult {
 }
 
 export async function upgrade(plan: string): Promise<UpgradeResult> {
-  const r = await fetch(API + '/api/billing/upgrade', {
+  return request<UpgradeResult>('/api/billing/upgrade', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ plan }),
-  });
-  if (!r.ok) {
-    const j = await r.json().catch(() => ({}));
-    throw new Error((j && j.detail) || `Request failed (${r.status})`);
-  }
-  return (await r.json()) as UpgradeResult;
+  }, { timeoutMs: 20_000, retries: 0 });
 }

@@ -1,16 +1,19 @@
-import { API, authHeaders } from '@/api/client';
-import type { ApplyResult, CodeStatsRow, Exemplar, FixResponse, HistoryRow, RevertResult, VerifyResult } from '@/types';
+import { authHeaders, request } from '@/api/client';
+import type {
+  ApplyResult, CodeStatsRow, Exemplar, FixResponse, HistoryRow, RevertResult, VerifyResult,
+} from '@/types';
+
+// Long-running backend operations get their own ceilings. The default (30 s) is for reads.
+const FIX_TIMEOUT_MS = 2 * 60 * 1000;          // one LLM generation
+const APPLY_TIMEOUT_MS = 5 * 60 * 1000;        // snapshot the target + edit the file
+const VERIFY_TIMEOUT_MS = 10 * 60 * 1000;      // rebuild the CPG on a scratch/live tree
 
 export async function loadHistory(): Promise<HistoryRow[]> {
-  const r = await fetch(API + '/api/scans', { headers: authHeaders() });
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
-  return (await r.json()) as HistoryRow[];
+  return request<HistoryRow[]>('/api/scans', { headers: authHeaders() });
 }
 
 export async function loadCodebaseStats(): Promise<CodeStatsRow[]> {
-  const r = await fetch(API + '/api/research/codebase', { headers: authHeaders() });
-  if (!r.ok) throw new Error(`Request failed (${r.status})`);
-  return (await r.json()) as CodeStatsRow[];
+  return request<CodeStatsRow[]>('/api/research/codebase', { headers: authHeaders() });
 }
 
 export async function generateFix(input: {
@@ -21,12 +24,11 @@ export async function generateFix(input: {
   exemplars?: Exemplar[];
   scan_id?: string;
 }): Promise<FixResponse> {
-  const res = await fetch(API + '/api/fix', {
+  return request<FixResponse>('/api/fix', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(input),
-  });
-  return (await res.json()) as FixResponse;
+  }, { timeoutMs: FIX_TIMEOUT_MS, retries: 0 });
 }
 
 export async function applyFix(p: {
@@ -37,25 +39,24 @@ export async function applyFix(p: {
   fixed_code: string;
   original_code?: string;
 }): Promise<ApplyResult> {
-  const res = await fetch(API + '/api/fix/apply', {
+  return request<ApplyResult>('/api/fix/apply', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(p),
-  });
-  return (await res.json()) as ApplyResult;
+  }, { timeoutMs: APPLY_TIMEOUT_MS, retries: 0 });
 }
 
 export async function revertFix(p: { scan_id: string; target: string }): Promise<RevertResult> {
-  const res = await fetch(API + '/api/fix/revert', {
+  return request<RevertResult>('/api/fix/revert', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(p),
-  });
-  return (await res.json()) as RevertResult;
+  }, { timeoutMs: APPLY_TIMEOUT_MS, retries: 0 });
 }
 
 /** P8: re-verify a fix with the CPG. With fixed_code it previews on a scratch copy; without, it
- *  checks the live (already applied) tree against the snapshot. */
+ *  checks the live (already applied) tree against the snapshot. A 401 is returned as a body so
+ *  the panel can say "sign in again" instead of showing a generic failure. */
 export async function verifyFix(p: {
   scan_id: string;
   path: string;
@@ -66,10 +67,9 @@ export async function verifyFix(p: {
   end_line?: number;
   original_code?: string;
 }): Promise<VerifyResult> {
-  const res = await fetch(API + '/api/fix/verify', {
+  return request<VerifyResult>('/api/fix/verify', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(p),
-  });
-  return (await res.json()) as VerifyResult;
+  }, { timeoutMs: VERIFY_TIMEOUT_MS, retries: 0, allowStatus: [401] });
 }
