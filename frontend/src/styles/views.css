@@ -241,6 +241,8 @@
 .empty-card .big { font-size: 18px; font-weight: 600; color: var(--neutral-700); }
 .empty-card .sub { margin-top: 4px; font-size: 13.5px; color: var(--text-muted); }
 
+.show-more { display: flex; justify-content: center; margin: 18px 0 8px; }
+
 .warn-banner {
   background: var(--warning-subtle); border: 1px solid #eeddb0; color: var(--amber-600);
   border-radius: 10px; padding: 12px 14px; font-size: 13.5px;
@@ -403,6 +405,8 @@
 /* ============ reduced motion ============ */
 @media (prefers-reduced-motion: reduce) {
   .pconn .flow { animation: none; }
+  .stage-spinner { animation: none; }
+  .track-fill { transition: none; }
   .view, .pipeline, .status-strip, .auth-shell { animation-duration: 0.01ms; }
 }
 

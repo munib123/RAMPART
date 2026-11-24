@@ -66,6 +66,9 @@ knowledge_base/adapters/*.bak
 # ---- Local fix snapshots (apply/revert safety net) ----
 backend/.fix_snapshots/
 
+# ---- Local runtime caches (safe to delete; rebuilt on demand) ----
+backend/.cache/
+
 # ---- Planfiles -------
 docs/**
 # ... except the Joern documents: the phase-by-phase plan with its status notes, the regenerated

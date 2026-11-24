@@ -16,6 +16,19 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // Keep the framework in long-lived vendor chunks. Pages are lazy-loaded in App.tsx,
+        // so each route becomes its own chunk alongside these. A function (not the object
+        // form) also catches subpath imports such as react-dom/client and react/jsx-runtime.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('react-router')) return 'router';
+          if (id.includes('react-dom') || id.includes('react/') || id.includes('\\react\\')) return 'react';
+          return 'vendor';
+        },
+      },
+    },
   },
   server: {
     port: 5173,

@@ -14,7 +14,7 @@ export default function Scanning() {
   const scanner = state.scanner || 'auto';
   const scope = state.scope || {};
 
-  const { elapsedMs, percent, longNote, report, error, stageRows, start, cancel } = useScan({
+  const { elapsedMs, percent, longNote, report, error, stageRows, start, cancel, running } = useScan({
     path,
     scanner,
     scope,
@@ -34,7 +34,7 @@ export default function Scanning() {
   }, [report, path, navigate]);
 
   return (
-    <section className="view" id="view-scanning">
+    <section className="view" id="view-scanning" aria-busy={running}>
       <div className="scancard">
         <div className="scan-head">
           <h3>Scanning</h3>

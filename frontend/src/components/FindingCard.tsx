@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { cap, esc, vClassOf } from '@/utils/format';
 import { Icon } from '@/components/Icons';
 import Collapsible from '@/components/Collapsible';
@@ -10,7 +10,7 @@ import { announce } from '@/api/client';
 import { cpgProvenance, cpgRuleName, isCpg } from '@/utils/joern';
 import type { Finding, VerifyResult } from '@/types';
 
-export default function FindingCard({ f, scanId, target, onApplied, onReverted }: { f: Finding; scanId?: string; target?: string; onApplied?: () => void; onReverted?: () => void }) {
+function FindingCard({ f, scanId, target, onApplied, onReverted }: { f: Finding; scanId?: string; target?: string; onApplied?: () => void; onReverted?: () => void }) {
   const [fixOpen, setFixOpen] = useState(false);
   // P8: re-verify THIS finding against the file as it is on disk right now (no LLM fix
   // needed - a fix made by hand in an editor counts). Preview-on-a-copy lives in the fix panel.
@@ -102,3 +102,7 @@ export default function FindingCard({ f, scanId, target, onApplied, onReverted }
     </article>
   );
 }
+
+// Shallow props memo: `f` comes from the report, and Report passes stable useCallback handlers,
+// so a banner change no longer re-renders every card.
+export default memo(FindingCard);

@@ -17,6 +17,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 
+from app import config
+
 
 @dataclass
 class Finding:
@@ -58,10 +60,11 @@ class BanditScanner:
                 [sys.executable, "-m", "bandit", "-r", path, "-f", "json",
                  "-x", "**/node_modules/**,**/.venv/**,**/venv/**,**/.git/**,**/dist/**,**/build/**,**/__pycache__/**"],
                 capture_output=True, text=True, encoding="utf-8", errors="replace",
-                timeout=600,
+                timeout=config.BANDIT_TIMEOUT,
             )
         except subprocess.TimeoutExpired:
-            raise RuntimeError("bandit timed out after 10 minutes. Try a smaller folder.")
+            raise RuntimeError(f"bandit timed out after {config.BANDIT_TIMEOUT} seconds. "
+                               "Try a smaller folder.")
         # bandit exits 1 when it FINDS issues - that's not an error.
         if not proc.stdout.strip():
             raise RuntimeError(f"bandit produced no output: {proc.stderr[:400]}")
@@ -195,6 +198,9 @@ class SemgrepScanner:
         try:
             proc = subprocess.run(
                 [exe, "scan", "--config", self.config, "--json", "--quiet",
+                 "--jobs", str(config.SEMGREP_JOBS),
+                 "--timeout", str(config.SEMGREP_RULE_TIMEOUT),
+                 "--max-target-bytes", str(config.SEMGREP_MAX_TARGET_BYTES),
                  "--exclude", "node_modules", "--exclude", ".venv", "--exclude", "venv",
                  "--exclude", ".git", "--exclude", "dist", "--exclude", "build",
                  "--exclude", "__pycache__", path],

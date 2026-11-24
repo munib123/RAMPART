@@ -1,28 +1,30 @@
-import { API, authHeaders, type ScanPayload } from '@/api/client';
-import type { PlanLimitPayload, ScanReport } from '@/types';
+import { authHeaders, request, type ScanPayload } from '@/api/client';
+import type { ScanReport } from '@/types';
+
+// A scan can queue behind another one (RAMPART_SCAN_QUEUE_TIMEOUT) and then run for minutes;
+// give it a generous ceiling so a slow repo is not mistaken for a dead backend.
+export const SCAN_TIMEOUT_MS = 15 * 60 * 1000;
 
 export async function runScan(payload: ScanPayload, signal?: AbortSignal): Promise<ScanReport> {
-  const res = await fetch(API + '/api/scan', {
+  return request<ScanReport>('/api/scan', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(payload),
+  }, {
+    timeoutMs: SCAN_TIMEOUT_MS,
+    retries: 0,
     signal,
+    // A 402 carries the structured plan-limit upsell; return it rather than throwing.
+    allowStatus: [402],
   });
-  if (res.status === 402) {
-    // Structured plan-limit response: pass it through so the UI can show an upsell.
-    try {
-      const j = (await res.json()) as ScanReport & PlanLimitPayload;
-      return j as ScanReport;
-    } catch {
-      /* fall through to generic handling */
-    }
-  }
-  return (await res.json()) as ScanReport;
 }
 
-export async function browse(): Promise<{ path?: string }> {
+export async function browse(): Promise<{ path?: string; error?: string }> {
   try {
-    return (await (await fetch(API + '/api/browse')).json()) as { path?: string };
+    return await request<{ path?: string; error?: string }>('/api/browse', {}, {
+      timeoutMs: 5 * 60 * 1000,     // the native folder dialog waits for the user
+      retries: 0,
+    });
   } catch {
     return {};
   }

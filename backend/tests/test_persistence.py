@@ -46,6 +46,35 @@ def test_0002_adds_the_provenance_columns():
 
 # ---- _persist_scan writes tool + joern -------------------------------------------------
 
+class _FakeConn:
+    """The tiny slice of asyncpg's connection _persist_scan uses inside db.transaction()."""
+
+    def __init__(self, calls, scan_id):
+        self.calls, self.scan_id = calls, scan_id
+
+    async def fetchval(self, q, *args):
+        self.calls.append(("scans", q, args))
+        return self.scan_id
+
+    async def executemany(self, q, args_list):
+        self.calls.append(("findings", q, args_list))
+
+
+class _FakeTx:
+    def __init__(self, calls, scan_id="scan-1"):
+        self.conn = _FakeConn(calls, scan_id)
+
+    async def __aenter__(self):
+        return self.conn
+
+    async def __aexit__(self, *exc):
+        return False
+
+
+def _patch_transaction(monkeypatch, calls, scan_id="scan-1"):
+    monkeypatch.setattr(scan_router.db, "transaction", lambda: _FakeTx(calls, scan_id))
+
+
 def _report():
     return {
         "ok": True, "target": "D:/x", "scanner": "semgrep", "scope": {"platform": "ecommerce"},
@@ -66,16 +95,7 @@ def _report():
 
 def test_persist_scan_writes_tool_and_joern(monkeypatch):
     calls = []
-
-    async def fetch_val(q, *args):
-        calls.append(("scans", q, args))
-        return "scan-1"
-
-    async def execute(q, *args):
-        calls.append(("findings", q, args))
-
-    monkeypatch.setattr(scan_router.db, "fetch_val", fetch_val)
-    monkeypatch.setattr(scan_router.db, "execute", execute)
+    _patch_transaction(monkeypatch, calls)
 
     scan_id = asyncio.run(scan_router._persist_scan("owner-1", _report()))
     assert scan_id == "scan-1"
@@ -85,30 +105,24 @@ def test_persist_scan_writes_tool_and_joern(monkeypatch):
     assert json.loads(scan_args[-1])["mode"] == "server"
     assert json.loads(scan_args[-1])["rule_state"]["joern-idor-missing-ownership"]["state"] == "ok"
 
-    rows = [c for c in calls if c[0] == "findings"]
+    (_, find_q, rows), = [c for c in calls if c[0] == "findings"]
+    assert "tool" in find_q
     assert len(rows) == 3
-    assert all("tool" in q for _, q, _ in rows)
-    tools = [args[-1] for _, _, args in rows]
+    tools = [row[-1] for row in rows]
     assert tools == ["joern", "semgrep", "unknown"]          # missing tool -> 'unknown', never NULL
+    assert all(row[0] == "scan-1" for row in rows)
     # code never reaches the DB: no code_slice column in the insert, no slice in the args
-    assert all("code_slice" not in q for _, q, _ in rows)
-    for _, _, args in rows:
-        assert not any(isinstance(a, dict) and "code" in a for a in args)
+    assert "code_slice" not in find_q
+    for row in rows:
+        assert not any(isinstance(a, dict) and "code" in a for a in row)
 
 
 def test_persist_scan_without_joern_block(monkeypatch):
     """A report from a pipeline without the CPG phase (or an older backend) stores '{}'."""
-    seen = {}
-
-    async def fetch_val(q, *args):
-        seen["joern"] = args[-1]
-        return "scan-2"
-
-    async def execute(q, *args):
-        pass
-
-    monkeypatch.setattr(scan_router.db, "fetch_val", fetch_val)
-    monkeypatch.setattr(scan_router.db, "execute", execute)
+    calls = []
+    _patch_transaction(monkeypatch, calls, scan_id="scan-2")
     r = _report(); del r["joern"]; r["findings"] = []
     asyncio.run(scan_router._persist_scan("owner-1", r))
-    assert json.loads(seen["joern"]) == {}
+    (_, _, scan_args), = [c for c in calls if c[0] == "scans"]
+    assert json.loads(scan_args[-1]) == {}
+    assert not [c for c in calls if c[0] == "findings"]      # no rows -> no executemany

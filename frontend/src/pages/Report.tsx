@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import SummaryCard from '@/components/SummaryCard';
 import FindingCard from '@/components/FindingCard';
@@ -7,23 +7,49 @@ import { announce } from '@/api/client';
 import { useAuth } from '@/context/AuthContext';
 import { revertFix } from '@/api/history';
 import { Icon } from '@/components/Icons';
+import { loadReport, saveReport } from '@/utils/reportStore';
 import type { PlanLimitPayload, ScanReport } from '@/types';
+
+// A 60-finding report renders the first 40 cards, then 40 more per click. Export expands all
+// (below) so a printed/PDF report is never truncated.
+const PAGE = 40;
 
 export default function Report() {
   const location = useLocation();
   const navigate = useNavigate();
   const { token } = useAuth();
   const state = (location.state || {}) as { report?: ScanReport; path?: string };
-  const report = state.report;
-  const path = state.path || report?.target || '';
+  const stateReport = state.report;
+  const statePath = state.path;
+  // A refresh on /report has no router state: fall back to the last successful report saved in
+  // this tab. `useState` runs the (synchronous) read once per mount.
+  const [persisted] = useState(() => (stateReport ? null : loadReport()));
+  const report = stateReport || persisted?.report;
+  const path = statePath || report?.target || persisted?.path || '';
+
   const [applied, setApplied] = useState(false);
   const [reverting, setReverting] = useState(false);
+  const [visible, setVisible] = useState(PAGE);
+
+  // Persist a successful report so a refresh restores it; sign-out clears it (AuthContext).
+  useEffect(() => {
+    if (stateReport && stateReport.ok) saveReport(stateReport, statePath);
+  }, [stateReport, statePath]);
+
+  useEffect(() => {
+    setVisible(PAGE);
+    setApplied(false);
+  }, [report]);
 
   useEffect(() => {
     if (report) {
       announce('Scan complete: ' + ((report.counts && report.counts.total) ?? (report.findings || []).length) + ' findings');
     }
   }, [report]);
+
+  // Stable callbacks so the memoized FindingCard list does not re-render on banner toggles.
+  const onApplied = useCallback(() => setApplied(true), []);
+  const onReverted = useCallback(() => setApplied(false), []);
 
   const onRevertAll = async () => {
     if (!report?.scan_id || !report.target) return;
@@ -73,14 +99,21 @@ export default function Report() {
     );
   }
 
+  const shown = findings.slice(0, visible);
+  const remaining = findings.length - shown.length;
+
   const onExport = () => {
-    // expand all collapsibles, then print (native)
-    document.querySelectorAll('#view-report .coll').forEach((c) => {
-      c.classList.add('is-open');
-      const b = c.querySelector('[data-coll]');
-      if (b) b.setAttribute('aria-expanded', 'true');
-    });
-    setTimeout(() => window.print(), 120);
+    // Export must include every finding, not just the pages shown: expand first, then open the
+    // print dialog on the next tick once React has rendered the remaining cards.
+    setVisible(findings.length);
+    setTimeout(() => {
+      document.querySelectorAll('#view-report .coll').forEach((c) => {
+        c.classList.add('is-open');
+        const b = c.querySelector('[data-coll]');
+        if (b) b.setAttribute('aria-expanded', 'true');
+      });
+      window.print();
+    }, 200);
   };
 
   return (
@@ -114,7 +147,25 @@ export default function Report() {
             {!findings.length ? (
               <div className="card empty-card"><div className="big">You're all set.</div><div className="sub">Nothing flagged in this path.</div></div>
             ) : (
-              findings.map((f, i) => <FindingCard f={f} key={i} scanId={report.scan_id} target={report.target} onApplied={() => setApplied(true)} />)
+              <>
+                {shown.map((f, i) => (
+                  <FindingCard
+                    f={f}
+                    key={`${f.path}:${f.line}:${f.cwe_id}:${f.rule_id}:${i}`}
+                    scanId={report.scan_id}
+                    target={report.target}
+                    onApplied={onApplied}
+                    onReverted={onReverted}
+                  />
+                ))}
+                {remaining > 0 && (
+                  <div className="show-more" data-noprint>
+                    <button className="btn" onClick={() => setVisible((v) => Math.min(v + PAGE, findings.length))}>
+                      Show {Math.min(PAGE, remaining)} more ({remaining} remaining)
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

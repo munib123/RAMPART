@@ -270,6 +270,24 @@ Scala frozen.
 
 ---
 
+## Performance
+
+Two local tools keep an optimization change honest. Neither needs a database or a Gemini key.
+
+| Command | What it does |
+|---|---|
+| `powershell -ExecutionPolicy Bypass -File scripts\verify.ps1` | Pre-commit gate: backend pytest, bench pytest, and `npm run build`. Every gate runs; the script exits non-zero if any failed. `-SkipBench` / `-SkipFrontend` skip a gate. |
+| `backend\.venv\Scripts\python.exe scripts\perf_baseline.py` | Measures cold/warm `/api/health` latency and full scan wall time on `semgrep_test/test_code` + `testbeds/shopfast` (bandit, Joern off, no LLM/DB). Writes `bench/runs/perf-baseline-<date>.json`. |
+
+`backend/.cache/` is the local, git-ignored cache root (safe to delete; rebuilt on demand).
+
+The scan hot path batches RAG embedding into one `encode()` call per scan, caches each file's
+source/AST for the duration of a scan (keyed by path + mtime + size), caches `/api/health`
+scanner probes and collection counts for 30 s (`?refresh=1` bypasses), and warms the ONNX
+embedder on a background thread at startup.
+
+---
+
 ## Knowledge-base corpora (`data/`)
 
 Every source is stored the same way - one markdown report per record, filed under a

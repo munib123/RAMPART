@@ -10,11 +10,12 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 import app.db as db
 from app import config
 from app.core.deps import current_user, optional_user
+from app.core.errors import error_payload
 from app.schemas.scan import ApplyFixReq, FixReq, RevertReq, VerifyFixReq
 from app.services import apply as apply_svc
 from app.services import gemini
@@ -42,41 +43,72 @@ def _limit_payload(user: dict) -> dict:
     }
 
 
+async def _reserve_fix(user: dict, scan_id: str | None) -> int | None:
+    """Atomically charge one fix and return the new count, or None when the plan is full.
+    The conditional UPDATE closes the check-then-increment race between concurrent fixes."""
+    plan = user.get("plan") or "free"
+    limits = config.PLANS.get(plan, config.PLANS["free"])
+    return await db.fetch_val(
+        """update users
+           set fixes_used = fixes_used + 1, last_fix_scan_id = $1
+           where id = $2 and fixes_used < $3 returning fixes_used""",
+        scan_id or None, user["id"], limits["fixes"],
+    )
+
+
+async def _refund_fix(user: dict) -> None:
+    """Undo a reservation after generation failed. Restores the previous last_fix_scan_id too,
+    so the same scan is still considered unfixed. Best-effort and never raises."""
+    try:
+        await db.execute(
+            """update users
+               set fixes_used = greatest(fixes_used - 1, 0), last_fix_scan_id = $1
+               where id = $2""",
+            user.get("last_fix_scan_id"), user["id"],
+        )
+    except Exception as e:
+        print(f"[fix] quota refund failed for {user['id']}: {type(e).__name__}: {e}")
+
+
 @router.post("/api/fix")
-async def fix(req: FixReq, user=Depends(optional_user)):
+async def fix(req: FixReq, request: Request = None, user=Depends(optional_user)):
     if user is None:
         return _AUTH_PAYLOAD
     if not db.enabled():
         return _AUTH_PAYLOAD
 
     # Charge rule (1 fix = one scan). Dedupe on last_fix_scan_id so the same scan's
-    # remaining findings don't each consume a fix.
+    # remaining findings don't each consume a fix. The charge is reserved atomically before
+    # the LLM call and refunded if generation is unavailable.
     plan = user.get("plan") or "free"
     limits = config.PLANS.get(plan, config.PLANS["free"])
     used = user.get("fixes_used") or 0
-    if used >= limits["fixes"]:
-        return _limit_payload(user)
 
     charge = True
     if req.scan_id:
         charge = req.scan_id != user.get("last_fix_scan_id")
+    charged = False
+    new_used = used
     if charge:
-        await db.execute(
-            """update users
-               set fixes_used = fixes_used + 1, last_fix_scan_id = $1
-               where id = $2""",
-            req.scan_id or None, user["id"],
-        )
+        reserved = await _reserve_fix(user, req.scan_id)
+        if reserved is None:
+            return _limit_payload(user)
+        charged, new_used = True, reserved
 
     finding = {"cwe_id": req.cwe_id, "title": req.title, "message": req.message}
     try:
         result = gemini.generate_fix(finding, req.code, req.exemplars)
+        if result.get("available") is False and charged:
+            await _refund_fix(user)
+            charged, new_used = False, used
         result["plan"] = plan
-        result["fixes_used"] = used + (1 if charge else 0)
+        result["fixes_used"] = new_used
         result["fixes_limit"] = limits["fixes"]
         return result
     except Exception as e:
-        return {"available": False, "error": f"{type(e).__name__}: {e}"}
+        if charged:
+            await _refund_fix(user)
+        return error_payload(request, e, "fix generation failed")
 
 
 async def _owns_scan(scan_id: str, user_id: str) -> tuple[str | None, dict | None]:

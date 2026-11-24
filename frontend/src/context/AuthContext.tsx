@@ -1,6 +1,8 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as authApi from '@/api/auth';
-import { getToken, getUser, setSession } from '@/api/client';
+import { ApiError, getToken, getUser, setSession } from '@/api/client';
+import { tokenExpiryMs } from '@/utils/jwt';
+import { clearReport } from '@/utils/reportStore';
 import type { User } from '@/types';
 
 interface AuthCtx {
@@ -14,13 +16,33 @@ interface AuthCtx {
 
 const AuthContext = createContext<AuthCtx | null>(null);
 
+// Refresh a token this long before it expires, so a scan started near the end of a session is
+// still saved. A failed refresh (backend down) retries; a 401 clears the session.
+const REFRESH_LEAD_MS = 5 * 60 * 1000;
+const REFRESH_RETRY_MS = 60 * 1000;
+const MAX_TIMER_MS = 2_147_000_000;
+
+function redirectToAuth() {
+  if (!window.location.hash.startsWith('#/auth')) {
+    window.location.hash = '#/auth?mode=login';
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => getUser());
   const token = getToken();
+  const refreshing = useRef(false);
 
-  const commit = useCallback((token: string, user: User) => {
-    setSession(token, user);
-    setUser(user);
+  const expire = useCallback(() => {
+    setSession(null, null);
+    setUser(null);
+    clearReport();
+    redirectToAuth();
+  }, []);
+
+  const commit = useCallback((nextToken: string, nextUser: User) => {
+    setSession(nextToken, nextUser);
+    setUser(nextUser);
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -38,24 +60,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     setSession(null, null);
     setUser(null);
+    clearReport();
   }, []);
 
   const refreshUser = useCallback(async () => {
     const t = getToken();
     if (!t) return;
     try {
-      const r = await fetch('http://127.0.0.1:8000/api/auth/me', {
-        headers: { Authorization: 'Bearer ' + t },
-      });
-      if (r.ok) {
-        const j = await r.json();
-        if (j.user) { setSession(t, j.user); setUser(j.user); }
-      } else if (r.status === 401) {
-        setSession(null, null);
-        setUser(null);
+      const r = await authApi.me();
+      if (r.user) { setSession(t, r.user); setUser(r.user); }
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) expire();
+      /* backend down: keep the cached session */
+    }
+  }, [expire]);
+
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    if (refreshing.current) return true;
+    if (!getToken()) return false;
+    refreshing.current = true;
+    try {
+      const r = await authApi.refresh();
+      commit(r.token, r.user);
+      return true;
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        expire();
+        return false;
       }
-    } catch { /* backend down: keep cached session */ }
-  }, []);
+      return false;                 // backend down: keep the session and try again later
+    } finally {
+      refreshing.current = false;
+    }
+  }, [commit, expire]);
+
+  // Keep the session alive: decode exp (unverified) and refresh shortly before it lapses.
+  useEffect(() => {
+    if (!token) return;
+    const exp = tokenExpiryMs(token);
+    if (exp === null) return;
+
+    let cancelled = false;
+    let timer = 0;
+    const schedule = (delayMs: number) => {
+      timer = window.setTimeout(async () => {
+        if (cancelled) return;
+        const ok = await refreshToken();
+        if (!ok && !cancelled && getToken()) schedule(REFRESH_RETRY_MS);
+      }, Math.max(0, Math.min(MAX_TIMER_MS, delayMs)));
+    };
+
+    const msLeft = exp - Date.now();
+    schedule(msLeft <= 0 ? 0 : msLeft - REFRESH_LEAD_MS);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [token, refreshToken]);
 
   const value = useMemo(
     () => ({ user, token, signIn, signUp, signOut, refreshUser }),
